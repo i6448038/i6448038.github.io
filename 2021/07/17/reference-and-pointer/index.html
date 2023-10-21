@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="图解Go的引用底层实现">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>图解Go的引用底层实现 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            图解Go的引用底层实现
+            
+          </h1>
+          <p class="posted-on">
+          2021-07-17
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/golang/" rel="tag">
+                  golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>Go怎么可能有引用？得了吧~<br>有人要说了，那利用<code>make()</code>函数执行后得到的slice、map、channel等类型，不都是得到的引用吗？</p>
+<p>我要说：那能叫<strong>引用</strong>吗？你能确定啥叫<strong>引用</strong>吗？<br>如果你有点迷糊，那么请听我往下讲：</p>
+<p>这一切要从变量说起。</p>
+<h2 id="什么是变量"><a href="#什么是变量" class="headerlink" title="什么是变量"></a>什么是变量</h2><p>无论是引用变量还是指针变量，都是变量；那么，什么叫变量？<br>其实变量本质就是一块内存。通常，我们对计算机内存进行操作，最直接的方式就是：“计算机，在0x0201地址内存一个整数100，在0x00202地址存一个浮点数10.6，读取0x00203的数据…” 这种方式让机器来操作还行，如果直接写成代码让人看的话，这一堆“0x0201、0x0202…”难记的地址能把人给整崩溃了~<br>于是，聪明的人们想出了一种方法：把一堆难记的地址用其他人类可以方便读懂的方式来间接表示。例如：将“0x0201”的地址命名为“id”，将“0x0202”命名为“score”…然后，代码编译期间，再将”name”等人类能读懂的文字转化为真实的内存地址；于是，变量诞生了~</p>
+<p><img src="/img/reference_golang/variable.png" alt></p>
+<p>所以，其实每个变量都代表了一块内存，变量名是我们给那块儿内存起的一个别名，内存中存的值就是我们给变量赋的值。变量名在程序编译期间会直接转化为内存地址。</p>
+<h2 id="什么是引用"><a href="#什么是引用" class="headerlink" title="什么是引用"></a>什么是引用</h2><p>引用是指向另外一个变量的变量，或者说，叫一个已知变量的别名。</p>
+<p><img src="/img/reference_golang/reference.png" alt></p>
+<p>注意，引用和引用本身指向的变量对应的是同一块内存地址。引用本身也会在编译期间转化为真正的内存地址。当然咯，引用和它指向的变量在编译期间会转化为同一个内存地址。</p>
+<h2 id="什么是指针"><a href="#什么是指针" class="headerlink" title="什么是指针"></a>什么是指针</h2><p>指针本身也是一个变量，需要分配内存地址，但是内存地址中存的是另一个变量的内存地址。有点绕口，请看图：</p>
+<p><img src="/img/reference_golang/pointer.png" alt></p>
+<h2 id="GO中的引用和指针"><a href="#GO中的引用和指针" class="headerlink" title="GO中的引用和指针"></a>GO中的引用和指针</h2><p>我们先看看“正统”的引用的例子，在C++中(C中是没有引用的哈)：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">int</span> i = <span class="number">3</span>;</span><br><span class="line">        <span class="keyword">int</span> *ptr = &amp;i;</span><br><span class="line">        <span class="keyword">int</span> &amp;ref = i;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%p %p %p\n"</span>, &amp;i, ptr, &amp;ref); </span><br><span class="line">        <span class="comment">// 打印出：0x7ffeeac553a8 0x7ffeeac553a8 0x7ffeeac553a8</span></span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>变量地址、引用地址、指针的值 均相同；符合常理</p>
+<p>那我们再试试Go中类似代码的例子:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    i := <span class="number">3</span></span><br><span class="line">    ref := i</span><br><span class="line">    ptr := &amp;i</span><br><span class="line">    </span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">"%p %p %p"</span>, &amp;i, &amp;ref, ptr))</span><br><span class="line">    <span class="comment">// 打印出 0xc000118000 0xc000118008 0xc000118000</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>变量i地址和指针ptr的值一样，这是符合预期的；但是：正如Go中没有特别的“引用符号”（C++中是<code>int &amp;ref = i;</code>）一样，上述go代码中的<code>ref</code>压根就是个变量，根本不是引用。</p>
+<p>可是，很多人不死心，是不是“实验对象”不对啊？代码中使用的是int整型，我们换做<code>slice</code>和<code>map</code>试试？毕竟网上的”资料”都是这么写的：<br>例如以下截图（只看标红部分就好）：<br><img src="/img/reference_golang/sample.jpg" alt><br>还有如下截图（只看标红部分就好）：<br><img src="/img/reference_golang/sample2.jpg" alt></p>
+<p>ok，那我们可以试试如下map的代码，看到底有没有引用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>)</span><br><span class="line">    i[<span class="string">"key"</span>]=<span class="string">"value"</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">"%p %p"</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印出：0xc00010e018 0xc00010e020</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>哈哈！不对呀，如果是引用的话，打印的地址应该相同才对，但是现在不相同！所以不存在？<br>别着急，紧接着看下面的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>)</span><br><span class="line">    i[<span class="string">"key"</span>]=<span class="string">"value"</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref[<span class="string">"key"</span>] = <span class="string">"value1"</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(i[<span class="string">"key"</span>]) <span class="comment">// 打印结果：value1</span></span><br><span class="line">    fmt.Println(ref[<span class="string">"key"</span>]) <span class="comment">// 打印结果：value1</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">"%p %p"</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印结果：0xc00000e028 0xc00000e030</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>能猜出来打印了什么吗？变量地址是不对，但是，但是值居然变了！ref变量可以“操控”i变量的内容！就和引用一样！</p>
+<p>这就很奇怪了~ 咋回事儿呢？</p>
+<p>我们细细研究一下<code>map</code>、<code>slice</code>、<code>channel</code>等具体实现（详情请看：我的其他文章 <a href="https://i6448038.github.io/2018/08/26/map-secret/" target="_blank" rel="noopener">图解Go map底层实现</a>、<a href="https://i6448038.github.io/2018/08/11/array-and-slice-principle/" target="_blank" rel="noopener">图解Go slice底层实现</a>、<a href="https://i6448038.github.io/2019/04/11/go-channel/" target="_blank" rel="noopener">图解Go channel底层实现</a>）我们发现，这些类型的底层实现都是会有一个指针指向另外的存储地址，所以，在<code>make</code>函数创建了具体的类型实例后，实际上在内存空间中会开辟多个地址空间，而随着变量的赋值，指针引用的那个地址值也会跟着“复制”，因而其他变量可以改变原有变量的内容。</p>
+<p>听着是不是有点绕？我们来看看图：</p>
+<p>首先实例化了map并赋值</p>
+<p><img src="/img/reference_golang/variable_reference1.png" alt></p>
+<p>然后又赋值给了另外一个变量ref</p>
+<p><img src="/img/reference_golang/variable_reference2.png" alt></p>
+<p>由于对于指针变量的值而言，就是一个地址(程序实现上就是一串数字)，所以，在赋值的时候，就“复制”了一串数字，但是，这串数字背后的含义确是另外一个地址，而地址的内容，恰恰就是<code>map</code> <code>slice</code> <code>channel</code> 等数据结构真正底层存储的数据!</p>
+<p>所以，两变量因为同一个指针变量指向的内存，而产生了类似于“引用”的效果。假如实例化的类型数据中，没有<code>指针</code>属性，则不会产生这种“类引用”的效果：<br>例如如下代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="number">3</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref = <span class="number">4</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(i, ref) <span class="comment">// 打印输出：3 4</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">"%p %p"</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印输出：0xc000016070 0xc000016078</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以将代码上述仔细看看能输出什么，不出意外的话你会发现：“类引用”效果消失了~</p>
+<p>要想再次展现“类引用”效果，只要创建一个带有指针属性的类型即可，我们自己实现都可以，无需依赖Go基础库中的<code>map</code>、<code>slice</code>、<code>channel</code>等</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Instance <span class="keyword">struct</span> &#123;</span><br><span class="line">    Name <span class="keyword">string</span></span><br><span class="line">    Data *<span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i Instance)</span> <span class="title">Store</span><span class="params">(num <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    *(i.Data) = num</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i Instance)</span> <span class="title">Show</span><span class="params">()</span> <span class="title">int</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> *(i.Data)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    data := <span class="number">5</span></span><br><span class="line"></span><br><span class="line">    i := Instance&#123;</span><br><span class="line">        Name:<span class="string">"hello"</span>,</span><br><span class="line">        Data:&amp;data,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref.Store(<span class="number">7</span>)</span><br><span class="line"></span><br><span class="line">    fmt.Println(i.Show(), ref.Show())</span><br><span class="line">    <span class="comment">// 打印出：7 7</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">"%p %p"</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印出：0xc0000a6018 0xc0000a6030</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>看看以上代码，是不是实现了“类引用”？ 有人要说了<code>map</code>展示key值，<code>slice</code>展示某个下标的值，没有用方法呀？<br>这就不对了，其实<code>map</code>的展示key的值<code>mapData[key]</code>也好，更改值也好，<code>slice</code>展示下标值<code>sliceArray[0]</code>也好，更改值也好；背后底层实现也都是些“函数”和“方法”，只不过Go语言把这些函数和方法做成了语法糖，我们无感知罢了~</p>
+<p>好了，现在我再问你：还敢说Go语言有引用类型吗？是不是感觉：也有、也没有了？ 😝</p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2021/09/05/float-binary/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2021/05/20/stack-heap-go/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

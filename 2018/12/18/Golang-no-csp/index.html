@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="Golang非CSP并发模型外的其他并行方法总结">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>Golang非CSP并发模型外的其他并行方法总结 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            Golang非CSP并发模型外的其他并行方法总结
+            
+          </h1>
+          <p class="posted-on">
+          2018-12-18
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/Golang/" rel="tag">
+                  Golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>Golang最为让人熟知的并发模型当属CSP并发模型，也就是由goroutine和channel构成的<a href="https://i6448038.github.io/2017/12/04/golang-concurrency-principle/" target="_blank" rel="noopener">GMP并发模型</a>，具体内容不在赘述了，可以翻回之前的文章查看。在这里，要讲讲Golang的其他并发方式。</p>
+<p>Golang不仅可以使用CSP并发模式，还可以使用传统的共享数据的并发模式。</p>
+<h1 id="临界区-critical-section"><a href="#临界区-critical-section" class="headerlink" title="临界区(critical section)"></a>临界区(critical section)</h1><p>这是传统语言比较常用的的方式，即加锁。加锁使其线程同步，每次只允许一个goroutine进入某个代码块，此代码块区域称之为”<em>临界区(critical section)</em>”。</p>
+<p>Golang为<em>临界区(critical section)</em>提供的是互斥锁的包和条件变量的包。</p>
+<h2 id="互斥锁"><a href="#互斥锁" class="headerlink" title="互斥锁"></a>互斥锁</h2><p>就是通常使用的锁，用来让线程串行用的。Golang提供了互斥锁<code>sync.Mutex</code>和读写互斥锁 <code>sync.RWMutex</code>，用法极其简单：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s sync.Mutex</span><br><span class="line">    </span><br><span class="line">s.Lock()</span><br><span class="line">    </span><br><span class="line"><span class="comment">// 这里的代码就是串行了，吼吼吼。。。</span></span><br><span class="line">    </span><br><span class="line">s.Unlock()</span><br></pre></td></tr></table></figure>
+
+<p>Lock和Unlock</p>
+<h3 id="sync-Mutex和sync-RWMutex的区别"><a href="#sync-Mutex和sync-RWMutex的区别" class="headerlink" title="sync.Mutex和sync.RWMutex的区别"></a><code>sync.Mutex</code>和<code>sync.RWMutex</code>的区别</h3><p>没啥大的区别，只不过<code>sync.RWMutex</code>更加细腻，可以将“读操作”和“写操作”区别对待。<br><code>sync.RWMutex</code>中的Lock和unLock针对写操作</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s sync.RWMutex</span><br><span class="line"></span><br><span class="line">s.Lock()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 上写锁了，吼吼</span></span><br><span class="line"></span><br><span class="line">s.Unlock()</span><br></pre></td></tr></table></figure>
+
+<p><code>sync.RWMutex</code>中的RLock和RUnLock针对读操作</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s sync.RWMutex</span><br><span class="line"></span><br><span class="line">s.RLock()</span><br><span class="line"></span><br><span class="line"><span class="comment">// 上读锁了，吼吼..</span></span><br><span class="line"></span><br><span class="line">s.RUnlock()</span><br></pre></td></tr></table></figure>
+
+<p>读写锁有以下规则：</p>
+<ul>
+<li>写锁被锁定，（再试图进行）读锁和写锁都阻塞</li>
+<li>读锁被锁定，（再试图进行）写锁阻塞，（再试图进行）读锁不阻塞</li>
+</ul>
+<p>即：多个写操作不能同时进行，写操作和读操作也不能同时进行，多个读操作可以同时进行</p>
+<h3 id="注意事项："><a href="#注意事项：" class="headerlink" title="注意事项："></a>注意事项：</h3><ul>
+<li>不要重复锁定互斥锁；因为代码写起来麻烦，容易出错，万一死锁(deadlock)了就废了。Go语言运行时系统自己抛出的panic都属于致命错误，都是无法恢复的，调用<code>recover</code>函数对它们起不到任何作用。一旦产生死锁，程序必然崩溃。</li>
+<li>锁定和解锁一定要成对出现，如果怕忘记解锁，最好是使用<code>defer</code>语句来解锁；但是，一定不要对未锁定的或者已经锁定的互斥锁解锁，因为会触发<code>panic</code>，而且此<code>panic</code>和死锁一样，属于致命错误，程序肯定崩溃</li>
+<li><code>sync.Mutex</code>是个结构体，尽量不要其当做参数，在多个函数直接传播。因为没啥意义，Golang的参数都是副本，多个副本之间都是相互独立的。</li>
+</ul>
+<h2 id="条件变量Cond"><a href="#条件变量Cond" class="headerlink" title="条件变量Cond"></a>条件变量Cond</h2><p>互斥锁是用来锁住资源，“创造”临界区的。而条件变量Cond可以认为是用来自行调度线程(在此即为groutine)的，当某个状态时，阻塞等待，当状态改变时，唤醒。</p>
+<p>Cond的使用，离不开互斥锁，即离不开<code>sync.Mutex</code>和<code>sync.RWMutex</code>。<br>Cond初始化都需要有个互斥锁。（ps:哪怕初始化不需要，就应用场景而言，也得需要个互斥锁）</p>
+<p><code>Cond</code>提供Wait、Signal、Broadcast 三种方法。<br>Wait表示线程(groutine)阻塞等待；<br>Signal表示唤醒等待的groutine；<br>Broadcast表示唤醒等待的所有groutine;</p>
+<p>初始化：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cond := sync.NewCond(&amp;sync.Mutex&#123;&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>在其中一个groutine中:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">cond.L.Lock()</span><br><span class="line"><span class="keyword">for</span> status == <span class="number">0</span> &#123;</span><br><span class="line">     cond.Wait()</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//状态改变，goroutine被唤醒后，干点啥。。。</span></span><br><span class="line">cond.L.Unlock()</span><br></pre></td></tr></table></figure>
+
+<p>以上算是模板</p>
+<p>在另外一个groutine中:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cond.L.Lock()</span><br><span class="line">status = <span class="number">1</span></span><br><span class="line">cond.Signal() <span class="comment">// 或者使用cond.Broadcast()来唤醒以上groutine中沉睡的groutine</span></span><br><span class="line">cond.L.Unlock()</span><br></pre></td></tr></table></figure>
+
+<h1 id="原子操作-atomicity"><a href="#原子操作-atomicity" class="headerlink" title="原子操作(atomicity)"></a>原子操作(atomicity)</h1><p>原子操作是硬件芯片级别的支持，所以可以保证绝对的线程安全。而且执行效率比其他方式要高出好几个数量级。</p>
+<p>Go语言的原子操作当然也是基于CPU和操作系统的，Go语言提供的原子操作的包是<code>sync/atomic</code>，此包提供了加(Add)、CAS(交换并比较 compare and swap)、成对出现的存储(store)和加载(load)以及交换(swap)。</p>
+<p>此包提供的大多数函数针对的数据类型也非常的单一：只有整型！使用方式十分的简单，看着函数直接调用就好。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="keyword">int32</span></span><br><span class="line">a = <span class="number">1</span></span><br><span class="line">a = atomic.AddInt32(&amp;a, <span class="number">2</span>) <span class="comment">//此处是原子操作，就这么简单，吼吼</span></span><br></pre></td></tr></table></figure>
+
+<p>在此特别强调一下CAS，CAS对应的函数前缀是“CompareAndSwap”，含义和用法正如英文翻译：比较并交换。在进行CAS操作的时候，函数会先判断被操作变量的当前值是否与我们预期的旧值相等，如果相等，它就把新值赋给该变量，并返回true，反之，就忽略此操作，并返回false。</p>
+<p>可能是Golang提供的原子操作的数据类型实在是有限，Go又补充了一个结构体<code>atomic.Value</code>，此结构体相当于一个小容器，可以提供原子操作的存储<code>store</code>和提取<code>load</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> atomicVal atomic.Value</span><br><span class="line">str := <span class="string">"hello"</span></span><br><span class="line"></span><br><span class="line">atomicVal.Store(str) <span class="comment">//此处是原子操作哦</span></span><br><span class="line"></span><br><span class="line">newStr := atomicVal.Load() <span class="comment">//此处是原子操作哦</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h1><p>为了能更好的调度goroutine，Go提供了<code>sync.WaitGroup</code>、<code>sync.Once</code>还有<code>context</code></p>
+<h2 id="sync-WaitGroup"><a href="#sync-WaitGroup" class="headerlink" title="sync.WaitGroup"></a><code>sync.WaitGroup</code></h2><p><code>sync.WaitGroup</code>的作用就是在多goroutine并发程序中，让主goroutine等待所有goroutine执行结束。（直接查看代码注释）<br><code>sync.WaitGroup</code>提供了三个函数<code>Add</code>、<code>Done</code>和<code>Wait</code>三者用法如下：</p>
+<ul>
+<li>Add 写在主goroutine中，参数为将要运行的goroutine的数量</li>
+<li>Done 写在各个非主goroutine中，表示运行结束</li>
+<li>Wait 写在主goroutine中，block主goroutine，等待所有其他goroutine运行结束</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> wait sync.WaitGroup</span><br><span class="line"></span><br><span class="line">    wait.Add(<span class="number">2</span>) <span class="comment">//必须是运行的goroutine的数量</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="comment">//TODO 一顿小操作</span></span><br><span class="line">        <span class="keyword">defer</span> wait.Done() <span class="comment">// done函数用在goroutine中，表示goroutine操作结束</span></span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="comment">//TODO 一顿小操作</span></span><br><span class="line">        <span class="keyword">defer</span> wait.Done() <span class="comment">// done函数用在goroutine中，表示goroutine操作结束</span></span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    wait.Wait() <span class="comment">// block住了，直到所有goroutine都结束</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p><code>sync.WaitGroup</code>中有一个计数器，记录的是需要等待的goroutine的数量，默认值是0，可以通过Add方法来增加或者减少值，但是切记，千万不能让计数器的值小于零，会触发panic！</p>
+<p><code>sync.WaitGroup</code>调用Wait方法的时候，<code>sync.WaitGroup</code>中计数器的值一定要为0。因此Add中的值一定要等于非主goroutine的数量！<br>且不要把Add和Wait方法放到不同的goroutine中执行！</p>
+<h2 id="sync-Once"><a href="#sync-Once" class="headerlink" title="sync.Once"></a><code>sync.Once</code></h2><p>真真正正的只执行一次。</p>
+<p><code>sync.Once</code>只要一个方法：<code>Do</code>，里面就一个参数:<code>func</code>。多说无益，复制下面代码，猜猜执行结果就知道了。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"sync"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> once sync.Once</span><br><span class="line">    onceBody := <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">"Only once"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    done := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">            once.Do(onceBody)</span><br><span class="line">            done &lt;- <span class="literal">true</span></span><br><span class="line">        &#125;()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++ &#123;</span><br><span class="line">        &lt;-done</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Only once</span><br></pre></td></tr></table></figure>
+
+<p>没错，只有一行。真只执行了一次。</p>
+<h2 id="context"><a href="#context" class="headerlink" title="context"></a>context</h2><p>context可以用来实现一对多的goroutine协作。这个包的应用场景主要是在API中。字面意思也很直接，上下文。当一个请求来时，会产生一个goroutine，但是这个goroutine往往要衍生出许多额外的goroutine去处理操作，例如链接database、请求rpc请求。。等等，这些衍生的goroutine和主goroutine有很多公用数据的，例如同一个请求生命周期、用户认证信息、token等，当这个请求超时或者被取消的时候，这里所有的goroutine都应该结束。context就可以帮助我们达到这个效果。</p>
+<p>很显然，主goroutine和衍生的所有子goroutine之间形成了一颗树结构。我们的context可以从根节点遍布整棵树，当然，是线程安全的。</p>
+<p>线程之间的基本是这样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">DoSomething</span><span class="params">(ctx context.Context, arg Arg)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="comment">// ... use ctx ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有两个根context:background和todo；这两个根都是contenxt空的，没有值的。两者也没啥太本质的区别，Background是最常用的，作为Context这个树结构的最顶层的Context，它不能被取消。当不知道用啥context的时候就可以用TODO。</p>
+<p>根生成子节点有以下方法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//生成可撤销的Context (手动撤销)</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithCancel</span><span class="params">(parent Context)</span> <span class="params">(ctx Context, cancel CancelFunc)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">//生成可定时撤销的<span class="title">Context</span> <span class="params">(定时撤销)</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">WithDeadline</span><span class="params">(parent Context, deadline time.Time)</span> <span class="params">(Context, CancelFunc)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">//也是生成可定时撤销的<span class="title">Context</span> <span class="params">(定时撤销)</span></span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">WithTimeout</span><span class="params">(parent Context, timeout time.Duration)</span> <span class="params">(Context, CancelFunc)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">//不可撤销的<span class="title">Context</span>,可以存一个<span class="title">kv</span>的值</span></span><br><span class="line"><span class="function"><span class="title">func</span> <span class="title">WithValue</span><span class="params">(parent Context, key, val <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">Context</span></span></span><br></pre></td></tr></table></figure>
+
+<h3 id="可撤销的Context"><a href="#可撤销的Context" class="headerlink" title="可撤销的Context"></a>可撤销的Context</h3><p>以下是每个方法的调用方式(全都来自godoc，可粘贴复用)：<br>可撤销的<code>func WithCancel(parent Context) (ctx Context, cancel CancelFunc)</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">gen := <span class="function"><span class="keyword">func</span><span class="params">(ctx context.Context)</span> &lt;-<span class="title">chan</span> <span class="title">int</span></span> &#123;</span><br><span class="line">    dst := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>)</span><br><span class="line">    n := <span class="number">1</span></span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">for</span> &#123;</span><br><span class="line">            <span class="keyword">select</span> &#123;</span><br><span class="line">            <span class="keyword">case</span> &lt;-ctx.Done(): <span class="comment">//只有撤销函数被调用后，才会触发</span></span><br><span class="line">                <span class="keyword">return</span> </span><br><span class="line">            <span class="keyword">case</span> dst &lt;- n:</span><br><span class="line">                n++</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line">    <span class="keyword">return</span> dst</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ctx, cancel := context.WithCancel(context.Background())</span><br><span class="line"><span class="keyword">defer</span> cancel()  <span class="comment">//调用返回的cancel方法来让 context声明周期结束</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> n := <span class="keyword">range</span> gen(ctx) &#123;</span><br><span class="line">    fmt.Println(n)</span><br><span class="line">    <span class="keyword">if</span> n == <span class="number">5</span> &#123;</span><br><span class="line">        <span class="keyword">break</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>要想结束所有线程，就调用<code>ctx, cancel := context.WithCancel(context.Background())</code>函数返回的cancel函数即可，当撤销函数被调用之后，对应的Context值会先关闭它内部的接收通道，也就是它的Done方法返回的通道。</p>
+<p><code>WithDeadline</code>和<code>WithTimeout</code>用法基本类似，而且WithTimeout函数内部调用了WithDeadline函数。两者唯一区别是WithTimeout表示从现在开始xxx超时，而WithDeadline的时间可以是之前的时间：意思是说WithTimeout表示从现在开始， xxx时间后超时。而WithDeadline表示xx时间点，结束！这个时间点可以是昨天，时间点不收任何限制。</p>
+<p>以下是godoc给出的列子：</p>
+<p><code>WithDeadline</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"context"</span></span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    d := time.Now().Add(<span class="number">50</span> * time.Millisecond)</span><br><span class="line">    ctx, cancel := context.WithDeadline(context.Background(), d)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Even though ctx will be expired, it is good practice to call its</span></span><br><span class="line">    <span class="comment">// cancelation function in any case. Failure to do so may keep the</span></span><br><span class="line">    <span class="comment">// context and its parent alive longer than necessary.</span></span><br><span class="line">    <span class="keyword">defer</span> cancel() <span class="comment">//时间超时会自动调用</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> &lt;-time.After(<span class="number">1</span> * time.Second):</span><br><span class="line">        fmt.Println(<span class="string">"overslept"</span>)</span><br><span class="line">    <span class="keyword">case</span> &lt;-ctx.Done():</span><br><span class="line">        fmt.Println(ctx.Err())</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">context deadline exceeded</span><br></pre></td></tr></table></figure>
+
+<p><code>WithTimeout</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"context"</span></span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// Pass a context with a timeout to tell a blocking function that it</span></span><br><span class="line">    <span class="comment">// should abandon its work after the timeout elapses.</span></span><br><span class="line">    ctx, cancel := context.WithTimeout(context.Background(), <span class="number">50</span>*time.Millisecond)</span><br><span class="line">    <span class="keyword">defer</span> cancel() <span class="comment">//时间超时会自动调用</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> &lt;-time.After(<span class="number">1</span> * time.Second):</span><br><span class="line">        fmt.Println(<span class="string">"overslept"</span>)</span><br><span class="line">    <span class="keyword">case</span> &lt;-ctx.Done():</span><br><span class="line">        fmt.Println(ctx.Err()) <span class="comment">// prints "context deadline exceeded"</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">context deadline exceeded</span><br></pre></td></tr></table></figure>
+
+<h3 id="不可撤销的context，传递值"><a href="#不可撤销的context，传递值" class="headerlink" title="不可撤销的context，传递值"></a>不可撤销的context，传递值</h3><p><code>WithValue</code>可以用来在传递值的，值的存取是以KV的形式来进行的。直接上例子</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> favContextKey <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line">    f := <span class="function"><span class="keyword">func</span><span class="params">(ctx context.Context, k favContextKey)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> v := ctx.Value(k); v != <span class="literal">nil</span> &#123;</span><br><span class="line">            fmt.Println(<span class="string">"found value:"</span>, v)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">        &#125;</span><br><span class="line">        fmt.Println(<span class="string">"key not found:"</span>, k)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    k := favContextKey(<span class="string">"language"</span>)</span><br><span class="line">    k1 := favContextKey(<span class="string">"Chinese"</span>)</span><br><span class="line">    ctx := context.WithValue(context.Background(), k, <span class="string">"Go"</span>)</span><br><span class="line">    ctx1 := context.WithValue(ctx, k1, <span class="string">"Go1"</span>)</span><br><span class="line"></span><br><span class="line">    f(ctx1, k1)</span><br><span class="line">    f(ctx1, k)</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">found value: Go1</span><br><span class="line">found value: Go</span><br></pre></td></tr></table></figure>
+
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2019/02/07/explain-image/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2018/12/12/raft/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

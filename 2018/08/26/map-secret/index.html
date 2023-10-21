@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="解剖Go语言map底层实现">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>解剖Go语言map底层实现 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            解剖Go语言map底层实现
+            
+          </h1>
+          <p class="posted-on">
+          2018-08-26
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/Golang/" rel="tag">
+                  Golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p><code>map</code>是Go语言中基础的数据结构，在日常的使用中经常被用到。但是它底层是如何实现的呢？</p>
+<p>Golang中<code>map</code>的底层实现是一个散列表，因此实现<code>map</code>的过程实际上就是实现散表的过程。在这个散列表中，主要出现的结构体有两个，一个叫<code>hmap</code>(<code>a header for a go map</code>)，一个叫<code>bmap</code>(<code>a bucket for a Go map</code>，通常叫其<code>bucket</code>)。这两种结构的样子分别如下所示：<br>hmap:</p>
+<img src="/img/go_map/hmap.png">
+
+<p>图中有很多字段，但是便于理解<code>map</code>的架构，你只需要关心的只有一个，就是标红的字段：buckets数组。Golang的map中用于存储的结构是bucket数组。而bucket(即<code>bmap</code>)的结构是怎样的呢？</p>
+<p>bucket：</p>
+<img src="/img/go_map/bmap.png">
+
+<p>相比于<code>hmap</code>，bucket的结构显得简单一些，标红的字段依然是“核心”，我们使用的<code>map</code>中的key和value就存储在这里。“高位哈希值”数组记录的是当前bucket中key相关的“索引”，稍后会详细叙述。还有一个字段是一个指向扩容后的bucket的指针，使得bucket会形成一个链表结构。例如下图：</p>
+<img src="/img/go_map/bmap_chain.png">
+
+<p>由此看出<code>hmap</code>和<code>bucket</code>的关系是这样的：</p>
+<p><img src="/img/go_map/hmap_bmap.png" alt="这里写图片描述"></p>
+<p>而bucket又是一个链表，所以，整体的结构应该是这样的：</p>
+<p><img src="/img/go_map/whole.png" alt="这里写图片描述"></p>
+<p>哈希表的特点是会有一个哈希函数，对你传来的key进行哈希运算，得到唯一的值，一般情况下都是一个数值。Golang的<code>map</code>中也有这么一个哈希函数，也会算出唯一的值，对于这个值的使用，Golang也是很有意思。</p>
+<p>Golang把求得的值按照用途一分为二：高位和低位。</p>
+<p><img src="/img/go_map/num.png" alt="这里写图片描述"></p>
+<p>如图所示，蓝色为高位，红色为低位。<br>然后低位用于寻找当前key属于<code>hmap</code>中的哪个bucket，而高位用于寻找bucket中的哪个key。上文中提到：bucket中有个属性字段是“高位哈希值”数组，这里存的就是蓝色的高位值，用来声明当前bucket中有哪些“key”，便于搜索查找。<br>需要特别指出的一点是：我们<code>map</code>中的key/value值都是存到同一个数组中的。数组中的顺序是这样的:</p>
+<p><img src="/img/go_map/key_value.png" alt="这里写图片描述"></p>
+<p>并不是key0/value0/key1/value1的形式，这样做的好处是：在key和value的长度不同的时候，可以消除padding带来的空间浪费。</p>
+<p>现在，我们可以得到Go语言<code>map</code>的整个的结构图了：</p>
+<p><img src="/img/go_map/all_elem.png" alt="这里写图片描述"></p>
+<h1 id="map的扩容"><a href="#map的扩容" class="headerlink" title="map的扩容"></a><code>map</code>的扩容</h1><p>当以上的哈希表增长的时候，Go语言会将bucket数组的数量扩充一倍，产生一个新的bucket数组，并将旧数组的数据迁移至新数组。</p>
+<h2 id="加载因子"><a href="#加载因子" class="headerlink" title="加载因子"></a>加载因子</h2><p>判断扩充的条件，就是哈希表中的<code>加载因子</code>(即loadFactor)。</p>
+<p><code>加载因子</code>是一个阈值，一般表示为：散列包含的元素数 除以 位置总数。是一种“产生冲突机会”和“空间使用”的平衡与折中：<code>加载因子</code>越小，说明空间空置率高，空间使用率小，但是<code>加载因子</code>越大，说明空间利用率上去了，但是“产生冲突机会”高了。</p>
+<p>每种哈希表的都会有一个<code>加载因子</code>，数值超过<code>加载因子</code>就会为哈希表扩容。<br>Golang的<code>map</code>的<code>加载因子</code>的公式是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">map长度 / 2^B</span><br></pre></td></tr></table></figure>
+
+<p>阈值是<code>6.5</code>。其中<code>B</code>可以理解为已扩容的次数。<br>当Go的<code>map</code>长度增长到大于<code>加载因子</code>所需的<code>map</code>长度时，Go语言就会将产生一个新的bucket数组，然后把旧的bucket数组移到一个属性字段<code>oldbucket</code>中。注意：并不是立刻把旧的数组中的元素转义到新的bucket当中，而是，只有当访问到具体的某个bucket的时候，会把bucket中的数据转移到新的bucket中。</p>
+<p>如下图所示：当扩容的时候，Go的<code>map</code>结构体中，会保存旧的数据，和新生成的数组</p>
+<p><img src="/img/go_map/extends.png" alt="这里写图片描述"></p>
+<p>上面部分代表旧的有数据的bucket，下面部分代表新生成的新的bucket。蓝色代表存有数据的bucket，橘黄色代表空的bucket。<br>扩容时<code>map</code>并不会立即把新数据做迁移，而是当访问原来旧bucket的数据的时候，才把旧数据做迁移，如下图：</p>
+<p><img src="/img/go_map/move_bucket.png" alt="这里写图片描述"></p>
+<p>注意：这里并不会直接删除旧的bucket，而是把原来的引用去掉，利用GC清除内存。</p>
+<h1 id="map中数据的删除"><a href="#map中数据的删除" class="headerlink" title="map中数据的删除"></a><code>map</code>中数据的删除</h1><p>如果理解了<code>map</code>的整体结构，那么查找、更新、删除的基本步骤应该都很清楚了。这里不再赘述。<br>值得注意的是，找到了<code>map</code>中的数据之后，针对key和value分别做如下操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、如果``key``是一个指针类型的，则直接将其置为空，等待GC清除；</span><br><span class="line">2、如果是值类型的，则清除相关内存。</span><br><span class="line">3、同理，对``value``做相同的操作。</span><br><span class="line">4、最后把key对应的高位值对应的数组index置为空。</span><br></pre></td></tr></table></figure>
+
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2018/10/01/Golang-interface/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2018/08/11/array-and-slice-principle/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

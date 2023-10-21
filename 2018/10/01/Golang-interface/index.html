@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="Go语言interface底层实现">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>Go语言interface底层实现 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            Go语言interface底层实现
+            
+          </h1>
+          <p class="posted-on">
+          2018-10-01
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/golang/" rel="tag">
+                  golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>Go的interface源码在Golang源码的<code>runtime</code>目录中。<br>Go在不同版本之间的interface结构可能会有所不同，但是，整体的结构是不会改变的，此文章用的Go版本是1.11。</p>
+<p>Go的interface是由两种类型来实现的：<code>iface</code>和<code>eface</code>。<br>其中，<code>iface</code>表示的是包含方法的interface，例如：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Person <span class="keyword">interface</span> &#123;</span><br><span class="line">	Print()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而<code>eface</code>代表的是不包含方法的interface，即</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Person <span class="keyword">interface</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> person <span class="keyword">interface</span>&#123;&#125; = xxxx实体</span><br></pre></td></tr></table></figure>
+
+<h2 id="eface"><a href="#eface" class="headerlink" title="eface"></a><code>eface</code></h2><p><code>eface</code>的具体结构是：<br><img src="/img/interface/eface.png" alt="在这里插入图片描述"><br>一共有两个属性构成，一个是类型信息<code>_type</code>，一个是数据信息。<br>其中，<code>_type</code>可以认为是Go语言中所有类型的公共描述，Go语言中几乎所有的数据结构都可以抽象成<code>_type</code>，是所有类型的表现，可以说是万能类型，<br><code>data</code>是指向具体数据的指针。</p>
+<p><code>type</code>的具体代码为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> _type <span class="keyword">struct</span> &#123;</span><br><span class="line">	size       <span class="keyword">uintptr</span> </span><br><span class="line">	ptrdata    <span class="keyword">uintptr</span> <span class="comment">// size of memory prefix holding all pointers</span></span><br><span class="line">	hash       <span class="keyword">uint32</span></span><br><span class="line">	tflag      tflag</span><br><span class="line">	align      <span class="keyword">uint8</span></span><br><span class="line">	fieldalign <span class="keyword">uint8</span></span><br><span class="line">	kind       <span class="keyword">uint8</span></span><br><span class="line">	alg        *typeAlg</span><br><span class="line">	<span class="comment">// gcdata stores the GC type data for the garbage collector.</span></span><br><span class="line">	<span class="comment">// If the KindGCProg bit is set in kind, gcdata is a GC program.</span></span><br><span class="line">	<span class="comment">// Otherwise it is a ptrmask bitmap. See mbitmap.go for details.</span></span><br><span class="line">	gcdata    *<span class="keyword">byte</span></span><br><span class="line">	str       nameOff</span><br><span class="line">	ptrToThis typeOff</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>eface</code>的整体结构是：<br><img src="/img/interface/eface_all.png" alt="在这里插入图片描述"><br>对于没有方法的interface赋值后的内部结构是怎样的呢？<br>可以先看段代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"strconv"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Binary <span class="keyword">uint64</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	b := Binary(<span class="number">200</span>)</span><br><span class="line">	any := (<span class="keyword">interface</span>&#123;&#125;)(b)</span><br><span class="line">	fmt.Println(any)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出200，赋值后的结构图是这样的：<br><img src="/img/interface/eface_fuzhi.png" alt="在这里插入图片描述"><br>对于将不同类型转化成<code>type</code>万能结构的方法，是运行时的<code>convT2E</code>方法，在<code>runtime</code>包中。<br>以上，是对于没有方法的接口说明。<br>对于包含方法的函数，用到的是另外的一种结构，叫<code>iface</code></p>
+<h1 id="iface"><a href="#iface" class="headerlink" title="iface"></a><code>iface</code></h1><p>所有包含方法的接口，都会使用<code>iface</code>结构。包含方法的接口就是一下这种最常见，最普通的接口：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Person <span class="keyword">interface</span> &#123;</span><br><span class="line">	Print()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>iface</code>的源代码是：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> iface <span class="keyword">struct</span> &#123;</span><br><span class="line">	tab  *itab</span><br><span class="line">	data unsafe.Pointer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>iface</code>的具体结构是：</p>
+<p><img src="/img/interface/iface.png" alt="在这里插入图片描述"></p>
+<p><code>itab</code>是<code>iface</code>不同于<code>eface</code>比较关键的数据结构。其可包含两部分：一部分是确定唯一的包含方法的interface的具体结构类型，一部分是指向具体方法集的指针。<br>具体结构为：<br><img src="/img/interface/iface_itable.png" alt="在这里插入图片描述"><br>属性 <code>itab</code>的源代码是：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> itab <span class="keyword">struct</span> &#123;</span><br><span class="line">	inter *interfacetype <span class="comment">//此属性用于定位到具体interface</span></span><br><span class="line">	_type *_type <span class="comment">//此属性用于定位到具体interface</span></span><br><span class="line">	hash  <span class="keyword">uint32</span> <span class="comment">// copy of _type.hash. Used for type switches.</span></span><br><span class="line">	_     [<span class="number">4</span>]<span class="keyword">byte</span></span><br><span class="line">	fun   [<span class="number">1</span>]<span class="keyword">uintptr</span> <span class="comment">// variable sized. fun[0]==0 means _type does not implement inter.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>属性<code>interfacetype</code>类似于<code>_type</code>，其作用就是interface的公共描述，类似的还有<code>maptype</code>、<code>arraytype</code>、<code>chantype</code>…其都是各个结构的公共描述，可以理解为一种外在的表现信息。<code>interfacetype</code>源码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> interfacetype <span class="keyword">struct</span> &#123;</span><br><span class="line">	typ     _type</span><br><span class="line">	pkgpath name</span><br><span class="line">	mhdr    []imethod</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">type</span> imethod <span class="keyword">struct</span> &#123;</span><br><span class="line">	name nameOff</span><br><span class="line">	ityp typeOff</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>iface</code>的整体结构为：</p>
+<p><img src="/img/interface/iface_all.png" alt="在这里插入图片描述"></p>
+<p>对于含有方法的interface赋值后的内部结构是怎样的呢？<br>一下代码运行后</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"strconv"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Binary <span class="keyword">uint64</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i Binary)</span> <span class="title">String</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> strconv.FormatUint(i.Get(), <span class="number">10</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i Binary)</span> <span class="title">Get</span><span class="params">()</span> <span class="title">uint64</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">uint64</span>(i)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	b := Binary(<span class="number">200</span>)</span><br><span class="line">	any := fmt.Stringer(b)</span><br><span class="line">	fmt.Println(any)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先，要知道代码运行结果为:200。<br>其次，了解到<code>fmt.Stringer</code>是一个包含<code>String</code>方法的接口。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Stringer <span class="keyword">interface</span> &#123;</span><br><span class="line">	String() <span class="keyword">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后，赋值后接口<code>Stringer</code>的内部结构为：<br><img src="/img/interface/iface_fuzhi.png" alt="在这里插入图片描述"></p>
+<p>对于将不同类型转化成itable中<code>type(Binary)</code>的方法，是运行时的<code>convT2I</code>方法，在<code>runtime</code>包中。</p>
+<p>参考文献：<br>《Go in action》<br><a href="https://research.swtch.com/interfaces" target="_blank" rel="noopener">https://research.swtch.com/interfaces</a><br><a href="https://juejin.im/entry/5a7d08d3f265da4e865a6200" target="_blank" rel="noopener">https://juejin.im/entry/5a7d08d3f265da4e865a6200</a></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2018/12/12/raft/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2018/08/26/map-secret/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="用Ping++做支付">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>用Ping++做支付 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            用Ping++做支付
+            
+          </h1>
+          <p class="posted-on">
+          2017-05-04
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/php/" rel="tag">
+                  php
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <h1 id="支付Ping"><a href="#支付Ping" class="headerlink" title="支付Ping++"></a>支付Ping++</h1><p>Ping++是一个聚合了主流支付平台（例如：支付宝、微信支付、银联、Apple Pay、招行一网通支付、 百度钱包、京东支付、易宝支付、Visa、MasterCard、JCB等）提供统一化SDK的接口、并可以提供部分支付的数据运维工作的第三方支付平台。</p>
+<p>目前类似的支付平台还有：BeanCloud、现在支付等。但是就目前的市场反应而言，首选Ping++。</p>
+<h2 id="Ping-支付流程"><a href="#Ping-支付流程" class="headerlink" title="Ping++支付流程"></a>Ping++支付流程</h2><p>ping++的使用非常的简单，号称“花费10分钟，让APP拥有支付功能”：</p>
+<ul>
+<li>第一、注册Ping++登陆账户</li>
+<li>第二、创建应用，并认证：<ul>
+<li>1、验证企业信息 约2天</li>
+<li>2、开通支付渠道 约 1~10工作日</li>
+<li>3、发起真实交易 约 1日</li>
+</ul>
+</li>
+<li>第三、 接入Ping++ SDK 并使用<br> <a href="https://www.pingxx.com/docs/overview/index" target="_blank" rel="noopener">https://www.pingxx.com/docs/overview/index</a><br>（ 注意支付流程，client端SDK和服务端SDK都要下。）</li>
+</ul>
+<h3 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h3><img src="/img/Ping++/charge_paymentflow.png">
+
+<h4 id="Note"><a href="#Note" class="headerlink" title="Note"></a>Note</h4><ul>
+<li>Ping++是针对2B业务的，所以，注册之后，要提供APP相关的企业信息。不提供个人业务，所以个人应用不能使用。</li>
+<li>Ping++不支持单纯的client端直接连接Ping++服务器完成支付，所有只有APP没有server端是不能完成支付的。我想这么设计的原因可能是：确保了Ping++的每次支付请求都是来自认证过的商户的server，而不是任意匹配了某些参数条件的其他IP。</li>
+</ul>
+<h3 id="可粘贴的例子"><a href="#可粘贴的例子" class="headerlink" title="可粘贴的例子"></a>可粘贴的例子</h3><p>Client端:<br>加上包 npm install pingpp-js</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> pingpp = <span class="built_in">require</span>(<span class="string">'pingpp-js'</span>);</span><br><span class="line">fetch(<span class="string">'get/charge'</span>).then(<span class="function"><span class="keyword">function</span>(<span class="params">response</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> response.json();</span><br><span class="line">&#125;).then(<span class="function"><span class="keyword">function</span>(<span class="params">json</span>) </span>&#123;</span><br><span class="line">    pingpp.createPayment(json, <span class="function"><span class="keyword">function</span>(<span class="params">result, err</span>)</span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(result === <span class="string">"success"</span>)&#123;</span><br><span class="line">            <span class="comment">//do something</span></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span>(result === <span class="string">"fail"</span>)&#123;</span><br><span class="line">           <span class="comment">//do something</span></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span>(result === <span class="string">"cancel"</span>)&#123;</span><br><span class="line">          <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>Server端：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> Request $request</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">test</span><span class="params">()</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">       $appId = <span class="string">"app_y9ivL0yHGGSCfj5q"</span>;</span><br><span class="line">       $appTestKey = <span class="string">"sk_test_zn9iLGj5qPKKSGyzzP54iXHG"</span>;</span><br><span class="line">       Pingpp::setApiKey($appTestKey);</span><br><span class="line">       $charge = Charge::create(<span class="keyword">array</span>(</span><br><span class="line">       <span class="string">'order_no'</span> =&gt; <span class="string">'77777777'</span>,</span><br><span class="line">       <span class="string">'amount'</span> =&gt; <span class="string">'100'</span>,</span><br><span class="line">       <span class="string">'app'</span> =&gt; <span class="keyword">array</span>(<span class="string">'id'</span> =&gt; $appId),</span><br><span class="line">       <span class="string">'channel'</span> =&gt; <span class="string">'alipay'</span>,</span><br><span class="line">       <span class="string">'currency'</span> =&gt; <span class="string">'cny'</span>,</span><br><span class="line">       <span class="string">'client_ip'</span> =&gt; <span class="string">'127.0.0.1'</span>,</span><br><span class="line">       <span class="string">'subject'</span> =&gt; <span class="string">'Your Subject'</span>,</span><br><span class="line">       <span class="string">'body'</span> =&gt; <span class="string">'Your Body'</span></span><br><span class="line">       ));</span><br><span class="line"></span><br><span class="line">       <span class="keyword">return</span> json_encode($charge);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="项目中的使用"><a href="#项目中的使用" class="headerlink" title="项目中的使用"></a>项目中的使用</h2><ul>
+<li><p>在项目利用的过程中，我们定义了两张表，一张是orders订单表，一个是user_service用户服务表。orders表记录的是购买渠道、订单号、订单状态等订单相关的记录信息；user_service表存放的则是购买成功的用户，以及用户买了哪些服务，及其服务的类型。由于这两张表要保持高度的数据一致性，所以，加了事务。</p>
+</li>
+<li><p>为了让整个支付流程有据可查，支付的每个环节都打了日志，放入的单独的日志文件中。日志命名payment。如下图：</p>
+<img src="/img/Ping++/log.png">
+
+</li>
+</ul>
+<h2 id="需要注意的技术细节"><a href="#需要注意的技术细节" class="headerlink" title="需要注意的技术细节"></a>需要注意的技术细节</h2><h3 id="webhooks"><a href="#webhooks" class="headerlink" title="webhooks:"></a><strong>webhooks:</strong></h3><ul>
+<li>Ping++的webhooks是需要自己手动去设置的，设置的时候一定要注意咱们的url地址是http还是https，回调url写准确。</li>
+<li>再就是虽然webhooks在设置通知事件的时候，写了这么一大堆<img src="/img/Ping++/webhooks.png">
+但是其实官方只支持：
+<img src="/img/Ping++/event.png">
+只有九种。写的时候要注意</li>
+<li>还有在回调函数中一定要注明response的状态码，这是ping++判断返回结果是否正确的唯一标识。不加有时候也可以，但是为了代码健壮性，最好是加上。<br>所以代码中应该加上以下header<img src="/img/Ping++/response.png"></li>
+<li>Ping++支持直接使用订单号来查询回调的结果正不正确，而且提供了日志功能，解决了回调没法追踪的问题。微信公众号等平台的回调就没有提供这个功能，这个功能很有用。<img src="/img/Ping++/webhook_config.png">
+
+
+</li>
+</ul>
+<h3 id="charge"><a href="#charge" class="headerlink" title="charge:"></a><strong>charge:</strong></h3><ul>
+<li>这个charge就是在调起支付的时候，Ping++服务器返回的一个调用成功的标记对象。里面有很多支付订单的信息：<img src="/img/Ping++/charge_resp.png">
+这里面对应的信息可以直接查阅文档：https://www.pingxx.com/api#查询-charge-对象
+这个charge需要注意的一点是：不可以通过order_no订单号来查询charge对象。所以在的服务端，需要同时记录 charge id 和order_no，并做对应。charge 代表一个订单，在某种意义上可以算作一笔交易。可以直接存下这个charge对象到数据库中。我们现在并没有存charge，建议以后charge对象要存到库中，方便查询。</li>
+<li>在调用支付请求charge对象的时候，订单号是不可以重复的。也正是这个原因，咱们现在的支付系统出现了一次支付出现多条数据的情况，Ping++讨论组里提供了一条解决方案，可以作为以后改进的参考：<a href="https://help.pingxx.com/article/123347/" target="_blank" rel="noopener">https://help.pingxx.com/article/123347/</a></li>
+<li>在微信中是可以调用支付宝的，Ping++提供了专门的方法：<img src="/img/Ping++/note.png">
+可以直接访问[alipay_in_weixin](https://github.com/PingPlusPlus/pingpp-js/blob/master/README.md) ，很详细，其实就是帮你做了一个页面，告诉患者：复制链接，跳出浏览器，使用其他浏览器打开。
+特别注意一下一点，就是默认调起的都是支付宝的网页版，但是大部分需求应该是调用的支付宝app，如何更改？其实ping++已经想到了这个问题：
+<img src="/img/Ping++/payment.png">
+在传参数的时候把“app_pay”这个参数指定为true就可以了。
+
+</li>
+</ul>
+<h3 id="运维相关"><a href="#运维相关" class="headerlink" title="运维相关"></a>运维相关</h3><ul>
+<li>如果在微信平台上点击退款，由于没有走Ping++的接口，Ping++是无法知道该笔订单已经退款的，所以Ping++平台的状态是未退款，暂时无法更改，这算是一个Ping++的小漏洞吧。</li>
+<li>管理平台上的TEST、LIVE 模式切换只是用来查看不同模式下的数据的。这里的切换不影响代码中的支付执行~ 这一点可能很多人会不习惯  </li>
+</ul>
+<h2 id="支付流程"><a href="#支付流程" class="headerlink" title="支付流程"></a>支付流程</h2><img src="/img/Ping++/charge.png">
+现在存在一个问题：第一次支付没钱，又一次支付成功会出现两条数据。
+改进版本：
+<img src="/img/Ping++/charge_payment.png">
+但是这个方式解决了订单重复的问题，但是存在另一个致命问题，不存在“待支付”的类型，寻找待支付的用户只能去Ping++管理后台去看了 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2017/05/14/互联网产品研发流程/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2017/04/29/PHP发邮件的几种方式总结/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

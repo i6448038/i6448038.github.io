@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="微博git使用中那些可圈可点的地方">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>微博git使用中那些可圈可点的地方 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            微博git使用中那些可圈可点的地方
+            
+          </h1>
+          <p class="posted-on">
+          2018-04-05
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/git/" rel="tag">
+                  git
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <h3 id="构造干净的git历史线索"><a href="#构造干净的git历史线索" class="headerlink" title="构造干净的git历史线索"></a>构造干净的git历史线索</h3><h4 id="一般公司git的使用方式："><a href="#一般公司git的使用方式：" class="headerlink" title="一般公司git的使用方式："></a>一般公司git的使用方式：</h4><ul>
+<li>一个master分支、一个dev分支，多个feature分支。</li>
+<li>一个功能点或者功能模块一个feature分支，除了日常的正常的在feature分支的提交，还要注意从master中pull最新的代码到当前所在的feature分支上，以保证当前代码是在最新的代码基础之上开发的，当前feature分支开发结束后，合并到dev分支，等到下一版本的所有feature分支都提交到dev(有时候不用所有的，dev有几个feature分支测几个功能点),测试同学在dev分支上展开测试，测试过程中产生的bug，再拎出一个或者多个feature分支进行修改，直到没问题，然后将dev中的代码合并到master，上线，然后线上回归，接着改bug。</li>
+</ul>
+<p>合并分支所涉及的git指令有:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">git pull origin master //在feature分支上</span><br><span class="line">git checkout dev </span><br><span class="line">git pull</span><br><span class="line">git merge feature</span><br><span class="line">git push</span><br><span class="line"></span><br><span class="line">//最后上线</span><br><span class="line">git checkout master</span><br><span class="line">git pull</span><br><span class="line">git merge dev</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
+<p>然后生成的git历史线<br><img src="/img/weibo/chuantaiyi.png" alt="img">  </p>
+<p>呃。。。乱！</p>
+<h4 id="微博工作中的使用："><a href="#微博工作中的使用：" class="headerlink" title="微博工作中的使用："></a>微博工作中的使用：</h4><ul>
+<li>一个master分支，一个或者多个feature分支。</li>
+<li>无dev分支，通常情况下远程分支只有一master分支，一两个feature分支（两个都是多的），从主干master中分出feature，开发过程中随时更新master上最新的代码，不用pull命令，而是rebase，测试环境直接用feature分支，测出的问题直接向feature分支中提，测的没问题之后，最后合并到master。</li>
+<li>在把feature分支合并到master的时候，将多个commit合并成一个。</li>
+<li>每个commit的内容都要写清楚</li>
+</ul>
+<p>合并分支所涉及的git指令:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">git checkout master </span><br><span class="line">git pull</span><br><span class="line">git checkout feature</span><br><span class="line">git rebase master</span><br><span class="line">git push —force</span><br></pre></td></tr></table></figure>
+
+<p>将多个commit合并成一个的方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git reset --soft xxxxxxxxxx</span><br><span class="line">git add xxxx</span><br><span class="line">git commit -m &quot;xxxx&quot;</span><br><span class="line">git push -f //一定要强制推送</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/weibo/weibo_rebase.png" alt="img"></p>
+<p>特别清晰有木有！</p>
+<h4 id="git-merge和-git-rebase的区别"><a href="#git-merge和-git-rebase的区别" class="headerlink" title="git merge和 git rebase的区别"></a><code>git merge</code>和 <code>git rebase</code>的区别</h4><p>一句话概括：<code>git rebase</code>不产生“分叉”，就像在同一个分支上<code>commit</code>了一样，而merge会产生“分叉”</p>
+<p>如下图：</p>
+<p><img src="/img/weibo/merge_rebase.jpg" alt="img"></p>
+<p><code>git pull</code> 等于<code>git fetch</code>加 <code>git merge</code>，每次从master更新代码的时候，如果使用<code>git pull origin master</code>相当于每次更新就<code>merge</code>了一下，因而会有很多“乱线” </p>
+<h3 id="git-工具选择"><a href="#git-工具选择" class="headerlink" title="git 工具选择"></a>git 工具选择</h3><p>不要<code>SourceTree</code>、不要<code>Smartgit</code>，只用phpstrom自带的。</p>
+<h4 id="查看异同并修改很方便"><a href="#查看异同并修改很方便" class="headerlink" title="查看异同并修改很方便"></a>查看异同并修改很方便</h4><p>准备提交代码:<br><img src="/img/weibo/shangchuan.png" alt="img"></p>
+<p>查看修改了什么：<br><img src="/img/weibo/chakan.png" alt="img"></p>
+<p>可以选择“查看不同”、“回滚整个文件”、“编辑当前代码”等操作,现在选择查看不同<br><img src="/img/weibo/chakan_diff.png" alt="img"></p>
+<p>点击”x”可以直接回滚到原来</p>
+<p><img src="/img/weibo/chakan1.png" alt="img"></p>
+<p>填写commit、提交等操作</p>
+<p><img src="/img/weibo/chakan1.png" alt="img"></p>
+<p>不用来回切换工具，直接用IDE本身，会带来很多方便，IDE的可视化效果也比较好，可以清楚的看到改动的地方，并直接在IDE中修改，能够减少“忘记改动”带来的bug</p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2018/04/29/http-cache/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2017/12/04/golang-concurrency-principle/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="图解go反射实现原理">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>图解go反射实现原理 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            图解go反射实现原理
+            
+          </h1>
+          <p class="posted-on">
+          2020-02-15
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/golang/" rel="tag">
+                  golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>Go反射的实现和<code>interface</code>和<code>unsafe.Pointer</code>密切相关。如果对golang的<code>interface</code>底层实现还没有理解，可以去看我之前的文章：<a href="https://mp.weixin.qq.com/s/re_9CmGm3xEbY7xCr5CYbQ" target="_blank" rel="noopener">Go语言interface底层实现</a>，<code>unsafe.Pointer</code>会在后续的文章中做介绍。<br>（本文目前使用的Go环境是Go 1.12.9）</p>
+<h2 id="interface回顾"><a href="#interface回顾" class="headerlink" title="interface回顾"></a>interface回顾</h2><p>首先我们简单的回顾一下interface的结构，总体上是：</p>
+<p><img src="/img/reflection/interface_total.png" alt></p>
+<p>细分下来分为有函数的<code>iface</code>和无函数的<code>eface</code>（就是<code>interface{}</code>）;</p>
+<p><strong>无函数的<code>eface</code></strong></p>
+<p><img src="/img/reflection/eface.png" alt></p>
+<p><strong>有函数的<code>iface</code></strong></p>
+<p><img src="/img/reflection/iface.png" alt></p>
+<h3 id="静态类型（static-interface-type）和动态混合类型（dynamic-concrete-type）"><a href="#静态类型（static-interface-type）和动态混合类型（dynamic-concrete-type）" class="headerlink" title="静态类型（static interface type）和动态混合类型（dynamic concrete type）"></a><strong>静态类型</strong>（static interface type）和<strong>动态混合类型</strong>（dynamic concrete type）</h3><p>Go语言中，每个变量都有唯一个<strong>静态类型</strong>，这个类型是编译阶段就可以确定的。有的变量可能除了静态类型之外，还会有<strong>动态混合类型</strong>。</p>
+<p>例如以下例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//带函数的interface</span></span><br><span class="line"><span class="keyword">var</span> r io.Reader </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">tty, err := os.OpenFile(<span class="string">"/dev/tty"</span>, os.O_RDWR, <span class="number">0</span>)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">r = tty</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//不带函数的interface</span></span><br><span class="line"><span class="keyword">var</span> empty <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">empty = tty</span><br></pre></td></tr></table></figure>
+
+<p><strong>有函数的<code>iface</code>的例子</strong></p>
+<p>我们一句一句来看：第1行，<code>var r io.Reader</code></p>
+<p><img src="/img/reflection/iface1.png" alt></p>
+<p>第4行至第七行就是简单的赋值，得到一个<code>*os.File</code>的实例,暂且不看了。最后一句第十句<code>r = tty</code></p>
+<p><img src="/img/reflection/iface2.png" alt></p>
+<p> <strong>无函数的<code>eface</code>的例子</strong></p>
+<p>我们接着往下看，<code>var empty interface{}</code></p>
+<p><img src="/img/reflection/eface1.png" alt></p>
+<p>最后是<code>empty = tty</code></p>
+<p><img src="/img/reflection/eface2.png" alt></p>
+<p>但是记住：虽然有<strong>动态混合类型</strong>，但是对外”表现”依然是静态类型。</p>
+<h2 id="Go反射简介"><a href="#Go反射简介" class="headerlink" title="Go反射简介"></a>Go反射简介</h2><p>Go反射有三大法则：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//接口数据  =====》 反射对象</span><br><span class="line">1. Reflection goes from interface value to reflection object.</span><br><span class="line"></span><br><span class="line">//反射对象 ===&gt; 接口数据</span><br><span class="line">2. Reflection goes from reflection object to interface value.</span><br><span class="line"></span><br><span class="line">// 倘若数据可更改，可通过反射对象来修改它</span><br><span class="line">3. To modify a reflection object, the value must be settable.</span><br></pre></td></tr></table></figure>
+
+<p>Go 的反射就是对以上三项法则的实现。</p>
+<p>Go的反射主要由两部分组成：<code>Type</code>和<code>Value</code>，<code>Type</code>和<code>Value</code>是俩结构体：(这俩结构体具体内容可以略过不看，知道有这回事儿就行了)</p>
+<p>Type:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Type <span class="keyword">interface</span> &#123;</span><br><span class="line">    Align() <span class="keyword">int</span></span><br><span class="line">    FieldAlign() <span class="keyword">int</span></span><br><span class="line">    Method(<span class="keyword">int</span>) Method</span><br><span class="line">    MethodByName(<span class="keyword">string</span>) (Method, <span class="keyword">bool</span>)</span><br><span class="line">    NumMethod() <span class="keyword">int</span></span><br><span class="line">    Name() <span class="keyword">string</span></span><br><span class="line">    PkgPath() <span class="keyword">string</span></span><br><span class="line">    Size() <span class="keyword">uintptr</span></span><br><span class="line">    String() <span class="keyword">string</span></span><br><span class="line">    Kind() Kind</span><br><span class="line">    Implements(u Type) <span class="keyword">bool</span></span><br><span class="line">    AssignableTo(u Type) <span class="keyword">bool</span></span><br><span class="line">    ConvertibleTo(u Type) <span class="keyword">bool</span></span><br><span class="line">    Comparable() <span class="keyword">bool</span></span><br><span class="line">    Bits() <span class="keyword">int</span></span><br><span class="line">    ChanDir() ChanDir</span><br><span class="line">    IsVariadic() <span class="keyword">bool</span></span><br><span class="line">    Elem() Type</span><br><span class="line">    Field(i <span class="keyword">int</span>) StructField</span><br><span class="line">    FieldByIndex(index []<span class="keyword">int</span>) StructField</span><br><span class="line">    FieldByName(name <span class="keyword">string</span>) (StructField, <span class="keyword">bool</span>)</span><br><span class="line">    FieldByNameFunc(match <span class="function"><span class="keyword">func</span><span class="params">(<span class="keyword">string</span>)</span> <span class="title">bool</span>) <span class="params">(StructField, <span class="keyword">bool</span>)</span></span></span><br><span class="line"><span class="function">    <span class="title">In</span><span class="params">(i <span class="keyword">int</span>)</span> <span class="title">Type</span></span></span><br><span class="line"><span class="function">    <span class="title">Key</span><span class="params">()</span> <span class="title">Type</span></span></span><br><span class="line"><span class="function">    <span class="title">Len</span><span class="params">()</span> <span class="title">int</span></span></span><br><span class="line"><span class="function">    <span class="title">NumField</span><span class="params">()</span> <span class="title">int</span></span></span><br><span class="line"><span class="function">    <span class="title">NumIn</span><span class="params">()</span> <span class="title">int</span></span></span><br><span class="line"><span class="function">    <span class="title">NumOut</span><span class="params">()</span> <span class="title">int</span></span></span><br><span class="line"><span class="function">    <span class="title">Out</span><span class="params">(i <span class="keyword">int</span>)</span> <span class="title">Type</span></span></span><br><span class="line"><span class="function">    <span class="title">common</span><span class="params">()</span> *<span class="title">rtype</span></span></span><br><span class="line"><span class="function">    <span class="title">uncommon</span><span class="params">()</span> *<span class="title">uncommonType</span></span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>Value:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Value <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ *rtype</span><br><span class="line">    ptr unsafe.Pointer</span><br><span class="line">    flag</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>你会发现反射的实现和interface的组成很相似，都是由“类型”和“数据值”构成，但是值得注意的是：interface的“类型”和“数据值”是在“一起的”，而反射的“类型”和“数据值”是分开的。</p>
+<p><code>Type</code>和<code>Value</code>提供了非常多的方法：例如获取对象的属性列表、获取和修改某个属性的值、对象所属结构体的名字、对象的底层类型(underlying type)等等</p>
+<p>Go中的反射，在使用中最核心的就两个函数：</p>
+<ul>
+<li>reflect.TypeOf(x)</li>
+<li>reflect.ValueOf(x)</li>
+</ul>
+<p>这两个函数可以分别将给定的数据对象转化为以上的<code>Type</code>和<code>Value</code>。这两个都叫做<code>反射对象</code></p>
+<h3 id="Reflection-goes-from-interface-value-to-reflection-object（法则一）"><a href="#Reflection-goes-from-interface-value-to-reflection-object（法则一）" class="headerlink" title="Reflection goes from interface value to reflection object（法则一）"></a>Reflection goes from interface value to reflection object（法则一）</h3><p>给定一个数据对象，可以将数据对象转化为反射对象<code>Type</code>和<code>Value</code>。</p>
+<p><img src="/img/reflection/law1.png" alt></p>
+<p>事例代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"reflect"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">float64</span> = <span class="number">3.4</span></span><br><span class="line"></span><br><span class="line">    t := reflect.TypeOf(x)</span><br><span class="line">    v := reflect.ValueOf(x)</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">"type:"</span>, t)   <span class="comment">//type: float64</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">"value:"</span>, v.String())  <span class="comment">//value: &lt;float64 Value&gt;</span></span><br><span class="line">    fmt.Println(<span class="string">"type:"</span>, v.Type()) <span class="comment">// type: float64</span></span><br><span class="line">    fmt.Println(<span class="string">"kind is float64:"</span>, v.Kind() == reflect.Float64) <span class="comment">//kind is float64: true</span></span><br><span class="line">    fmt.Println(<span class="string">"value:"</span>, v.Float()) <span class="comment">//value: 3.4</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由代码17行可以看出：<code>Value</code>还可以获取到当前数据值的<code>Type</code>。<br>所以，法则一的图应为：</p>
+<p><img src="/img/reflection/law1.1.png" alt></p>
+<h3 id="Reflection-goes-from-reflection-object-to-interface-value-（法则二）"><a href="#Reflection-goes-from-reflection-object-to-interface-value-（法则二）" class="headerlink" title="Reflection goes from reflection object to interface value.（法则二）"></a>Reflection goes from reflection object to interface value.（法则二）</h3><p>给定的反射对象，可以转化为某种类型的数据对象。即法则一的逆向。</p>
+<p><img src="/img/reflection/law2.png" alt></p>
+<p>注意<code>Type</code>是没法逆向转换的，仔细想想也合理，如果可逆类型转化成什么呢？(#^.^#)</p>
+<p>承接法则一的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"reflect"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">float64</span> = <span class="number">3.4</span></span><br><span class="line"></span><br><span class="line">    t := reflect.TypeOf(x)</span><br><span class="line">    v := reflect.ValueOf(x)</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    o := v.Interface().(<span class="keyword">float64</span>) <span class="comment">// 法则2代码</span></span><br><span class="line">    fmt.Println(o)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="To-modify-a-reflection-object-the-value-must-be-settable-法则三"><a href="#To-modify-a-reflection-object-the-value-must-be-settable-法则三" class="headerlink" title="To modify a reflection object, the value must be settable.(法则三)"></a>To modify a reflection object, the value must be settable.(法则三)</h3><p>法则三是说：通过反射对象，可以修改原数据中的内容。</p>
+<p>这里说的反射对象，是指<code>Value</code>，毕竟<code>Type</code>只是表示原数据的类型相关的内容，而<code>Value</code>是对应着原数据对象本身。</p>
+<p>在目前以上的所有例子中，反射得到的<code>Value</code>对象的修改，都是无法直接修改原数据对象的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"reflect"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">float64</span> = <span class="number">3.4</span></span><br><span class="line"></span><br><span class="line">    t := reflect.TypeOf(x)</span><br><span class="line">    v := reflect.ValueOf(&amp;x)</span><br><span class="line"></span><br><span class="line">    ....</span><br><span class="line"></span><br><span class="line">    o := v.Interface().(<span class="keyword">float64</span>)</span><br><span class="line">    fmt.Println(o)</span><br><span class="line"></span><br><span class="line">    v.SetFloat(<span class="number">5.4</span>) <span class="comment">//此行会报错</span></span><br><span class="line">    fmt.Println(x)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码20行会报一个panic</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reflect: reflect.Value.SetFloat using unaddressable value</span><br></pre></td></tr></table></figure>
+
+<p>这句话的意思并不是地址不可达，而是：对象<code>v</code>不可设置(<code>settable</code>)。</p>
+<p>我们可以通过<code>Value</code>结构体的<code>CanSet()</code>方法来查看是否可以设置修改新值。<br>通过以下代码可以知道<code>CanSet()</code>返回值是false。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmt.Println(v.CanSet()) <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="如何通过反射对象来修改原数据对象的值呢？"><a href="#如何通过反射对象来修改原数据对象的值呢？" class="headerlink" title="如何通过反射对象来修改原数据对象的值呢？"></a>如何通过反射对象来修改原数据对象的值呢？</h3><p>如何才能可以通过反射对象来修改原数据对象的值或者说为什么不能设置呢？</p>
+<p>原因简单且纯粹：在Go中，任何函数的参数都是值的拷贝，而非原数据。</p>
+<p>反射函数<code>reflect.ValueOf()</code>也不例外。我们目前得到的反射对象，都是原对象的copy的反射对象，而非原对象本身，所以不可以修改到原对象；即使可以修改，修改一个传参时候的副本，也毫无意义，不如报错儿。Go反射第三法则中的制定的<code>settable</code>属性就由此而来，还延伸出了类似于<code>CanSet()</code>的方法。</p>
+<p>那如何修改呢？</p>
+<p>首先，在Go中要想让函数“有副作用“，传值必须传指针类型的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> x <span class="keyword">float64</span> = <span class="number">3.4</span></span><br><span class="line">v := reflect.ValueOf(&amp;x)</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>此时还不行，因为这样反射对象对应的是原数据对象的指针类型，必须要拿到当前类型的值类型(*v)，如何做？<br>Go提供了另外一个方法<code>Elem()</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> x <span class="keyword">float64</span> = <span class="number">3.4</span></span><br><span class="line">v := reflect.ValueOf(&amp;x)</span><br><span class="line"></span><br><span class="line">p := v.Elem()</span><br><span class="line">fmt.Println(p.CanSet()) <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line">p.SetFloat(<span class="number">7.1</span>)</span><br><span class="line">fmt.Println(x) <span class="comment">// 7.1</span></span><br></pre></td></tr></table></figure>
+
+<p>看以上代码，就可以修改原数据了。</p>
+<h2 id="反射原理"><a href="#反射原理" class="headerlink" title="反射原理"></a>反射原理</h2><p>不难发现，go的反射和interface在结构上是如此的相近！都分为两部分：一部分是<code>Type</code>一部分是<code>value</code>。</p>
+<p>反射会不会是比着interface来实现的？</p>
+<p>反射是什么意思？反射的意思是在运行时，能够动态知道给定数据对象的类型和结构，并有机会修改它！<br>现在一个数据对象，如何判断它是什么结构？<br>数据interface中保存有结构数据呀，只要想办法拿到该数据对应的内存地址，然后把该数据转成interface，通过查看interface中的类型结构，就可以知道该数据的结构了呀~<br>其实以上就是Go反射通俗的原理。</p>
+<p>图可以展示为：<br><img src="/img/reflection/reflect.png" alt></p>
+<p>图中结构中牵扯到的指针，都是<code>unsafe.Pointer</code>指针，具体这是个什么指针，后续的文章中会有介绍，在此，你就姑且认为是可以指向Go系统中任意数据的指针就可以。</p>
+<h3 id="源码部分-（以下部分可以忽略，是我在查阅代码时候遇到的一点点坑。）"><a href="#源码部分-（以下部分可以忽略，是我在查阅代码时候遇到的一点点坑。）" class="headerlink" title="源码部分 （以下部分可以忽略，是我在查阅代码时候遇到的一点点坑。）"></a>源码部分 （以下部分可以忽略，是我在查阅代码时候遇到的一点点坑。）</h3><p>我们来看看具体的源码：源码在”GO SDK/src/refelct“包中，具体主要是包中的”type.go”和”value.go”这两个文件。</p>
+<p>可以简单的认为，反射的核心代码，主要是<code>reflect.ValueOf()</code>和<code>reflect.TypeOf()</code>这两个函数。</p>
+<p>先看类型转换：<code>reflect.TypeOf()</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// TypeOf returns the reflection Type that represents the dynamic type of i.</span></span><br><span class="line"><span class="comment">// If i is a nil interface value, TypeOf returns nil.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TypeOf</span><span class="params">(i <span class="keyword">interface</span>&#123;&#125;)</span> <span class="title">Type</span></span> &#123;</span><br><span class="line">    eface := *(*emptyInterface)(unsafe.Pointer(&amp;i))</span><br><span class="line">    <span class="keyword">return</span> toType(eface.typ)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中出现了两种数据结构，一个是<code>Type</code>，一个是<code>emptyInterface</code><br>分别看看这两者的代码：<br><code>emptyInterface</code>在 ”GO SDK/src/reflect/value.go“文件中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// emptyInterface is the header for an interface&#123;&#125; value.</span></span><br><span class="line"><span class="keyword">type</span> emptyInterface <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ  *rtype</span><br><span class="line">    word unsafe.Pointer</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// nonEmptyInterface is the header for an interface value with methods.</span></span><br><span class="line"><span class="keyword">type</span> nonEmptyInterface <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// see ../runtime/iface.go:/Itab</span></span><br><span class="line">    itab *<span class="keyword">struct</span> &#123;</span><br><span class="line">        ityp *rtype <span class="comment">// static interface type</span></span><br><span class="line">        typ  *rtype <span class="comment">// dynamic concrete type</span></span><br><span class="line">        hash <span class="keyword">uint32</span> <span class="comment">// copy of typ.hash</span></span><br><span class="line">        _    [<span class="number">4</span>]<span class="keyword">byte</span></span><br><span class="line">        fun  [<span class="number">100000</span>]unsafe.Pointer <span class="comment">// method table</span></span><br><span class="line">    &#125;</span><br><span class="line">    word unsafe.Pointer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>仔细一看，是空接口和包含方法的interface的两个结构体。且和<code>eface</code>和<code>iface</code> 内容字段一致！不是有<code>eface</code>和<code>iface</code>了吗？这两者有什么不同？？</p>
+<p>经过查阅代码，发现：</p>
+<p>interface源码(位于”Go SDK/src/runtime/runtime2.go“)中的 <code>eface</code>和 <code>iface</code> 会和 反射源码(位于”GO SDK/src/reflect/value.go“)中的<code>emptyInterface</code>和<code>nonEmptyInterface</code>保持数据同步！</p>
+<p>此外，还有interface源码(位于”Go SDK/src/runtime/type.go“)中的<code>_type</code>会和 反射源码(位于”GO SDK/src/reflect/type.go“)中的<code>rtype</code>也保持数据同步一致！</p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg" alt></p>
+<p>参考文献：<br>Go 1.12.9 反射源码：/src/reflect/ 包<br>Go 1.12.9 interface 源码：/src/runtime/runtime2.go 以及其他<br><a href="https://studygolang.com/articles/2157" target="_blank" rel="noopener">https://studygolang.com/articles/2157</a><br><a href="https://blog.golang.org/laws-of-reflection" target="_blank" rel="noopener">https://blog.golang.org/laws-of-reflection</a><br><a href="https://blog.csdn.net/u011957758/article/details/81193806" target="_blank" rel="noopener">https://blog.csdn.net/u011957758/article/details/81193806</a><br><a href="https://draveness.me/golang/docs/part2-foundation/ch04-basic/golang-reflect/#431-" target="_blank" rel="noopener">https://draveness.me/golang/docs/part2-foundation/ch04-basic/golang-reflect/#431-</a><br><a href="https://mp.weixin.qq.com/s/Hke0mSCEa4ga_GS_LUp78A" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/Hke0mSCEa4ga_GS_LUp78A</a></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2020/03/13/unsafe-pointer/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2019/12/01/redis-data-struct/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

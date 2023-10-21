@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="MySQL的SQL性能优化总结">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>MySQL的SQL性能优化总结 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            MySQL的SQL性能优化总结
+            
+          </h1>
+          <p class="posted-on">
+          2019-02-16
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/mysql/" rel="tag">
+                  mysql
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>很多时候，我们的程序出现的“性能问题”，其实是我们自己写的那”坨”代码的问题，是自己Coding的问题，是Mysql的DML语句使用的问题。<br>以下是我总结的关于MySQL DML语句的使用中需要注意的点。</p>
+<h2 id="对于select-要时刻保持谨慎的态度"><a href="#对于select-要时刻保持谨慎的态度" class="headerlink" title="对于select *要时刻保持谨慎的态度"></a>对于<code>select *</code>要时刻保持谨慎的态度</h2><p>绝大多数情况，是不需要<code>select *</code>的。一旦使用了这种语句，便会让优化器无法完成索引覆盖扫描这类优化，而且还会增加额外的I/O、内存和CPU的消耗。<br>当然，使用<code>select *</code>也并不是全是坏处，合理的使用<code>select *</code>可以简化开发，提高相同代码的复用性。</p>
+<h2 id="是否扫描的太多额外的记录"><a href="#是否扫描的太多额外的记录" class="headerlink" title="是否扫描的太多额外的记录"></a>是否扫描的太多额外的记录</h2><p>有时候会发现某些查询可能需要读取几千行数据，但是仅返回几条或者很少的结果，可以使用以下方式去优化：</p>
+<ul>
+<li>看看能否改表结构。例如使用汇总表</li>
+<li>看看获取数据结果的方式是否最优，获取路劲是否已经是最短。</li>
+<li>使用覆盖索引，把所有需要的列都放到索引中，以减少返回表中对应行中取数据的步骤。</li>
+</ul>
+<h2 id="切分某些SQL语句"><a href="#切分某些SQL语句" class="headerlink" title="切分某些SQL语句"></a>切分某些SQL语句</h2><p>传统的互联网系统中，强调网络连接尽量少，数据层尽可能在一次连接中完成尽可能多的工作，防止建立多次链接，但是这种想法对于MySQL并不适用，MySQL从设计上让连接和断开都很轻量，在一般服务器上可以支持每秒超过10万的查询。</p>
+<p>所以对于有些场景下，可以将一个大的查询“分而治之”，切分成小查询，然后再组合起来。例如以下情况：</p>
+<ul>
+<li>对于全量数据查询变成分页。假如一张表中有数千万条数据，一次select all，肯定是不行的。可以换成一次取一部分，把一次的压力分摊。</li>
+<li>删除大量旧数据的时候，不要一个大的语句一次性清完，推荐<code>一次删一万条</code>。如果用一个大的语句一次性完成的话，可能需要一次锁住大量数据，占满大量日志事务，让Mysql停在那儿了，为避免这种情况发生，最好一次性删除一万条左右的数据，然后每次删完暂停一会儿再操作，将服务器上的一次性压力分散。</li>
+</ul>
+<p>注意：虽然Mysql建立连接十分轻量，但是这不意味着可以逐条循环中查询然后再拼接，这样效率依然是非常慢，而且通常是工作中sql优化的点。</p>
+<h2 id="慎用join操作"><a href="#慎用join操作" class="headerlink" title="慎用join操作"></a>慎用<code>join</code>操作</h2><p>这算是一条禁忌吧，很多公司的互联网产品都杜绝join操作，换成先从一张表中先取出数据id，再从另外一张表中使用<code>where in</code>查询的两次单表查询操作。主要是以下几点原因：</p>
+<ul>
+<li>让应用的缓存(redis、memcache等)更高效。例如在第一张表中查询出部分id了，如果命中了缓存，就可以省去一条where in语句了。</li>
+<li>更容易应对业务的发展，方便对数据库进行拆分，更容易做到高性能和高扩展。</li>
+<li>对where in中的id进行升序排序后，查询效率比join的随机关联更高效</li>
+<li>减少多余的查询。在应用层中两次查询，意味着对某条记录应用只需要查询一次，而使用join可能需要重复的扫描访问一部分数据。</li>
+<li>单张表查询可以减少锁的竞争。</li>
+</ul>
+<p>假如非用不可，可以采用以下方式来优化：</p>
+<ul>
+<li>确保<code>ON</code>或者<code>using</code>子句中的列上有索引</li>
+<li>确保任何的<code>group by</code>和<code>order by</code>中的表达式只涉及到一个表中的列。</li>
+</ul>
+<h2 id="在性能要求比较高的场景中，杜绝查询中使用临时表"><a href="#在性能要求比较高的场景中，杜绝查询中使用临时表" class="headerlink" title="在性能要求比较高的场景中，杜绝查询中使用临时表"></a>在性能要求比较高的场景中，杜绝查询中使用<code>临时表</code></h2><p>MySQL的临时表示没有任何索引的，使用临时表一般都意味着性能比较低,因此在对性能要求比较高的场景中，最好不要使用带有临时表的操作：</p>
+<ul>
+<li>未带索引的字段上的<code>group by</code>操作。</li>
+<li><code>UNION</code>查询。</li>
+<li>查询语句中的子查询。</li>
+<li>部分<code>order by</code>操作，例如<code>distinct</code>函数和<code>order by</code>一起使用且<code>distinct</code>和<code>order by</code>同一个字段。再例如某些情况下<code>group by</code>和<code>order by</code>字段不同。</li>
+</ul>
+<p>具体是否用到临时表，可以通过<code>explain</code>来查看，查看<code>Extra</code>列的结果，如果出现<code>Using temporary</code>则需要注意。</p>
+<h2 id="count-函数优化"><a href="#count-函数优化" class="headerlink" title="count()函数优化"></a><code>count()</code>函数优化</h2><p><code>count()</code>函数有一点需要特别注意：它是不统计值为NULL的字段的！所以：不能指定查询结果的某一列，来统计结果行数。即<code>count(xx column)</code> 不太好。</p>
+<p>如果想要统计结果集，就使用<code>count(*)</code>，性能也会很好。</p>
+<h2 id="尽量不使用子查询"><a href="#尽量不使用子查询" class="headerlink" title="尽量不使用子查询"></a>尽量不使用子查询</h2><p>尽量别使用子查询，尽可能的使用关联来代替</p>
+<h2 id="优化分页limit"><a href="#优化分页limit" class="headerlink" title="优化分页limit"></a>优化分页<code>limit</code></h2><p>通常我们在分页的时候，通常使用的是<code>limit 50, 10</code>这种语句。数据少还不错，但是当数据偏移量非常大的时候，性能就会出现问题，例如<code>select xx,xxx from test_table limit 100000020, 20</code>。扫描了100000020条数据，才返回20条数据。这个时候我们可以用一下两种方式来优化：</p>
+<h3 id="利用between-and和主键索引"><a href="#利用between-and和主键索引" class="headerlink" title="利用between and和主键索引"></a>利用<code>between and</code>和主键索引</h3><p>利用主键自增id，我们如果知道了分页的上边界，以上查询可以改写为：<br><code>select xxx, xxx from test_table where id between xxxxx and xxxx</code>。</p>
+<h3 id="利用自增主键索引、order-by加limit，不使用offset"><a href="#利用自增主键索引、order-by加limit，不使用offset" class="headerlink" title="利用自增主键索引、order by加limit，不使用offset"></a>利用自增主键索引、<code>order by</code>加<code>limit</code>，不使用offset</h3><p> <code>limit</code>和<code>offset</code>的问题，其实就是<code>offset</code>的问题，它会导致MySQL扫描大量不需要的行然后再抛弃掉。如果使用某个标签记录上一次所取数据的位置，那么下次就可以直接从书签位置开始扫描，这样就可以避免使用<code>offset</code>。</p>
+<p> 例如以上查询可以改为:</p>
+<p> 第一组数据：``select xxx, xxxx from test_table order by id desc limit 20;</p>
+<p> 这样就拿到了本次数据和下次数据的分解id值，则下一页查询就知道可以：<br><code>select xxx, xxx from test_table where id &lt; &#39;上页id分界值&#39; order by id desc limit 20</code></p>
+<h2 id="熟悉并灵活使用explain"><a href="#熟悉并灵活使用explain" class="headerlink" title="熟悉并灵活使用explain"></a>熟悉并灵活使用<code>explain</code></h2><p>以下是mysql执行查询的整个过程，<code>explain</code>可以查看图中标红部分，</p>
+<p><img src="/img/mysql_performace/mysql_performace.png" alt></p>
+<p><code>explain</code>会展示很多字段和内容，其中的内容往往不好记，使用的时候，可以查看以下图解内容:<br><a href="https://i6448038.github.io/2019/02/07/explain-image" target="_blank" rel="noopener">explain图解</a></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2019/02/23/mysql-lock/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2019/02/07/explain-image/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="Go语言设计模式之责任链模式">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>Go语言设计模式之责任链模式 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            Go语言设计模式之责任链模式
+            
+          </h1>
+          <p class="posted-on">
+          2023-07-29
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/Go设计模式/" rel="tag">
+                  Go设计模式
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>其实很多人不知道，责任链模式是我们工作中经常遇到的模式，特别是web后端工程师，我们工作中每时每刻都在用：因为市面上大部分的web框架的过滤器基本都是基于这个设计模式为基本模式搭建的。</p>
+<h2 id="1-模式介绍"><a href="#1-模式介绍" class="headerlink" title="1.模式介绍"></a>1.模式介绍</h2><p>我们先来看一下责任链模式（Chain Of Responsibility Design Pattern ）的英文介绍：<br>Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it.</p>
+<p>翻译成中文就是：将请求的发送和接收解耦，让多个接收对象都有机会处理这个请求。将这些接收对象串成一条链，并沿着这条链传递这个请求，直到链上的某个接收对象能够处理它为止。</p>
+<p>这么说比较抽象，用更加容易理解的话来进一步解读一下。在责任链模式中，一个请求过来，会有多个处理器（也就是刚刚定义中说的“接收对象”）依次处理同一个请求。即请求先经过 A 处理器处理，然后再把请求传递给 B 处理器，B 处理器处理完后再传递给 C 处理器，以此类推，形成一个链条。链条上的每个处理器各自承担各自的处理职责，所以叫作责任链模式。</p>
+<p><img src="/img/pattern/linked/hanlder_design1.drawio.png" alt="在这里插入图片描述"></p>
+<h2 id="2-模式demo"><a href="#2-模式demo" class="headerlink" title="2.模式demo"></a>2.模式demo</h2><h3 id="2-1UML"><a href="#2-1UML" class="headerlink" title="2.1UML"></a>2.1UML</h3><p>责任链模式（Chain Of Responsibility Design Pattern ）的整体结构如下：</p>
+<p><img src="/img/pattern/linked/hanlder_chain_design1.drawio.png" alt="在这里插入图片描述"></p>
+<h3 id="2-2-标准demo"><a href="#2-2-标准demo" class="headerlink" title="2.2 标准demo"></a>2.2 标准demo</h3><p>我们依据标准的UML图，写出一个具体的例子（对应UML图）：</p>
+<p><img src="/img/pattern/linked/demo_chain.drawio.png" alt="在这里插入图片描述"></p>
+<p>首先定义一个接口<code>IHandler</code>：</p>
+<pre><code>type IHandler interface {
+    SetNext(handler IHandler)
+    Handle(score int)
+}</code></pre><p>然后分别构建三个不同的实现：<br><code>ConcreteHandler1</code></p>
+<pre><code>type ConcreteHandler1 struct {
+    Next IHandler
+}
+
+func (c *ConcreteHandler1) Handle(score int) {
+    if score &lt; 0 {
+        fmt.Println(&quot;ConcreteHandler1 处理&quot;)
+        return
+    }
+    if c.Next != nil {
+        c.Next.Handle(score)
+    }
+    return
+}
+func (c *ConcreteHandler1) SetNext(handler IHandler) {
+    c.Next = handler
+}</code></pre><p><code>ConcreteHandler2</code></p>
+<pre><code>type ConcreteHandler2 struct {
+    Next IHandler
+}
+
+func (c *ConcreteHandler2) Handle(score int) {
+    if score &gt; 0 {
+        fmt.Println(&quot;ConcreteHandler2 处理&quot;)
+        return
+    }
+    if c.Next != nil {
+        c.Next.Handle(score)
+    }
+    return
+}
+
+func (c *ConcreteHandler2) SetNext(handler IHandler) {
+    c.Next = handler
+}</code></pre><p><code>ConcreteHandler3</code></p>
+<pre><code>type ConcreteHandler3 struct {
+    Next IHandler
+}
+
+func (c *ConcreteHandler3) Handle(score int) {
+    if score == 0 {
+        fmt.Println(&quot;ConcreteHandler3 处理&quot;)
+        return
+    }
+    if c.Next != nil {
+        c.Next.Handle(score)
+    }
+    return
+}
+
+func (c *ConcreteHandler3) SetNext(handler IHandler) {
+    c.Next = handler
+}</code></pre><p>最后是<code>main</code>函数：</p>
+<pre><code>func main() {
+    handler1 := &amp;ConcreteHandler1{}
+    handler2 := &amp;ConcreteHandler2{}
+    handler3 := &amp;ConcreteHandler3{}
+
+    handler1.SetNext(handler2)
+    handler2.SetNext(handler3)
+
+    handler1.Handle(10)
+
+}</code></pre><p>打印结果为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ConcreteHandler2 处理</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-改进版demo"><a href="#2-3-改进版demo" class="headerlink" title="2.3 改进版demo"></a>2.3 改进版demo</h3><p>通过以上标准例子不难发现：<code>main</code>函数承接了很多client自身之外的“额外工作”：构建和拼接组装责任链，这不利于后续client端的使用和扩展：一不小心可能责任链拼就接错了或者拼接少节点了。<br>我们可以对UML做一个改进：增加一个节点管理模块。改进图如下：</p>
+<p><img src="/img/pattern/linked/chain_design_uml.drawio.png" alt="在这里插入图片描述"></p>
+<p>对比上文的uml图，新增加了一个<code>ChainHandler</code>结构体用来管理拼接的<code>Handler</code>，client端无需了解<code>Handler</code>的业务，<code>Handler</code>的组合可以使用链表，也可以使用数组(当前用了数组)。<br>具体实现如下：<br>先定义<code>Handler</code>接口:</p>
+<pre><code>type Handler interface {
+    Handle(score int)
+}</code></pre><p>然后分别实现<code>Handler</code>接口的三个结构体：<br><code>ConcreteHandlerOne</code></p>
+<pre><code>type ConcreteHandlerOne struct {
+    Handler
+}
+
+func (c *ConcreteHandlerOne) Handle(score int) {
+    if score &lt; 0 {
+        fmt.Println(&quot;ConcreteHandler1 处理&quot;)
+        return
+    }
+}</code></pre><p><code>ConcreteHandlerTwo</code></p>
+<pre><code>type ConcreteHandlerTwo struct {
+    Handler
+}
+
+func (c *ConcreteHandlerTwo) Handle(score int) {
+    if score &gt; 0 {
+        fmt.Println(&quot;ConcreteHandler2 处理&quot;)
+        return
+    }
+}</code></pre><p><code>ConcreteHandlerThree</code></p>
+<pre><code>type ConcreteHandlerThree struct {
+    Handler
+}
+
+func (c *ConcreteHandlerThree) Handle(score int) {
+    if score == 0 {
+        fmt.Println(&quot;ConcreteHandler3 处理&quot;)
+        return
+    }
+}</code></pre><p><code>main</code>函数调用(client调用)：</p>
+<pre><code>func main() {
+    chain := &amp;ChainHandler{}
+    chain.AddHandler(&amp;ConcreteHandlerOne{})
+    chain.AddHandler(&amp;ConcreteHandlerTwo{})
+    chain.AddHandler(&amp;ConcreteHandlerThree{})
+    chain.Handle(10)
+}</code></pre><p>最终的实现结构图：</p>
+<p><img src="/img/pattern/linked/chain_demo_chain.drawio.png" alt="在这里插入图片描述"></p>
+<p>日常工作中出现的责任链模式（Chain Of Responsibility Design Pattern ）一般都是以上这种包含<code>Hanlder</code>管理的模式。</p>
+<h2 id="3-源码解析"><a href="#3-源码解析" class="headerlink" title="3. 源码解析"></a>3. 源码解析</h2><p>在日常框架和语言基础库中，经常能够看到很多场景使用了责任链模式。</p>
+<h3 id="3-1-beego过滤器"><a href="#3-1-beego过滤器" class="headerlink" title="3.1 beego过滤器"></a>3.1 beego过滤器</h3><p>可以对比改进版demo的uml图，beego的过滤器就是按照这种模式来设计的（当前参照的beego版本是2.0）。</p>
+<p><img src="/img/pattern/linked/beego_chain.drawio.png" alt="在这里插入图片描述"></p>
+<h4 id="3-1-1-client端"><a href="#3-1-1-client端" class="headerlink" title="3.1.1 client端"></a>3.1.1 client端</h4><p>调用端首先是过滤器的注册：</p>
+<pre><code>web.InsertFilter(&quot;/v2/api/*&quot;, web.BeforeRouter, auth.AuthAPIFilter)</code></pre><p>然后在<code>github.com/beego/beego/v2@v2.0.3/server/web/router.go</code>的<code>ControllerRegister</code>结构体的<code>serveHttp</code>函数中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(p.filters[BeforeRouter]) &gt; <span class="number">0</span> &amp;&amp; p.execFilter(ctx, urlPath, BeforeRouter) &#123;</span><br><span class="line">		<span class="keyword">goto</span> Admin</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上<code>p.execFilter(ctx, urlPath, BeforeRouter)</code>处，启动调用。</p>
+<h4 id="3-1-2-Handler接口"><a href="#3-1-2-Handler接口" class="headerlink" title="3.1.2 Handler接口"></a>3.1.2 Handler接口</h4><p>Handler接口很简单</p>
+<pre><code>// HandleFunc define how to process the request
+type HandleFunc func(ctx *beecontext.Context)
+
+    ...
+
+type FilterFunc = HandleFunc</code></pre><h4 id="3-1-3-Handler接口实现"><a href="#3-1-3-Handler接口实现" class="headerlink" title="3.1.3 Handler接口实现"></a>3.1.3 Handler接口实现</h4><p>接口的实现扩展比较灵活，直接把用户定义的函数作为接口的实现。与client端中的过滤器注册联动。</p>
+<pre><code>// 过滤器注册
+web.InsertFilter(&quot;/v2/api/*&quot;, web.BeforeRouter, auth.AuthAPIFilter)
+
+// 自定义过滤器
+var AuthAPIFilter = func(ctx *context.Context) {
+    isAccess := validateAccess(ctx)
+    if !isAccess {
+        res, _ := json.Marshal(r)
+        ctx.WriteString(string(res))
+        // ctx.Redirect(401, &quot;/401&quot;)
+    }
+}</code></pre><h4 id="3-1-4-Handler管理"><a href="#3-1-4-Handler管理" class="headerlink" title="3.1.4 Handler管理"></a>3.1.4 Handler管理</h4><p><code>Handler</code>的管理模块是在<code>github.com/beego/beego/v2@v2.0.3/server/web/router.go</code>的中的 <code>FilterRouter</code>和<code>ControllerRegister</code>两个结构体中</p>
+<pre><code>// ControllerRegister containers registered router rules, controller handlers and filters.
+type ControllerRegister struct {
+    routers      map[string]*Tree
+    enablePolicy bool
+    enableFilter bool
+    policies     map[string]*Tree
+    filters      [FinishRouter + 1][]*FilterRouter
+    pool         sync.Pool
+
+    // the filter created by FilterChain
+    chainRoot *FilterRouter
+
+    // keep registered chain and build it when serve http
+    filterChains []filterChainConfig
+
+    cfg *Config
+}
+
+
+type FilterRouter struct {
+    filterFunc     FilterFunc
+    next           *FilterRouter
+    tree           *Tree
+    pattern        string
+    returnOnOutput bool
+    resetParams    bool
+}</code></pre><p><code>FilterRouter</code>是一个链表，包含用户自定义的过滤函数；<code>ControllerRegister</code>对<code>FilterRouter</code>进行管理。</p>
+<h3 id="3-2-Go源码http-handler"><a href="#3-2-Go源码http-handler" class="headerlink" title="3.2 Go源码http.handler"></a>3.2 Go源码http.handler</h3><p>我们在使用Go构建http web服务器的时候，使用的http.Handler就是使用的责任链模式。</p>
+<pre><code>package main
+
+import (
+    &quot;net/http&quot;
+)
+
+func main() {
+    s := http.NewServeMux()
+
+    s.HandleFunc(&quot;/&quot;, func(writer http.ResponseWriter, request *http.Request) {
+
+        // todo ....
+
+        return
+    })
+
+    http.ListenAndServe(&quot;:80&quot;, s)
+
+}</code></pre><p>以<code>2.3 的UML图</code>为标准，整体的结构图如下：</p>
+<p><img src="/img/pattern/linked/go_hanlder_demo.drawio.png" alt="在这里插入图片描述"></p>
+<h4 id="3-2-1-client端"><a href="#3-2-1-client端" class="headerlink" title="3.2.1 client端"></a>3.2.1 client端</h4><p>整个模式的启动是随着http server启动后，接受到请求后的处理开始的。在<code>net/http/server.go</code>的<code>serve</code>函数中</p>
+<pre><code>func (c *conn) serve(ctx context.Context) {
+    ...
+
+    // HTTP cannot have multiple simultaneous active requests.[*]
+    // Until the server replies to this request, it can&apos;t read another,
+    // so we might as well run the handler in this goroutine.
+    // [*] Not strictly true: HTTP pipelining. We could let them all process
+    // in parallel even if their responses need to be serialized.
+    // But we&apos;re not going to implement HTTP pipelining because it
+    // was never deployed in the wild and the answer is HTTP/2.
+    serverHandler{c.server}.ServeHTTP(w, w.req)
+
+    ...
+
+}</code></pre><p>可以看到http server的原理很简单，就是for 死循环等待接收，然后一个请求过来，就对应的生成一个单独的协程<code>goroutine</code>去处理。</p>
+<h4 id="3-2-2-Handler接口"><a href="#3-2-2-Handler接口" class="headerlink" title="3.2.2 Handler接口"></a>3.2.2 Handler接口</h4><p>Go源码中对责任链模式的实现非常标准，Handler接口与设计模式中的Handler接口同名，在<code>net/http/server.go</code>中：</p>
+<pre><code>type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)
+}</code></pre><p>为了扩展方便，在使用过程中并非直接使用，而是中间又加了一层抽象层（相当于Java中的抽象类了，Go中没有抽象类）</p>
+<pre><code>// The HandlerFunc type is an adapter to allow the use of
+// ordinary functions as HTTP handlers. If f is a function
+// with the appropriate signature, HandlerFunc(f) is a
+// Handler that calls f.
+type HandlerFunc func(ResponseWriter, *Request)
+
+// ServeHTTP calls f(w, r).
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+    f(w, r)
+}</code></pre><h4 id="3-2-3-Handler接口实现"><a href="#3-2-3-Handler接口实现" class="headerlink" title="3.2.3 Handler接口实现"></a>3.2.3 Handler接口实现</h4><p>与上文中提到的Beego的过滤器类似，Go的Handler设计的也非常容易扩展，用户自定义的请求处理函数Handler都会变成<code>Handler</code>的子类。</p>
+<pre><code>func main() {
+    s := http.NewServeMux()
+
+    s.HandleFunc(&quot;/&quot;, func(writer http.ResponseWriter, request *http.Request) {
+
+        // todo ....
+
+        return
+    })
+
+    http.ListenAndServe(&quot;:80&quot;, s)
+
+}
+
+// HandleFunc registers the handler function for the given pattern.
+func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+    if handler == nil {
+        panic(&quot;http: nil handler&quot;)
+    }
+    // 强制类型转换，转成了实现了Hanlder的“抽象类”HandlerFunc
+    mux.Handle(pattern, HandlerFunc(handler)) 
+
+}</code></pre><p>注意看上文的<code>HandleFunc</code>中的 <code>mux.Handle(pattern, HandlerFunc(handler))</code>这一行，将用户自定义的处理函数强制转换成了上文3.2.2中的<code>Handler</code>的”抽象类”<code>HandlerFunc</code>类型，进而实现了继承。</p>
+<h4 id="3-2-4-Handler接口的管理类ChainHandler"><a href="#3-2-4-Handler接口的管理类ChainHandler" class="headerlink" title="3.2.4 Handler接口的管理类ChainHandler"></a>3.2.4 Handler接口的管理类ChainHandler</h4><p>Go中对Handler的管理类是在<code>net/http/server.go</code>文件的<code>ServeMux</code>结构体和<code>muxEntry</code>结构体中：</p>
+<pre><code>type ServeMux struct {
+    mu    sync.RWMutex
+    m     map[string]muxEntry
+    es    []muxEntry // slice of entries sorted from longest to shortest.
+    hosts bool       // whether any patterns contain hostnames
+}
+
+type muxEntry struct {
+    h       Handler
+    pattern string
+}</code></pre><p>其中，用户自定以的处理函数都被封装到了<code>muxEntry</code>结构体的<code>Handler</code>中，一个自定义的函数对应一个<code>muxEntry</code>，<code>ServeMux</code>使用hashmap对<code>muxEntry</code>集合进行管理（上文的beego中是使用的链表，上文demo中使用了数组）。当web server接收到请求的时候，<code>ServeMux</code>会根据hashmap找到相应的handler然后处理。</p>
+<pre><code>func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
+    if r.RequestURI == &quot;*&quot; {
+        if r.ProtoAtLeast(1, 1) {
+            w.Header().Set(&quot;Connection&quot;, &quot;close&quot;)
+        }
+        w.WriteHeader(StatusBadRequest)
+        return
+    }
+
+    // *******寻找handler*******
+    h, _ := mux.Handler(r)
+
+    h.ServeHTTP(w, r)
+}
+
+func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string) {
+
+    ...
+
+    if path != r.URL.Path {
+        _, pattern = mux.handler(host, path)
+        u := &amp;url.URL{Path: path, RawQuery: r.URL.RawQuery}
+        return RedirectHandler(u.String(), StatusMovedPermanently), pattern
+    }
+
+    // *******寻找handler*******
+    return mux.handler(host, r.URL.Path)
+}
+
+func (mux *ServeMux) handler(host, path string) (h Handler, pattern string) {
+    mux.mu.RLock()
+    defer mux.mu.RUnlock()
+
+    // Host-specific pattern takes precedence over generic ones
+    if mux.hosts {
+        // *******寻找handler*******
+        h, pattern = mux.match(host + path)
+    }
+    if h == nil {
+        // *******寻找handler*******
+        h, pattern = mux.match(path)
+    }
+    if h == nil {
+        h, pattern = NotFoundHandler(), &quot;&quot;
+    }
+    return
+}
+
+
+func (mux *ServeMux) match(path string) (h Handler, pattern string) {
+
+    // ********通过hashmap找到相关handler*********
+    v, ok := mux.m[path]
+    if ok {
+        return v.h, v.pattern
+    }
+
+
+    for _, e := range mux.es {
+        if strings.HasPrefix(path, e.pattern) {
+            return e.h, e.pattern
+        }
+    }
+    return nil, &quot;&quot;
+}</code></pre><p>在程序运行过程中，用户注册自定义的函数被转化成了<code>Handler</code>，然后<code>Handler</code>又结合用户自定义的<code>URL</code>地址被<code>ServeMux</code>以<code>URL</code>为Key、<code>Handler</code>为Value做成hashmap管理起来；等到请求来的时候，<code>ServeMux</code>就根据用户请求的<code>URL</code>地址，从hashmap中找到具体的<code>Hanlder</code>来处理请求。</p>
+<h2 id="4-总结"><a href="#4-总结" class="headerlink" title="4. 总结"></a>4. 总结</h2><p>责任链模式的基本思想就是要处理的请求(通常会是结构体，然后作为函数参数)；依次经过多个处理对象处理，这些处理函数可以动态的添加和删除，具备很高的灵活性和扩展性，通常会对这些处理函数做统一处理，存储方式一般是通过链表、数组、hash map等存储结构。</p>
+<p>责任链模式的应用非常广泛：</p>
+<ol>
+<li>业务场景：作为敏感词（涉黄、政治、反动等此）过滤的设计结构</li>
+<li>技术框架：路由、router过滤器、日志log框架等等</li>
+</ol>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+      
+        <div class="nav-next">
+          <a href="/2022/10/16/http2/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

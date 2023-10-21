@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="为什么Go语言不允许循环引入?">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>为什么Go语言不允许循环引入? - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            为什么Go语言不允许循环引入?
+            
+          </h1>
+          <p class="posted-on">
+          2020-06-23
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/golang/" rel="tag">
+                  golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>每当Go程序编译出现循环引入报错的时候就非常让人头疼。</p>
+<p>那么，为什么Go不允许循环引入呢？</p>
+<p>我觉得原因如下：</p>
+<h2 id="搞清楚package包的定位"><a href="#搞清楚package包的定位" class="headerlink" title="搞清楚package包的定位"></a>搞清楚package包的定位</h2><p>首先，搞清楚Go语言中<code>package</code>包的定位；</p>
+<p>Go语言的<code>packa</code>和其他语言中的库、模块是相同的概念，在其他语言中，实现某个库或者模块需要建立”单独的项目”，而在Go中，仅仅是一个包就够了。<br>在正常Coding的时候，在我们项目中可以随便引入外来的项目(例如PHP项目引入PHP包)，但是，我们可以随意的修改引入的包吗？不可以！在我们写PHP的时候，我们可以引外来的包，并在引入的包中做修改，和现有项目循环依赖吗？更不可以！</p>
+<p>从这个角度来讲，Go语言不允许循环引入，算是合情合理的，因为Go中的<code>package</code>就是相当于其他语言中的“一个小项目”。</p>
+<h2 id="语言设计层面"><a href="#语言设计层面" class="headerlink" title="语言设计层面"></a>语言设计层面</h2><p>第二，我们考虑一下，循环引入可能带来的坏处。</p>
+<p>曾经有人提议Go语言作者Rob Pike，想要在Go以后的版本去掉循环引入；Rob Pike坚决不同意。Rob Pike觉得假如你两个包之间存在循环引入的问题，那一定是你在设计之初就没考虑好模块的划分。</p>
+<p>我们试想，假如允许循环引入，那么，模块和模块之间就存在相互的调用，随着项目的推进，模块之间的依赖关系越来越多，最后导致俩模块耦合性变的很高，最初模块之间的界限变的越来越模糊，最后都偶合在一起了，变的一团糟。一个好的设计，一个好的模块的划分，就不应该存在循环依赖的问题！</p>
+<p>因此，Go语言在设计之初，就强制要求不允许循环引入，这会迫使开发者在写代码之前就考虑模块与模块之间的依赖关系，保持依赖关系的整洁。否则，允许循环引入，虽然带来了coding的方便，但是从工程的长远角度来考虑，对整个工程的构建、代码的整洁都是非常不利的。</p>
+<h2 id="其他原因"><a href="#其他原因" class="headerlink" title="其他原因"></a>其他原因</h2><p>最后一点，禁止循环引入会让编译变的更高效。</p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝"><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝"></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code></h2><p><img src="https://i6448038.github.io/img/weichat/qrcode.jpg" alt></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2021/05/20/stack-heap-go/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2020/05/05/why-array-begins-zerro/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

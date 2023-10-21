@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="快速理解Go数组和切片的内部实现原理">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>快速理解Go数组和切片的内部实现原理 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            快速理解Go数组和切片的内部实现原理
+            
+          </h1>
+          <p class="posted-on">
+          2018-08-11
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/golang/" rel="tag">
+                  golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>   很多人对Go语言的<code>array</code>和<code>slice</code>傻傻分不清楚，今天我们就从底层出发，来聊聊它俩到底有什么区别。</p>
+<h1 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h1><p>   几乎所有计算机语言，数组的实现都是相似的：一段连续的内存，Go语言也一样，Go语言的数组底层实现就是一段连续的内存空间。每个元素有唯一一个索引(或者叫<code>下标</code>)来访问。如下图所示，下图是<code>[5]int{1:10, 2:20}</code>数组的内部实现逻辑图:</p>
+<p><img src="/img/slice/array.png" alt="image"></p>
+<p>  由于内存连续，CPU很容易计算索引(即数组的<code>下标</code>)，可以快速迭代数组里的所有元素。<br>  Go语言的数组不同于C语言或者其他语言的数组，C语言的数组变量是指向数组第一个元素的指针；而Go语言的数组是一个值，Go语言中的数组是值类型，一个数组变量就表示着整个数组，意味着Go语言的数组在传递的时候，传递的是原数组的拷贝。你可以理解为Go语言的数组是一种有序的<code>struct</code></p>
+<h1 id="slice"><a href="#slice" class="headerlink" title="slice"></a>slice</h1><p>  切片是一个很小的对象，是对数组进行了抽象，并提供相关的操作方法。切片有三个属性字段：长度、容量和指向数组的指针。</p>
+<p>  <img src="/img/slice/slice_1.png" alt="image"></p>
+<p>  上图中，<code>ptr</code>指的是指向array的pointer，<code>len</code>是指切片的长度, <code>cap</code>指的是切片的容量。现在，我想你对数组和切片有了一个本质的认识。</p>
+<h2 id="切片有多种声明方式，每种初始化方式对应的逻辑图是怎样的呢？"><a href="#切片有多种声明方式，每种初始化方式对应的逻辑图是怎样的呢？" class="headerlink" title="切片有多种声明方式，每种初始化方式对应的逻辑图是怎样的呢？"></a>切片有多种声明方式，每种初始化方式对应的逻辑图是怎样的呢？</h2><h3 id="对于s-make-byte-5-和s-byte-的方式"><a href="#对于s-make-byte-5-和s-byte-的方式" class="headerlink" title="对于s := make([]byte, 5)和s := []byte{...}的方式"></a>对于<code>s := make([]byte, 5)</code>和<code>s := []byte{...}</code>的方式</h3><p>  <img src="/img/slice/slice2.png" alt="image"></p>
+<h3 id="对于s-s-2-4-的方式"><a href="#对于s-s-2-4-的方式" class="headerlink" title="对于s = s[2:4]的方式"></a>对于<code>s = s[2:4]</code>的方式</h3><p>  <img src="/img/slice/slice3.png" alt="image"></p>
+<h3 id="对于nil的切片即var-s-byte对应的逻辑图是"><a href="#对于nil的切片即var-s-byte对应的逻辑图是" class="headerlink" title="对于nil的切片即var s []byte对应的逻辑图是"></a>对于<code>nil</code>的切片即<code>var s []byte</code>对应的逻辑图是</h3><p>  <img src="/img/slice/slice4.png" alt="image"></p>
+<p>  在此有一个说明：<code>nil</code>切片和<code>空</code>切片是不太一样的，空切片即<code>s := make([]byte, 0)</code>或者<code>s := []byte{}</code>出来的切片<br>  空切片的逻辑图为：</p>
+<p>  <img src="/img/slice/slice5.png" alt="image"></p>
+<p>  空切片指针不为nil，而nil切片指针为nil。但是，不管是空切片还是nil切片，对其调用内置函数<code>append()</code>、<code>len</code>和<code>cap</code>的效果都是一样的，感受不到任何区别。</p>
+<h2 id="扩容"><a href="#扩容" class="headerlink" title="扩容"></a>扩容</h2><p>  slice这种数据结构便于使用和管理数据集合，可以理解为是一种“动态数组”，<code>slice</code>也是围绕动态数组的概念来构建的。既然是动态数组，那么slice是如何扩容的呢？</p>
+<p>  请记住以下两条规则：</p>
+<ul>
+<li>如果切片的容量小于1024个元素，那么扩容的时候slice的cap就翻番，乘以2；一旦元素个数超过1024个元素，增长因子就变成1.25，即每次增加原来容量的四分之一。</li>
+<li>如果扩容之后，还没有触及原数组的容量，那么，切片中的指针指向的位置，就还是原数组，如果扩容之后，超过了原数组的容量，那么，Go就会开辟一块新的内存，把原来的值拷贝过来，这种情况丝毫不会影响到原数组。</li>
+</ul>
+<p>知道了一下规则，请看下面程序,试问输出结果：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    arr := [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>&#125;</span><br><span class="line">    slice := arr[<span class="number">0</span>:<span class="number">2</span>]</span><br><span class="line">    testSlice1 := slice</span><br><span class="line">    testSlice2 := <span class="built_in">append</span>(<span class="built_in">append</span>(<span class="built_in">append</span>(slice, <span class="number">1</span>),<span class="number">2</span>),<span class="number">3</span>)</span><br><span class="line">    slice[<span class="number">0</span>] = <span class="number">11</span></span><br><span class="line">  </span><br><span class="line">    fmt.Println(testSlice1[<span class="number">0</span>])</span><br><span class="line">    fmt.Println(testSlice2[<span class="number">0</span>])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11</span><br><span class="line">10</span><br></pre></td></tr></table></figure>
+
+<p>答对了吗？</p>
+<p>参考文献:<br>《Go in action》<br><a href="https://blog.golang.org/go-slices-usage-and-internals" target="_blank" rel="noopener">https://blog.golang.org/go-slices-usage-and-internals</a></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2018/08/26/map-secret/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2018/07/18/golang-mistakes/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

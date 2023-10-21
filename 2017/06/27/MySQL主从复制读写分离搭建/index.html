@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="MySQL主从复制读写分离搭建">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>MySQL主从复制读写分离搭建 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            MySQL主从复制读写分离搭建
+            
+          </h1>
+          <p class="posted-on">
+          2017-06-27
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/php/" rel="tag">
+                  php
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <h1 id="MySQL主从设置"><a href="#MySQL主从设置" class="headerlink" title="MySQL主从设置"></a>MySQL主从设置</h1><p>MySQL主从复制，读写分离的设置非常简单：</p>
+<h2 id="修改配置my-cnf文件"><a href="#修改配置my-cnf文件" class="headerlink" title="修改配置my.cnf文件"></a>修改配置<code>my.cnf</code>文件</h2><p>master 和 slave设置的差不多：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin  </span><br><span class="line">server-id=222</span><br></pre></td></tr></table></figure>
+
+<p><code>log-bin=mysql-bin</code>的意思是：启用二进制日志。<br><code>server-id=222</code>的意思是设置了服务器的唯一ID，默认是1，一般取IP最后一段，可以写成别的，只要不和其他mysql服务器重复就好。<br>这里，有的MySQL默认的<code>my.cnf</code>文件引用了<code>/etc/mysql/conf.d</code>路径下的所有cnf文件，因此，也可以在<code>/etc/mysql/conf.d</code>目录下添加一个cnf文件，添加上以上内容</p>
+<h2 id="分别重启master和slave机器的mysql"><a href="#分别重启master和slave机器的mysql" class="headerlink" title="分别重启master和slave机器的mysql"></a>分别重启master和slave机器的mysql</h2><p>/etc/init.d/mysql restart</p>
+<h2 id="master上建立账户并授权slave，slave上也做好相关配置"><a href="#master上建立账户并授权slave，slave上也做好相关配置" class="headerlink" title="master上建立账户并授权slave，slave上也做好相关配置"></a>master上建立账户并授权slave，slave上也做好相关配置</h2><p>用root用户分别登录master和slave机器：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql -uroot -p //输入之后会让你输入root密码，输入root密码就算登陆了</span><br></pre></td></tr></table></figure>
+
+<h3 id="master机器上"><a href="#master机器上" class="headerlink" title="master机器上"></a>master机器上</h3><p>建立账户并授权slave机器，注意用户名和密码，可以随意设置，但是一定要记下来，因为后面slave还需要用到</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GRANT</span> <span class="keyword">REPLICATION</span> <span class="keyword">SLAVE</span> <span class="keyword">ON</span> *.* <span class="keyword">to</span> <span class="string">'ryugou'</span>@<span class="string">'%'</span> <span class="keyword">identified</span> <span class="keyword">by</span> <span class="string">'ryugou'</span>;</span><br></pre></td></tr></table></figure>
+
+<p>一般不用root帐号，@’%’表示所有客户端都可能连，只要帐号，密码正确，此处可用具体客户端IP代替，如192.168.145.226，加强安全。</p>
+<h3 id="slave机器上"><a href="#slave机器上" class="headerlink" title="slave机器上"></a>slave机器上</h3><p>查看<code>master</code>状态</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">master</span> <span class="keyword">status</span>;</span><br></pre></td></tr></table></figure>
+
+<img src="/img/storage/master-status.png">
+
+<p>在mysql终端输入</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">change</span> <span class="keyword">master</span> <span class="keyword">to</span> master_host=<span class="string">'xxx.xxx.xxx.xxx'</span>,master_user=<span class="string">'ryugou'</span>,master_password=<span class="string">'ryugou'</span>,</span><br><span class="line">         master_log_file=<span class="string">'mysql-bin.000004'</span>,master_log_pos=<span class="number">120</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>master_log_file</code>就是<code>master</code>机器上的对应的内容，<code>master_log_pos</code>也是，注意查看master状态上的内容。<br><code>master_user</code>和<code>master_password</code>就是master机器上授权时设置用户名和密码。</p>
+<p>启动从服务器</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">start</span> <span class="keyword">slave</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="检查从服务器复制功能状态"><a href="#检查从服务器复制功能状态" class="headerlink" title="检查从服务器复制功能状态"></a>检查从服务器复制功能状态</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">slave</span> <span class="keyword">status</span>\G;</span><br></pre></td></tr></table></figure>
+
+<p>会出现一个列表<br><img src="/img/storage/slave-status.png"><br>主要看<code>Slave_IO_Running</code>和<code>Slave_SQL_Running</code> 这俩状态必须都为<code>Yes</code>。</p>
+<h2 id="master创建数据库，从服务器设置用户访问权限"><a href="#master创建数据库，从服务器设置用户访问权限" class="headerlink" title="master创建数据库，从服务器设置用户访问权限"></a>master创建数据库，从服务器设置用户访问权限</h2><p>在master上创建数据库 test，会发现在slave上也创建了 test，现在想要读写分离，slave上的机器某用户gou可以访问它，但是只能读</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">grant</span> <span class="keyword">select</span> <span class="keyword">on</span> test.*  <span class="keyword">to</span> gou;</span><br></pre></td></tr></table></figure>
+
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2017/06/28/rest-接口规范/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2017/06/18/用PHPExcel读取excel表格/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

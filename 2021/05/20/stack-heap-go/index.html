@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="细谈Go变量的内存分布">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>细谈Go变量的内存分布 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            细谈Go变量的内存分布
+            
+          </h1>
+          <p class="posted-on">
+          2021-05-20
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/golang/" rel="tag">
+                  golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>我们程序中的变量大多被分配在内存的两个区域：<code>statck</code>和<code>heap</code>。</p>
+<h2 id="stack和heap"><a href="#stack和heap" class="headerlink" title="stack和heap"></a><code>stack</code>和<code>heap</code></h2><p>首先让我们一起来回顾一下进程的内存分配：<br>我们写的程序代码跑起来后，会是一个进程；OS会给我们的进程分配内存；内存结构大致如下：</p>
+<p><img src="/img/stack_heap/mem_total.png" alt></p>
+<p>OS给一个进程分配的内存空间大致可以分为：<code>代码区</code>、<code>全局数据区</code>、<code>栈(stack)</code>、<code>堆(heap)</code>、<code>环境变量区域</code>以及中间空白的<code>缓冲区</code>六个部分。其中，数据的增长路径除<code>栈(stack)</code>是由高到低之外，其余的均是由低到高(可看图中数据箭头)。</p>
+<p>我们思考一下，为什么<code>栈(stack)区</code>这么特殊和其他区域路径相反？还有，进程内存中<code>stack</code>和<code>heap</code>和数据结构中的<code>stack</code>和<code>heap</code>名字都相同，是有什么联系吗？请带着问题往下看：</p>
+<h3 id="进程内存中的stack和heap"><a href="#进程内存中的stack和heap" class="headerlink" title="进程内存中的stack和heap"></a>进程内存中的<code>stack</code>和<code>heap</code></h3><p><code>stack</code> : 是由程序侧通过<code>系统调用</code>向操作系统申请的，由操作系统管理和释放，不需要程序员手动管理；一般用于存放线程和函数中产生的临时变量。这块区域的数据使用速度较快，不用手动管理，省心省力。</p>
+<p><code>heap</code>：是由程序侧通过<code>系统调用</code>向操作系统申请的，但是需要程序员自行管理的内存区域，因为此区域的定位是<code>global variable</code>，用于存放全局的变量(虽然很多编程语言中不这么利用)； 程序员需要手动或者通过GC及时free或者delete此内存区域中的数据，但是也要注意：如果频繁的进行删除和添加，会导致内存碎片。</p>
+<h3 id="数据结构stack和heap"><a href="#数据结构stack和heap" class="headerlink" title="数据结构stack和heap"></a>数据结构<code>stack</code>和<code>heap</code></h3><p>我们再来看看数据结构中的<code>stack</code>和<code>heap</code>；</p>
+<p><strong>stack</strong><br><img src="/img/stack_heap/stack.png" alt><br>后进先出LIFO的数据结构。</p>
+<p><strong>Heap</strong><br><img src="/img/stack_heap/heap.png" alt></p>
+<p>堆的定义：</p>
+<ul>
+<li>完全二叉树</li>
+<li>每一个节点的值都必须大于等于（或小于等于）其子树中每个节点的值</li>
+</ul>
+<p>根节点是最大数的叫做“大顶堆”，根节点是最小数的叫做“小顶堆”。</p>
+<p>堆<code>heap</code>这种数据结构经常利用在“如何快速定位并获取到Top N最热门的xxx”，通常的做法如下图：</p>
+<p><img src="/img/stack_heap/heap1.png" alt></p>
+<h3 id="内存中的”stack和heap“与数据结构中的”stack和heap“的联系"><a href="#内存中的”stack和heap“与数据结构中的”stack和heap“的联系" class="headerlink" title="内存中的”stack和heap“与数据结构中的”stack和heap“的联系"></a>内存中的”<code>stack</code>和<code>heap</code>“与数据结构中的”<code>stack</code>和<code>heap</code>“的联系</h3><p>一句话总结：进程内存中的<code>栈区(stack)</code>使用的数据结构就是<code>stack</code>，内存中的<code>heap</code>和数据结构中的<code>heap</code>则毫无关系。</p>
+<p>看如下C代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> a = <span class="number">3</span>; </span><br><span class="line">   <span class="keyword">int</span> b = <span class="number">5</span>;</span><br><span class="line">   ret = add(a, b);</span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">"%d"</span>, ret);</span><br><span class="line">   reuturn <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> x, <span class="keyword">int</span> y)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">int</span> sum = <span class="number">0</span>;</span><br><span class="line">   sum = x + y;</span><br><span class="line">   <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上代码在栈区中的数据是这样的：<br><img src="/img/stack_heap/stack1.png" alt></p>
+<p>还及得上文中提到的：“进程内存中只有<code>栈区(stack)</code>数据是由高位向低位增长的，其余的均为由低位向高位增长吗？”</p>
+<p>栈区用的数据结构是栈，函数变量的销毁和返回顺序用逆恰好符合stack先进后出的特点，我觉得这是<code>栈区(stack)</code>逆序增长很重要的一点。</p>
+<p>但是，最根本的原因还是在于：历史遗留问题。请看下图：</p>
+<p><img src="/img/stack_heap/stack2.png" alt><br>在当初那个内存空间及其短缺的年代，你认为左图还是右图更适合“缓冲区”？因为<code>stack</code>区域和<code>heap</code>区域大小都是动态分配的，都有“不确定性”，很显然，左图发生<code>堆栈重叠</code>更小，且更适合内存的充分利用。</p>
+<h2 id="Go变量的位置"><a href="#Go变量的位置" class="headerlink" title="Go变量的位置"></a>Go变量的位置</h2><p>我们在写C、PHP、Java的时候，可以很容易的知道，所写的变量所在的位置：带<code>new</code>、<code>malloc</code>等字段的，那一定是在堆上分配了，至于后续GC怎么处理，有没有引用继续关联，堆有没与释放，程序是否存在内存泄露…这都是后续处理的问题了；变量的存储位置是妥妥的堆上了。但是，在用Go的时候要注意，<code>new</code>、<code>make</code>等等关键字都不好使，Go变量的位置不是由写程序的程序员来决定的，而是Go自行处理；所以可能你的变量是<code>new</code>出来的，但是，最终也不一定分配到堆上，很可能是分配在栈上。</p>
+<p>Go把变量的位置在哪儿这件事对程序员“隐藏”了，Go自行处理；因为Go认为：变量的存储位置，会对程序的性能有一定影响，而Go是计划打造对性能有极致要求的程序，因而自己管了。<br>Go是这么管的：<br>首先，栈<code>stack</code>上的效率肯定是比堆要高的，这算是常识；Go在编译期会对每一个函数变量做判断，如果不能够判断此函数中的变量在返回之后是否仍被引用到，就给把变量扔堆<code>heap</code>上，否则，就扔栈<code>stack</code>上。但是注意：如果变量非常大，还是会扔到堆<code>heap</code>上。</p>
+<h3 id="逃逸分析"><a href="#逃逸分析" class="headerlink" title="逃逸分析"></a>逃逸分析</h3><p>我们是否有办法知道我们写的Go程序中变量的位置呢？<br>答案是有的，Go向开发者提供了变量逃逸分析的工具 </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> build -gcflags <span class="string">'-m -l'</span> main.<span class="keyword">go</span> <span class="comment">// 这里的main.go也可以是某个具体的二进制应用程序</span></span><br></pre></td></tr></table></figure>
+
+<p>下面对如下代码进行逃逸分析：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a:= <span class="number">3</span></span><br><span class="line">    b := <span class="number">5</span></span><br><span class="line">    ret := add(a, b)</span><br><span class="line">    fmt.Println(ret)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">add</span><span class="params">(x,y <span class="keyword">int</span>)</span><span class="title">int</span></span> &#123;</span><br><span class="line">    sum := x + y</span><br><span class="line">    <span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>分析结果:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./main.<span class="keyword">go</span>:<span class="number">11</span>:<span class="number">16</span>: main ... argument does not escape</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">11</span>:<span class="number">16</span>: ret escapes to heap</span><br></pre></td></tr></table></figure>
+
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg" alt></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2021/07/17/reference-and-pointer/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2020/06/23/why-aviod-import-cycle/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

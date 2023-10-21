@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="golang错题集">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>golang错题集 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            golang错题集
+            
+          </h1>
+          <p class="posted-on">
+          2018-07-18
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/golang/" rel="tag">
+                  golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>本文即<a href="https://i6448038.github.io/2017/07/28/GolangDetails/" target="_blank" rel="noopener">Go语言的那些坑</a>三。</p>
+<h1 id="不要对Go并发函数的执行时机做任何假设"><a href="#不要对Go并发函数的执行时机做任何假设" class="headerlink" title="不要对Go并发函数的执行时机做任何假设"></a>不要对Go并发函数的执行时机做任何假设</h1><p>请看下列的列子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"runtime"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	names := []<span class="keyword">string</span>&#123;<span class="string">"lily"</span>, <span class="string">"yoyo"</span>, <span class="string">"cersei"</span>, <span class="string">"rose"</span>, <span class="string">"annei"</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, name := <span class="keyword">range</span> names&#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>&#123;</span><br><span class="line">			fmt.Println(name)</span><br><span class="line">		&#125;()</span><br><span class="line">	&#125;</span><br><span class="line">	runtime.GOMAXPROCS(<span class="number">1</span>)</span><br><span class="line">	runtime.Gosched()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请问输出什么？</p>
+<p>答案:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">annei</span><br><span class="line">annei</span><br><span class="line">annei</span><br><span class="line">annei</span><br><span class="line">annei</span><br></pre></td></tr></table></figure>
+
+<p>为什么呢？是不是有点诧异？<br>输出的都是“annei”，而“annei”又是“names”的最后一个元素，那么也就是说程序打印出了最后一个元素的值，而name对于匿名函数来讲又是一个外部的值。因此，我们可以做一个推断：虽然每次循环都启用了一个协程，但是这些协程都是引用了外部的变量，当协程创建完毕，再执行打印动作的时候，name的值已经不知道变为啥了，因为主函数协程也在跑，大家并行，但是在此由于names数组长度太小，当协程创建完毕后，主函数循环早已结束，所以，打印出来的都是遍历的names最后的那一个元素“annei”。<br>如何证实以上的推断呢？<br>其实很简单，每次循环结束后，停顿一段时间，等待协程打印当前的name便可。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"runtime"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	names := []<span class="keyword">string</span>&#123;<span class="string">"lily"</span>, <span class="string">"yoyo"</span>, <span class="string">"cersei"</span>, <span class="string">"rose"</span>, <span class="string">"annei"</span>&#125;</span><br><span class="line">	<span class="keyword">for</span> _, name := <span class="keyword">range</span> names&#123;</span><br><span class="line">		<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>&#123;</span><br><span class="line">			fmt.Println(name)</span><br><span class="line">		&#125;()</span><br><span class="line">		time.Sleep(time.Second)</span><br><span class="line">	&#125;</span><br><span class="line">	runtime.GOMAXPROCS(<span class="number">1</span>)</span><br><span class="line">	runtime.Gosched()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打印结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">lily</span><br><span class="line">yoyo</span><br><span class="line">cersei</span><br><span class="line">rose</span><br><span class="line">annei</span><br></pre></td></tr></table></figure>
+
+<p>以上我们得出一个结论，不要对“go函数”的执行时机做任何的假设，除非你确实能做出让这种假设成为绝对事实的保证。</p>
+<h1 id="假设T类型的方法上接收器既有T类型的，又有-T指针类型的，那么就不可以在不能寻址的T值上调用-T接收器的方法"><a href="#假设T类型的方法上接收器既有T类型的，又有-T指针类型的，那么就不可以在不能寻址的T值上调用-T接收器的方法" class="headerlink" title="假设T类型的方法上接收器既有T类型的，又有*T指针类型的，那么就不可以在不能寻址的T值上调用*T接收器的方法"></a>假设T类型的方法上接收器既有<code>T</code>类型的，又有<code>*T</code>指针类型的，那么就不可以在不能寻址的T值上调用<code>*T</code>接收器的方法</h1><p>请看代码,试问能正常编译通过吗？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">type</span> Lili <span class="keyword">struct</span>&#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(Lili *Lili)</span> <span class="title">fmtPointer</span><span class="params">()</span></span>&#123;</span><br><span class="line">	fmt.Println(<span class="string">"poniter"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(Lili Lili)</span> <span class="title">fmtReference</span><span class="params">()</span></span>&#123;</span><br><span class="line">	fmt.Println(<span class="string">"reference"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	li := Lili&#123;&#125;</span><br><span class="line">	li.fmtPointer()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>答案：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">能正常编译通过，并输出&quot;poniter&quot;</span><br></pre></td></tr></table></figure>
+
+<p>感觉有点诧异，请接着看以下的代码，试问能编译通过？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">type</span> Lili <span class="keyword">struct</span>&#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(Lili *Lili)</span> <span class="title">fmtPointer</span><span class="params">()</span></span>&#123;</span><br><span class="line">	fmt.Println(<span class="string">"poniter"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(Lili Lili)</span> <span class="title">fmtReference</span><span class="params">()</span></span>&#123;</span><br><span class="line">	fmt.Println(<span class="string">"reference"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	Lili&#123;&#125;.fmtPointer()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>答案：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">不能编译通过。</span><br><span class="line">“cannot call pointer method on Lili literal”</span><br><span class="line">“cannot take the address of Lili literal”</span><br></pre></td></tr></table></figure>
+
+<p>是不是有点奇怪？这是为什么呢？其实在第一个代码示例中，main主函数中的“li”是一个变量，li的虽然是类型Lili，但是li是可以寻址的，&amp;li的类型是<code>*Lili</code>，因此可以调用*Lili的方法。</p>
+<h1 id="一个包含nil指针的接口不是nil接口"><a href="#一个包含nil指针的接口不是nil接口" class="headerlink" title="一个包含nil指针的接口不是nil接口"></a>一个包含nil指针的接口不是nil接口</h1><p>请看下列代码，试问返回什么</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"bytes"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"io"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> debug = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">var</span> buf *bytes.Buffer</span><br><span class="line">	<span class="keyword">if</span> debug&#123;</span><br><span class="line">		buf = <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">	&#125;</span><br><span class="line">	f(buf)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(out io.Writer)</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> out != <span class="literal">nil</span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"surprise!"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>答案是输出：surprise。<br>ok，让我们吧<code>debug</code>开关关掉，及<code>debug</code>的值变为<code>false</code>。那么输出什么呢？是不是什么都不输出？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"bytes"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"io"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> debug = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">var</span> buf *bytes.Buffer</span><br><span class="line">	<span class="keyword">if</span> debug&#123;</span><br><span class="line">		buf = <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">	&#125;</span><br><span class="line">	f(buf)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(out io.Writer)</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> out != <span class="literal">nil</span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"surprise!"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>答案是：依然输出surprise。</p>
+<p>这是为什么呢？<br>这就牵扯到一个概念了，是关于接口值的。概念上讲一个接口的值分为两部分：一部分是类型，一部分是类型对应的值，他们分别叫：动态类型和动态值。类型系统是针对编译型语言的，类型是编译期的概念，因此类型不是一个值。<br>在上述代码中，给f函数的out参数赋了一个<code>*bytes.Buffer</code>的空指针，所以out的动态值是nil。然而它的动态类型是<em>bytes.Buffer，意思是：“A non-nil interface containing a nil pointer”，所以“out!=nil”的结果依然是true。<br>但是，对于直接的``</em>bytes.Buffer``类型的判空不会出现此问题。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"bytes"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">var</span> buf *bytes.Buffer</span><br><span class="line">	<span class="keyword">if</span> buf == <span class="literal">nil</span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"right"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>还是输出: right<br>只有 接口指针 传入函数的接口参数时，才会出现以上的坑。<br>修改起来也很方便，把<code>*bytes.Buffer</code>改为<code>io.Writer</code>就好了。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"bytes"</span></span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"io"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">const</span> debug = <span class="literal">false</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">var</span> buf  io.Writer <span class="comment">//原来是var buf *bytes.Buffer</span></span><br><span class="line">	<span class="keyword">if</span> debug&#123;</span><br><span class="line">		buf = <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">	&#125;</span><br><span class="line">	f(buf)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(out io.Writer)</span></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> out != <span class="literal">nil</span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"surprise!"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="将map转化为json字符串的时候，json字符串中的顺序和map赋值顺序无关"><a href="#将map转化为json字符串的时候，json字符串中的顺序和map赋值顺序无关" class="headerlink" title="将map转化为json字符串的时候，json字符串中的顺序和map赋值顺序无关"></a>将map转化为json字符串的时候，json字符串中的顺序和map赋值顺序无关</h1><p>请看下列代码，请问输出什么？若为json字符串，则json字符串中key的顺序是什么？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	params := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>)</span><br><span class="line"></span><br><span class="line">	params[<span class="string">"id"</span>] = <span class="string">"1"</span></span><br><span class="line">	params[<span class="string">"id1"</span>] = <span class="string">"3"</span></span><br><span class="line">	params[<span class="string">"controller"</span>] = <span class="string">"sections"</span></span><br><span class="line"></span><br><span class="line">	data, _ := json.Marshal(params)</span><br><span class="line">	fmt.Println(<span class="keyword">string</span>(data))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>答案：输出<code>{&quot;controller&quot;:&quot;sections&quot;,&quot;id&quot;:&quot;1&quot;,&quot;id1&quot;:&quot;3&quot;}</code><br>利用Golang自带的json转换包转换，会将map中key的顺序改为字母顺序，而不是map的赋值顺序。map这个结构哪怕利用<code>for range</code>遍历的时候,其中的key也是无序的，可以理解为map就是个无序的结构，和php中的array要区分开来</p>
+<h1 id="Json反序列化数字到interface-类型的值中，默认解析为float64类型"><a href="#Json反序列化数字到interface-类型的值中，默认解析为float64类型" class="headerlink" title="Json反序列化数字到interface{}类型的值中，默认解析为float64类型"></a>Json反序列化数字到interface{}类型的值中，默认解析为float64类型</h1><p>请看以下程序，程序想要输出json数据中整型<code>id</code>加上<code>3</code>的值,请问程序会报错吗？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	jsonStr := <span class="string">`&#123;"id":1058,"name":"RyuGou"&#125;`</span></span><br><span class="line">	<span class="keyword">var</span> jsonData <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">	json.Unmarshal([]<span class="keyword">byte</span>(jsonStr), &amp;jsonData)</span><br><span class="line"></span><br><span class="line">	sum :=  jsonData[<span class="string">"id"</span>].(<span class="keyword">int</span>) + <span class="number">3</span></span><br><span class="line">	fmt.Println(sum)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="string">``</span><span class="string">` </span></span><br><span class="line"><span class="string">答案是会报错，输出结果为：</span></span><br></pre></td></tr></table></figure>
+
+<p>panic: interface conversion: interface {} is float64, not int</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">使用 Golang 解析 JSON  格式数据时，若以 interface&#123;&#125; 接收数据，则会按照下列规则进行解析：</span><br></pre></td></tr></table></figure>
+
+<p>bool, for JSON booleans</p>
+<p>float64, for JSON numbers</p>
+<p>string, for JSON strings</p>
+<p>[]interface{}, for JSON arrays</p>
+<p>map[string]interface{}, for JSON objects</p>
+<p>nil for JSON null</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">应该改为：</span><br><span class="line">```go</span><br><span class="line">func main()&#123;</span><br><span class="line">	jsonStr := `&#123;&quot;id&quot;:1058,&quot;name&quot;:&quot;RyuGou&quot;&#125;`</span><br><span class="line">	var jsonData map[string]interface&#123;&#125;</span><br><span class="line">	json.Unmarshal([]byte(jsonStr), &amp;jsonData)</span><br><span class="line"></span><br><span class="line">	sum :=  int(jsonData[&quot;id&quot;].(float64)) + 3</span><br><span class="line">	fmt.Println(sum)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="即使在有多个变量、且有的变量存在有的变量不存在、且这些变量共同赋值的情况下，也不可以使用-来给全局变量赋值"><a href="#即使在有多个变量、且有的变量存在有的变量不存在、且这些变量共同赋值的情况下，也不可以使用-来给全局变量赋值" class="headerlink" title="即使在有多个变量、且有的变量存在有的变量不存在、且这些变量共同赋值的情况下，也不可以使用:=来给全局变量赋值"></a>即使在有多个变量、且有的变量存在有的变量不存在、且这些变量共同赋值的情况下，也不可以使用<code>:=</code>来给全局变量赋值</h1><p><code>:=</code>往往是用来声明局部变量的，在多个变量赋值且有的值存在的情况下，<code>:=</code>也可以用来赋值使用,例如:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">msgStr := <span class="string">"hello wolrd"</span></span><br><span class="line">msgStr, err := <span class="string">"hello"</span>, errors.New(<span class="string">"xxx"</span>)<span class="comment">//err并不存在</span></span><br></pre></td></tr></table></figure>
+
+<p>但是，假如全局变量也使用类似的方式赋值，就会出现问题，请看下列代码，试问能编译通过吗？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> varTest <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">test</span><span class="params">()</span></span>&#123;</span><br><span class="line">	varTest, err := function()</span><br><span class="line">	fmt.Println(err.Error())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">function</span><span class="params">()</span><span class="params">(<span class="keyword">string</span>, error)</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">"hello world"</span>, errors.New(<span class="string">"error"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	test()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>答案是：通不过。输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">varTest declared and not used</span><br></pre></td></tr></table></figure>
+
+<p>但是如果改成如下代码，就可以通过：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> varTest <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">test</span><span class="params">()</span></span>&#123;</span><br><span class="line">	err := errors.New(<span class="string">"error"</span>)</span><br><span class="line">	varTest, err = function()</span><br><span class="line">	fmt.Println(err.Error())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">function</span><span class="params">()</span><span class="params">(<span class="keyword">string</span>, error)</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">"hello world"</span>, errors.New(<span class="string">"error"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	test()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">error</span><br></pre></td></tr></table></figure>
+
+<p>这是什么原因呢？<br>答案其实很简单，在<code>test</code>方法中，如果使用<code>varTest, err := function()</code>这种方式的话，相当于在函数中又定义了一个和全局变量<code>varTest</code>名字相同的局部变量，而这个局部变量又没有使用，所以会编译不通过。</p>
+<h1 id="interface-是一个指向interface的指针类型，而不是interface类型"><a href="#interface-是一个指向interface的指针类型，而不是interface类型" class="headerlink" title="*interface 是一个指向interface的指针类型，而不是interface类型"></a>*interface 是一个指向interface的指针类型，而不是interface类型</h1><p>请问以下代码，能编译通过吗？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Father <span class="keyword">interface</span> &#123;</span><br><span class="line">	Hello()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Child <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s Child)</span><span class="title">Hello</span><span class="params">()</span></span>  &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">var</span> buf  Child</span><br><span class="line">	buf = Child&#123;&#125;</span><br><span class="line">	f(&amp;buf)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(out *Father)</span></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> out != <span class="literal">nil</span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"surprise!"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>答案是：不能编译通过。输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">*Father is pointer to interface, not interface</span><br></pre></td></tr></table></figure>
+
+<p>注意了：接口类型的变量可以被赋值为实现接口的结构体的实例，但是并不能代表接口的指针可以被赋值为实现接口的结构体的指针实例。即：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> buf Father = Child&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>是对的，但是</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> buf *Father = <span class="built_in">new</span>(Child)</span><br></pre></td></tr></table></figure>
+
+<p>却是不对的。应该改为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> buf Father = Child&#123;&#125;</span><br><span class="line"><span class="keyword">var</span> pointer *Father = &amp;buf</span><br></pre></td></tr></table></figure>
+
+
+<p>要想让问题最开始的代码编译通过要将以上代码修改为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Father <span class="keyword">interface</span> &#123;</span><br><span class="line">	Hello()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Child <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s Child)</span><span class="title">Hello</span><span class="params">()</span></span>  &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">var</span> buf  Father</span><br><span class="line">	buf = Child&#123;&#125;</span><br><span class="line">	f(&amp;buf)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">(out *Father)</span></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> out != <span class="literal">nil</span>&#123;</span><br><span class="line">		fmt.Println(<span class="string">"surprise!"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2018/08/11/array-and-slice-principle/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2018/05/08/bitcoin-and-blockchain/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

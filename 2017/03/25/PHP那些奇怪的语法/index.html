@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="PHP那些琐碎的知识点">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>PHP那些琐碎的知识点 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            PHP那些琐碎的知识点
+            
+          </h1>
+          <p class="posted-on">
+          2017-03-25
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/php/" rel="tag">
+                  php
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p> PHP有很多很奇特、很难记的知识点，我做了一下记录：</p>
+<h1 id="单引号’’和””的区别"><a href="#单引号’’和””的区别" class="headerlink" title="单引号’’和””的区别:"></a>单引号’’和””的区别:</h1><p>  PHP不会检查单引号<code>&#39;&#39;</code>字符串中变量内插或（几乎）任何转义序列，所以采用单引号这种方式来定义字符串相当简单快捷。但是，双引号<code>&quot;&quot;</code>则不然，php会检查字符串中的变量或者转义序列，并输出变量和转义序列的值。</p>
+<pre><code>$a = &quot;123&quot;;
+print &apos;$a\t&apos;;
+print &apos;$a&apos;;</code></pre><p>  输出：</p>
+<pre><code>$a\t$a</code></pre><p>  如果是双引号<code>&quot;&quot;</code>:</p>
+<pre><code>$a = &quot;123&quot;;
+print &quot;$a\t&quot;;
+print &quot;$a&quot;;    </code></pre><p>  输出：</p>
+<pre><code>123 123</code></pre><h2 id="注意："><a href="#注意：" class="headerlink" title="注意："></a>注意：</h2><p>  单引号<code>&#39;&#39;</code>可以解释<code>&#39;\</code>和<code>\\</code>这俩转义字符，就这俩！<br>  能使单引号字符尽量使用单引号，单引号的效率比双引号要高（因为双引号要先遍历一遍，判断里面有没有变量，然后再进行操作，而单引号则不需要判断）。<br>  单引号<code>&#39;&#39;</code>和双引号<code>&quot;&quot;</code>都可以用来</p>
+<h1 id="echo-和-print的区别："><a href="#echo-和-print的区别：" class="headerlink" title="echo 和 print的区别："></a>echo 和 print的区别：</h1><p>  这两都是语句，不是函数；这俩语句的作用都是输出字符串。但是：</p>
+<p>  <code>echo</code>可以传入多个参数。而<code>print</code>只有一个：</p>
+<pre><code>echo &quot;123&quot;, &quot;123&quot;;//输出123123
+print &quot;123&quot;, &quot;123&quot;;//报错，只可以写一个参数 print &quot;123&quot;;</code></pre><p>  <code>echo</code>无返回值，而<code>print</code>返回值恒为1；</p>
+<h2 id="注意：-1"><a href="#注意：-1" class="headerlink" title="注意："></a>注意：</h2><p>  PHP的八中数据类型，除了数组<code>array</code>和没有实现<code>__toString</code>魔法函数的对象都可以用echo或者print来输出，并且<code>boolean</code>类型的用echo或者print来输出，只会显示1或者不显示。</p>
+<pre><code>echo true; //输出1
+echo false; //什么都不输出 </code></pre><h1 id="数字和字符串相加："><a href="#数字和字符串相加：" class="headerlink" title="数字和字符串相加："></a>数字和字符串相加：</h1><p>  PHP会自动完成字符串和数字的转换，这样有时候会带来好处，有时候却很让人苦恼。</p>
+<pre><code>echo 1 + &quot;2&quot;;//输出3
+echo 1 + &quot;a&quot;;//输出1</code></pre><p>  <code>$a = 1 + &quot;A&quot;;</code>试问变量<code>$a</code>的数据类型？</p>
+<pre><code>if(is_numeric($a)){
+    echo &quot;是整型&quot;;
+}
+else{
+    echo &quot;是其他类型&quot;;
+}
+
+//最后输出：是整型</code></pre><h1 id="随机数生成函数rand-和mt-rand-的区别"><a href="#随机数生成函数rand-和mt-rand-的区别" class="headerlink" title="随机数生成函数rand()和mt_rand()的区别:"></a>随机数生成函数<code>rand()</code>和<code>mt_rand()</code>的区别:</h1><p>  <code>rand()</code>和<code>mt_rand()</code>用法完全一致，它俩分别有两种用法:</p>
+<pre><code>//第一种用法：
+rand();//产生的随机数为0到getrandmax()之间
+mt_rand();//产生的随机数为0到mt_getrandmax()之间
+
+//第二种用法：
+rand($min, $max);//产生从$min到$max之间的随机数
+mt_rand($min, $max);//产生从$min到$max之间的随机数</code></pre><p>  区别：<code>mt_rand()</code>是更好地随机数生成器，因为它跟<code>rand()</code>相比播下了一个更好地随机数种子；而且性能上比<code>rand()</code>快4倍，<code>mt_getrandmax()</code>所表示的数值范围也更大    </p>
+<h1 id="BCMath库和GMP库的区别"><a href="#BCMath库和GMP库的区别" class="headerlink" title="BCMath库和GMP库的区别:"></a>BCMath库和GMP库的区别:</h1><p>  BCMath库很容易使用。将数字作为字符串传入函数，它会将数字的和（或差，积等）作为字符串返回。不过，使用BCMath时，对数字所能完成的操作仅限于基本算术运算。</p>
+<pre><code>$sum = bcadd(&quot;12345678&quot;, &quot;87654321&quot;);//$sum = &quot;99999999&quot;</code></pre><p>  GMP函数可以接受整数或者字符串作为参数，不过它们更乐意将数字作为资源来传递，这实际上是指向数字内部表示的指针。所以与BCMath函数不同，BCMath函数返回字符串，而GMP只返回资源。可以将这个资源作为数字传递到任何GMP函数。</p>
+<pre><code>$four = gmp_add(2, 2);//可以传入整数
+$eight = gmp_add(&apos;4&apos;, &apos;4&apos;);//或字符串
+$twelve = gmp_add($four, $eight);//或GMP资源</code></pre><p>  GMP唯一的缺点是，想要用非GMP函数查看或使用资源时，需要使用<code>gmp_strval()</code>或<code>gmp_intval()</code>显示地进行转换。</p>
+<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p>  BCMath与PHP捆绑发行，若GMP不与PHP捆绑，需要另外下载和安装。完成高精度数学运算的另一种选择是使用PECL的<code>big_int</code>库。</p>
+<h1 id="include和require的区别："><a href="#include和require的区别：" class="headerlink" title="include和require的区别："></a>include和require的区别：</h1><p>  <code>include()</code> 、<code>require()</code>语句包含并运行指定文件。这两结构在包含文件上完全一样，唯一的区别是对于错误的处理：</p>
+<ul>
+<li><code>require()</code>语句在遇到包含文件不存在，或是出错的时候，就停止即行，并报错。    </li>
+<li><code>include()</code>在遇到包含文件不存在的时候，只生成警告，并且脚本会继续。</li>
+</ul>
+<p>换句话说，如果你想在丢失文件时停止处理页面，那就别犹豫了，用<code>require()</code>吧。<code>include()</code>就不是这样，脚本会继续运行。</p>
+<h2 id="include-once和require-once"><a href="#include-once和require-once" class="headerlink" title="include_once和require_once"></a>include_once和require_once</h2><ul>
+<li><code>include_once()</code>和<code>require_once()</code>一样，应该用于在脚本执行期间同一个文件有可能被包含超过一次的情况下，想确保它只被包含一次以避免函数重定义，变量重新赋值等问题。这就是<code>include_once()</code>和<code>require_once()</code>与<code>include()</code>和<code>require()</code>的主要区别。</li>
+<li><code>require_once()</code>、<code>include_once()</code>运行效率要比<code>require()</code>和<code>include()</code>低，因为前两者需要判断寻找引入的文件是否已经存在。`</li>
+</ul>
+<h1 id="PHP合并数组-和array-merge-的区别"><a href="#PHP合并数组-和array-merge-的区别" class="headerlink" title="PHP合并数组+和array_merge()的区别"></a>PHP合并数组<code>+</code>和<code>array_merge()</code>的区别</h1><p>  同为数组合并，但是还是有差别的:  </p>
+<ul>
+<li><p>键名为数字时，array_merge()不会覆盖掉原来的值，但＋合并数组则会把最先出现的值作为最终结果返回，而把后面的数组拥有相同键名的那些值“抛弃”掉（不是覆盖）</p>
+<pre><code>$a = array(&apos;a&apos;,&apos;b&apos;); 
+$b = array(&apos;c&apos;, &apos;d&apos;); 
+$c = $a + $b; 
+var_dump($c);
+//输出：
+// array (size=2)
+//  0 =&gt; string &apos;a&apos; (length=1)
+//  1 =&gt; string &apos;b&apos; (length=1) 
+var_dump(array_merge($a, $b));
+//输出：
+//array (size=4)
+// 0 =&gt; string &apos;a&apos; (length=1)
+// 1 =&gt; string &apos;b&apos; (length=1)
+// 2 =&gt; string &apos;c&apos; (length=1)
+// 3 =&gt; string &apos;d&apos; (length=1) </code></pre></li>
+<li><p>键名为字符时，＋仍然把最先出现的键名的值作为最终结果返回，而把后面的数组拥有相同键名的那些值“抛弃”掉，但array_merge()此时会覆盖掉前面相同键名的值 </p>
+<pre><code>$a = array(&apos;a&apos; =&gt; &apos;a&apos; ,&apos;b&apos; =&gt; &apos;b&apos;);
+$b = array(&apos;a&apos; =&gt; &apos;A&apos;, &apos;b&apos; =&gt; &apos;B&apos;);
+$c = $a + $b;
+var_dump($c);
+//输出：
+//array (size=2)
+//&apos;a&apos; =&gt; string &apos;a&apos; (length=1)
+//&apos;b&apos; =&gt; string &apos;b&apos; (length=1)
+var_dump(array_merge($a, $b));
+//输出：
+//array (size=2)
+//&apos;a&apos; =&gt; string &apos;A&apos; (length=1)
+//&apos;b&apos; =&gt; string &apos;B&apos; (length=1)</code></pre><h1 id="字符串常用函数"><a href="#字符串常用函数" class="headerlink" title="字符串常用函数"></a>字符串常用函数</h1><p>PHP提供了很多方便的字符串函数，常用的有：</p>
+</li>
+<li><p><code>strstr ( string $haystack , mixed $needle [, bool $before_needle = false ] )</code>。返回 haystack 字符串从 needle 第一次出现的位置开始到 haystack 结尾的字符串。若为before_needle为 TRUE，strstr() 将返回 needle 在 haystack 中的位置之前的部分。</p>
+</li>
+<li><p><code>substr( string $string , int $start [, int $length ] )</code>。返回字符串 string 由 start 和 length 参数指定的子字符串。</p>
+</li>
+<li><p><code>substr_replace ( mixed $string , mixed $replacement , mixed $start [, mixed $length ] )</code>。substr_replace() 在字符串 string 的副本中将由 start 和可选的 length 参数限定的子字符串使用 replacement 进行替换。</p>
+</li>
+<li><p><code>strrev ( string $string )</code>。返回 string 反转后的字符串。</p>
+</li>
+<li><p><code>str_replace ( mixed $search , mixed $replace , mixed $subject [, int &amp;$count ] )</code>。该函数返回一个字符串或者数组。该字符串或数组是将 subject 中全部的 search 都被 replace 替换之后的结果。subject为执行替换的数组或者字符串。也就是 haystack。如果 subject 是一个数组，替换操作将遍历整个 subject，返回值也将是一个数组。如果count被指定，它的值将被设置为替换发生的次数。</p>
+</li>
+<li><p><code>strpos ( string $haystack , mixed $needle [, int $offset = 0 ] )</code>。返回 needle 在 haystack 中首次出现的数字位置；如果提供了offset参数，搜索会从字符串该字符数的起始位置开始统计。 如果是负数，搜索会从字符串结尾指定字符数开始。</p>
+</li>
+<li><p><code>ltrim()</code>、<code>rtrim()</code>、<code>trim()</code>。这仨都是删除字符串中的空白符。<code>ltrim()</code>删除字符串开头的空白字符;<code>rtrim()</code>删除字符串末端的空白字符；<code>trim()</code>去除字符串首尾处的空白字符。  </p>
+</li>
+</ul>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2017/04/10/Mac环境下利用本地php5-6安装扩展出现的Operation-not-permitted解决/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2017/03/05/让vim炫酷起来/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

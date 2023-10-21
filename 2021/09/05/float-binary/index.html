@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="浮点数精度丢失问题详解">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>浮点数精度丢失问题详解 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            浮点数精度丢失问题详解
+            
+          </h1>
+          <p class="posted-on">
+          2021-09-05
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/计算机基础/" rel="tag">
+                  计算机基础
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>请看以下Go代码，会返回 <code>0.7</code> 吗？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> num <span class="keyword">float32</span></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">7</span>; i++&#123;</span><br><span class="line">    num = num + <span class="number">0.1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fmt.Println(num)</span><br></pre></td></tr></table></figure>
+
+<p>答案可能出人意料，是：<code>0.70000005</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0.70000005</span></span><br></pre></td></tr></table></figure>
+
+<p>也许有人会问，是不是Go语言的问题？换其他语言试试？<br>OK，我们换JS试试。<br><img src="/img/float/browser.jpg" alt><br>答案依然令人意外。<br>除此之外，你还可以试试C、C++、Java、PHP等其他语言的float类型相加，看得到的数据是否精确；</p>
+<p>还有，除了语言之外，你还可以在MySQL等数据库中试试float类型数据的字段叠加，得到的数据是否精确。</p>
+<p>我可以先告诉你答案：<code>只要是float类型的数据相加，无论在任何语言、任何数据库、任何中间件中进行加法(减法乘除法)运算，得到的数据，都不会精确。</code></p>
+<p>这是浮点类型的精度丢失现象。(Loss of significance)</p>
+<p>要了解产生这个现象的原因，就要先了解计算机是如何定义和表示float类型的。<br>不同于正整数类型的表示方法，float类型在计算机中的表示略显复杂，遵循的是<code>IEEE 754标准</code>。</p>
+<p>下面，我们就讲一下<code>IEEE 754标准</code>。</p>
+<p>我们首先回顾一下整数类型在计算机中的表示。<br>我们知道:计算机只认识0和1；那么，对于像6一样的这种正整数，我们要做十进制到二进制的转换。<br>即：<br><img src="/img/float/integers.png" alt></p>
+<p>所以，十进制<code>6</code>最终转化为二进制为<code>110</code>。</p>
+<p>这很好理解，但是，如何表示 <code>6.1</code>等这类小数呢？<br>有人说了，可以找个特殊的符号，用来表示小数点<code>.</code>，把<code>6.1</code>中<code>6</code>和<code>1</code>隔开；听起来是个不错的办法。其实<code>IEEE 754</code>还真就是这么做的，只不过思路略有些复杂，总体思路就是：仿照用”科学计数法”！</p>
+<p>我们再回顾一下什么是<code>科学计数法</code>。<br><code>把一个数表示成a与10的n次幂相乘的形式（1≤|a|&lt;10，a不为分数形式，n为整数），这种记数法叫做科学记数法。</code><br>也就是：<code>1.360X10^4</code> 这种计数方式。</p>
+<p>我们可以仿照科学计数法，来表示浮点数，把二进制数统一表示成 <code>1.0110101 X 2^n</code>这种形式。<br>数据层面怎么表示出这种形式呢？根据<code>IEEE 754</code>的标准，将数据分为三部分：</p>
+<p><img src="/img/float/total.png" alt></p>
+<p>从左到右分别表示：符号位(正负数)、指数位和小数位</p>
+<p>以单精度浮点数为例，单精度浮点数一共32位(双精度64位，即平时所说的<code>double</code>类型)，具体内部表示为：</p>
+<p><img src="/img/float/total_01.png" alt></p>
+<ul>
+<li>1个bit表示符号位</li>
+<li>8个bit表示指数位</li>
+<li>23个bit表示小数位</li>
+</ul>
+<p>这里有个地方要特别注意：因为数据最终要表示成 <code>1.0110101 X 2^n</code>这种形式，整数位在二进制下，永远都是<code>1</code>，所以在表示float类型的时候，直接把<code>1</code>给去掉了，假如有就占据一个bit的空间，既然那个bit位上永远都是1，所以干脆去掉了。</p>
+<p>那么，具体该如何展示呢？例如小数点后的数字怎么表示？<code>6.1</code>能否写成<code>110.1</code>呢？如果能的话小数点后这个1代表什么呢？个数一？那添加几个零的话，能否认为是十、一百、一千？似乎是不可以，因为这样只能满足”视觉效果”,逻辑层面直接说不通。</p>
+<p>要明白在小数点后的数字代表除以2后的数字，例如二进制下小数点后的第一位1代表 1 / 2等于 <code>0.5</code>，第二位1代表 1/2/2等于 <code>0.25</code>，依次类推第三位1则代表 <code>0.125</code>…具体请看下图：</p>
+<p><img src="/img/float/binary_table.png" alt></p>
+<p>所以，给定一个小数，譬如<code>0.1</code>，要想得到对应的二进制数，应该是和小数点左边的计算方式相反：<code>乘以2，记录整数位</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">0.1 X 2 = 0.2  0</span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line">(1.6 - 1 = 0.6)</span><br><span class="line">0.6 X 2 = 1.2  1</span><br><span class="line">(1.2 - 1 = 0.2) </span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line">(1.6 - 1 = 0.6)</span><br><span class="line">0.6 X 2 = 1.2  1</span><br><span class="line">(1.2 - 1 = 0.2) </span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line"></span><br><span class="line">... </span><br><span class="line">// 无限循环下去</span><br></pre></td></tr></table></figure>
+
+<p>所以，<code>0.1</code> 用二进制表示为：<code>0.000110011001100110011...</code><br>因此 <code>6.1</code> 用二进制应该表示为：<code>110.000110011001100110011...</code><br>用”科学计数法“表示为：<code>1.10000110011001100110011... X 2^2</code><br>OK，看来小数位的数可以确定了是<code>10000110011001100110011</code>，即去掉整数位1后，向后截取的23位数(浮点数不精确的本质原因)。</p>
+<p>符号位0表示正数，1表示负数，所以可以确定是<code>6.1</code>的符号位是0；现在符号位有了，小数位有了，只剩下指数2如的表示了，该如何表示呢？直接在8位的空间内转化为<code>000000010</code>？</p>
+<p>显然不可以，首先，如果指数位用<code>原码</code>表示，那么，针对指数位为负的情况，就得加一个符号位去表示，而且还会出现两个零的情况：<code>00000000</code>和<code>1000000</code>，操作起来过程复杂~</p>
+<p>有人要问那如果使用补码呢？<br>如果使用补码，会出现以下情况，请看例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">例如：1.01 X 2^-1 和 1.11 X 2^3比较大小？</span><br><span class="line"></span><br><span class="line">     首先对比指数位， -1 和 3，分别转化为二进制数 ``111``和``011``；</span><br><span class="line"></span><br><span class="line">     如果没有其他逻辑处理，``111``是&quot;7&quot;，``011``是&quot;3&quot;， 7会小于3吗？</span><br></pre></td></tr></table></figure>
+
+<p>可见使用补码，也不是很方便，于是，引用了另外一种编码方式——-移码。<br>先说说移码的定义：<code>将每一个数值加上一个偏置常数(Excess / bias)，通常，当编码位数为n的时候，bias取 &quot;2^n-1&quot; 或者 &quot;2^n-1 - 1&quot;</code></p>
+<p>承接以上1.01 X 2^-1 和 1.11 X 2^3比较大小的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">例如：1.01 X 2^-1 和 1.11 X 2^3比较大小？</span><br><span class="line">    </span><br><span class="line">    指数为-1的则表示为 -1 + 4 = 3，二进制表示为:011</span><br><span class="line"></span><br><span class="line">    指数为3的则表示为 3 + 4 = 7 二进制表示为：111</span><br><span class="line"></span><br><span class="line">    7 &gt; 3，即 111 &gt; 011 比较完毕</span><br></pre></td></tr></table></figure>
+
+<p>就这样，浮点数”科学计数法“的指数位比较变得简单了，而且，消除了”正零“ 和 ”负零“ 不相同的问题。</p>
+<p>因为 ：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">假设偏移量是：4</span><br><span class="line"></span><br><span class="line">则移码表示的0只有：0 + 4 = 4，即“100”</span><br></pre></td></tr></table></figure>
+
+<p>在<code>IEEE 754</code>中，指数位移码的偏移量为指数位数的 <code>2^n-1 - 1</code>，为127。</p>
+<p>所以，回到<code>6.1</code>表示的问题上，指数位为：<code>2 + 127 = 129</code>，二进制表示为：<code>10000001</code></p>
+<p>因此，<code>6.1</code>在<code>IEEE 754</code>单精度浮点数标准的下，表示为：</p>
+<p><img src="/img/float/ieee754.png" alt></p>
+<p>好了，现在了解了浮点数<code>IEEE 754</code>标准的表示方法，知道为何浮点数相加总是不精确了吧？</p>
+<p>因为浮点数很多小数在二进制环境下很多都无法完整的表示，只能截取部分数据来近似的表示，两个数相加的话，就是两个近似的数相加的和，如果相加次数足够多，精确度自然也就会越来越低</p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg" alt></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2022/03/19/js-learning-1/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2021/07/17/reference-and-pointer/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

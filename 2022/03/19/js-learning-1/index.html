@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="JS的那些坑（一）">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>JS的那些坑（一） - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            JS的那些坑（一）
+            
+          </h1>
+          <p class="posted-on">
+          2022-03-19
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/前端/" rel="tag">
+                  前端
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>本文总结了JS在日常使用和面试中需要注意的知识点。</p>
+<h2 id="变量提升"><a href="#变量提升" class="headerlink" title="变量提升"></a><code>变量提升</code></h2><p>请看以下代码输出什么</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">showName()</span><br><span class="line"><span class="built_in">console</span>.log(myname)</span><br><span class="line"><span class="keyword">var</span> myname = <span class="string">'hello world'</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">showName</span>(<span class="params"></span>) </span>&#123; </span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'函数showName被执行'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>答案</strong>：</p>
+<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/624818afeb2c48b08e9542a86ca196b7~tplv-k3u1fbpfcp-watermark.image?" alt="image.png"></p>
+<p>答案和我们印象中js自上而下的执行顺序有些出入，这是由于js为了开发者写代码方便而省略掉的变量声明部分，而在编译阶段会将此部分补充完整，而开发者习惯了“简洁版”，并延续了”简洁版”的思路而产生的错觉。<br>现在，我们把”省去”的声明代码还原，就能发现端倪：</p>
+<p>首先看变量的“全貌”:</p>
+<p><code>var myname = &#39;hello world&#39;</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> myname <span class="comment">//声明部分</span></span><br><span class="line"></span><br><span class="line">myname = <span class="string">'hello world'</span> <span class="comment">//赋值部分</span></span><br></pre></td></tr></table></figure>
+
+<p>再看看函数的“全貌”：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 把声明提前</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">showName</span>(<span class="params"></span>) </span>&#123; </span><br><span class="line">   <span class="built_in">console</span>.log(<span class="string">'函数showName被执行'</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//执行部分</span></span><br><span class="line">showName()</span><br></pre></td></tr></table></figure>
+
+<p>在这里，以上函数<code>showName</code>是一个完整的函数声明，没有赋值操作，而如下函数声明，是声明与赋值分开的：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">var</span> showName = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">"函数showName被执行"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>等同于如下操作：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明</span></span><br><span class="line"><span class="keyword">var</span> showName = <span class="literal">undefined</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 赋值</span></span><br><span class="line">showName = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">"函数showName被执行"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所谓的变量提升，是指在 JavaScript 代码执行过程中，JavaScript 引擎把变量的声明部分和函数的声明部分提升到代码开头的“行为”。变量被提升后，会给变量设置默认值，这个默认值就是我们熟悉的 undefined。</p>
+<h2 id="script标签"><a href="#script标签" class="headerlink" title="script标签"></a><code>script标签</code></h2><p>请看以下代码，将输出什么？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;script type=<span class="string">"text/javascript"</span>&gt;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">"1"</span>)</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">"&lt;/script&gt;"</span>)</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">"2"</span>)</span><br><span class="line">&lt;<span class="regexp">/script&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>答案：<strong>程序报错</strong></p>
+<p>包含在&lt;script&gt;标签的内容，将会被浏览器顺序执行，直到遇到&lt;/script&gt;；特别注意：不要在代码的任何地方出现“&lt;/script&gt;”字符串，只要一出现，浏览器的解释器就认为是代码终止符到了，后续内容将不再解析；应该换为“&lt;\/script&gt;”，这样浏览器会对内容做一个转义，程序就能正常运行了。</p>
+<h2 id="undefined"><a href="#undefined" class="headerlink" title="undefined"></a><code>undefined</code></h2><p>JS整个语言只有六种数据类型：undefined、Null、Boolean、Number、String以及Object，JS不支持自定义类型的机制。</p>
+<p>请看以下代码，试问返回什么</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">var</span> message</span><br><span class="line"></span><br><span class="line">alert(message)</span><br><span class="line">alert(age)</span><br></pre></td></tr></table></figure>
+
+<p>答案显而易见：在进行<code>alert(age)</code>的时候，报错了；那再看看如下代码，请问会输出什么：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> message</span><br><span class="line"></span><br><span class="line">alert(<span class="keyword">typeof</span> message)</span><br><span class="line">alert(<span class="keyword">typeof</span> age)</span><br></pre></td></tr></table></figure>
+
+<p>答案可能很意外，会弹出两次<code>undefined</code>，而且不报错。</p>
+<p>可能让人感到很奇怪，但事实却是如此；对未初始化的变量进行<code>typeof</code>操作符会返回<code>undefined</code>的，对未定义的变量进行<code>typeof</code>操作也是会返回<code>undefined</code>；可能背后的逻辑是：无论变量是否定义，都不会真正执行吧</p>
+<h2 id="NaN"><a href="#NaN" class="headerlink" title="NaN"></a><strong>NaN</strong></h2><p>请看以下代码输出什么？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(<span class="literal">NaN</span> === <span class="literal">NaN</span>)</span><br></pre></td></tr></table></figure>
+
+<p>正确答案是：<code>false</code></p>
+<p>NaN的含义是：“Not a Number”;是一个特殊的值，这个数值表示一个本来返回数值的操作数未返回数值的情况，以替代直接报错。例如：“10 / 0” 在其他语言中直接就报错了，但是JS为了防止程序报错崩溃，加入了<code>NaN</code>，<figure class="highlight plain"><figcaption><span>/ 0 </span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">## 函数参数</span><br><span class="line">请看以下代码输出什么？</span><br><span class="line"></span><br><span class="line">```js</span><br><span class="line">function sum(num1, num2)&#123;</span><br><span class="line">    return num1 + num2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">let a = sum(1)</span><br><span class="line">console.log(a)</span><br></pre></td></tr></table></figure></p>
+<p>会报错吗？<br>正确答案是：输出<code>NaN</code></p>
+<p>js函数的参数与绝大多数语言中的参数不同，js对函数参数的类型和个数都没有强制限制；在js内部，函数参数的实现是拿一个数组来表示的；因此，哪怕你定义了两个参数，只传进去一个参数，也不影响js的正常运行。<br>写代码的时候，在js的函数体内部，可以通过arguments对象来访问js的参数数组，从而获取传递给函数的每一个参数。</p>
+<p>再来看看以上这道题目，<code>sum</code>函数有俩参数，但是只传了一个参数，程序不会报错，原因不解释了。在<code>sum</code>函数中，程序变为了 1 + arguments[1]，由于 arguments[1]为传参，故值为<code>undefined</code>, <figure class="highlight plain"><figcaption><span>+ undefined```为``NaN``（not a number）</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">## 函数名</span><br><span class="line"></span><br><span class="line">请看以下代码，存在两个相同的函数名，在代码运行后，会输出什么？</span><br><span class="line"></span><br><span class="line">```js</span><br><span class="line">function addNum(num) &#123;</span><br><span class="line">     return num + 10</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">function addNum(num) &#123;</span><br><span class="line">    return num + 20</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">let num = addNum(1)</span><br><span class="line">console.log(num)</span><br></pre></td></tr></table></figure></p>
+<p>正确答案：输出<code>21</code></p>
+<p>其他语言中例如Java，只要定义函数签名或者函数参数类型和数量不同，就可以定义相同的函数名，这是传统意义上的重载，但是JS中没有重载，如果定义了两个以上相同的函数名，JS最终会以最后定义的函数为准。</p>
+<h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><p>请看一下代码，最终会输出什么？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> num1 = <span class="number">5</span></span><br><span class="line"><span class="keyword">var</span> num2 = num1</span><br><span class="line">num2 = num2 + <span class="number">1</span></span><br><span class="line"><span class="built_in">console</span>.log(num1)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj1 = <span class="keyword">new</span> <span class="built_in">Object</span>()</span><br><span class="line"><span class="keyword">var</span> obj2 = obj1</span><br><span class="line">obj2.name = <span class="string">"ryugou"</span></span><br><span class="line"><span class="built_in">console</span>.log(obj1.name)</span><br></pre></td></tr></table></figure>
+
+<p>正确答案：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">5</span><br><span class="line">ryugou</span><br></pre></td></tr></table></figure>
+
+<p>js的变量值可分为：<code>基本类型</code>和<code>引用类型</code>两种；其中，<code>基本类型</code>值是简单的数据段，包含 <code>underfined</code>、<code>Null</code>、<code>Boolean</code>、<code>Number</code>和<code>String</code>这五种，其余为引用类型。<br>这两种类型的值在进行变量间赋值的时候，也会有所不同。对于值是<code>基本类型</code>的变量，在赋值的时候，会在给赋值变量复制一个新值。例如上题中的<code>var num2 = num1</code> 这时，是将num1的值复制一份，填写给<code>num2</code>，相当于:<code>var num2 = 5</code>。<br>但是，如果是<code>引用类型</code>的变量，在赋值的时候，各种变量还会指向原引用。例如代码中的<code>var obj2 = obj1</code>，此时<code>obj2</code>和<code>obj1</code>同时指向了同一个object。</p>
+<h1 id="更多精彩内容，请关注我的公众号"><a href="#更多精彩内容，请关注我的公众号" class="headerlink" title="更多精彩内容，请关注我的公众号"></a>更多精彩内容，请关注我的公众号</h1><p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/795aa185e1914591812cf61fb521ea65~tplv-k3u1fbpfcp-zoom-1.image" alt></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2022/10/16/http2/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2021/09/05/float-binary/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

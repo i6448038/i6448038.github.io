@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="图解Go的unsafe.Pointer">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>图解Go的unsafe.Pointer - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            图解Go的unsafe.Pointer
+            
+          </h1>
+          <p class="posted-on">
+          2020-03-13
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/Golang/" rel="tag">
+                  Golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>相信看过Go源码的同学已经对<code>unsafe.Pointer</code>非常的眼熟，因为这个类型可以说在源码中是随处可见：<code>map</code>、<code>channel</code>、<code>interface</code>、<code>slice</code>…但凡你能想到的内容，基本都会有<code>unsafe.Pointer</code>的影子。</p>
+<p>看字面意思，<code>unsafe.Pointer</code>是“不安全的指针”，指针就指针吧，还安不安全的是个什么鬼？</p>
+<p>接下来，我们就来了解一下Go的这个“不安全的指针”<code>unsafe.Pointer</code>。</p>
+<h2 id="什么叫变量"><a href="#什么叫变量" class="headerlink" title="什么叫变量"></a>什么叫变量</h2><p>在了解指针之前，我们有必要先了解一下什么叫“变量”。<br>其实变量就是一个内存地址的名字，这听起来可能有些奇怪：指针不是地址码？<br>听我细细来讲：此地址非彼地址。通常，我们要在计算机内存中存数据，我们会怎么做？<br>我们肯定说：“计算机，在0x0201地址内存一个数100”。就这一句话，别看它糙，实际上在计算机中真就这么干的。然后我们接着说：“在0x0202中存什么，在0x0203中存什么，把0x0203中的值变为0x0201中的值…”</p>
+<p>这些“0x0201”、“0x0202”、“0x0203”…这些数字儿是不是不太好记？写个代码是不是头都大了？<br>于是聪明的先人给想了个办法，把这些地址换成<strong>代号</strong>，“0x0201”我叫x，“0x0202”我给他起个名字叫y，“0x0203”我给他起个名字叫z…</p>
+<p>于是 “计算机，在0x0201地址内存一个数100”。就变成了<code>var x int =100</code>。<br>而这个这个代号就是变量。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0x0201地址    =============》   100</span><br><span class="line"></span><br><span class="line">0x0201地址    ======》X ===》   100</span><br></pre></td></tr></table></figure>
+
+<p>果然，计算机界中的任何问题，都可以通过加一个中间层来解决。(#^.^#)</p>
+<p>最后，计算机会在内存中存代号和变量地址的对应关系。</p>
+<h2 id="什么叫指针"><a href="#什么叫指针" class="headerlink" title="什么叫指针"></a>什么叫指针</h2><p>我们印象中的指针这个概念，其实就是一个存了内存地址的对象，这个对象指向的内存地址可能是另外一个对象、函数或者结构体等。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_0.png" alt></p>
+<p>这个理解没错，但是一定要理清楚指针和变量的关系。</p>
+<p><img src="/img/unsafe_pointer/variable_pointer.jpg" alt></p>
+<p>在一般的指针中，由于指针只是一个地址，底层实现是一个unsigned int，所以在C语言中，指针之间的赋值和计算等同类型之间的操作很常见。</p>
+<p>以下代码扫一眼，看看是否知道输出结果。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">"stdio.h"</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> <span class="keyword">const</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> c = <span class="string">'b'</span>;</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">1000</span>;</span><br><span class="line">    <span class="keyword">char</span> *cp;</span><br><span class="line">    <span class="keyword">int</span> *ip;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//指针的正常赋值</span></span><br><span class="line">    cp = &amp;c;</span><br><span class="line">    ip = &amp;i;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"cp[%p]\n"</span>, cp); <span class="comment">//cp[0x7ffee904275f]</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"ip[%p]\n"</span>, ip); <span class="comment">//ip[0x7ffee9042758]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//指针的计算</span></span><br><span class="line">    cp = cp + <span class="number">1</span>;</span><br><span class="line">    ip = ip + <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"cp[%p]\n"</span>, cp); <span class="comment">//cp[0x7ffee9042760]</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"ip[%p]\n"</span>, ip); <span class="comment">//ip[0x7ffee904275c]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//不同"类型"指针之间的赋值</span></span><br><span class="line">    cp = ip;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"cp[%p] ip[%p]\n"</span>, cp, ip); <span class="comment">//cp[0x7ffee904275c] ip[0x7ffee904275c]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//不同指针之间的比较  输出true</span></span><br><span class="line">    <span class="keyword">if</span> (cp == ip) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"true\n"</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"false\n"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通常意义上我们了解的不同类型的指针，可以归为“同一类型”，无论是int类型的指针还是char类型的指针，都称之为“指针类型”。<br>指针指向对象类型的约束对指针本身而言非常弱，因为在通常C语言中的定义不同类型的指针，只是为了调用的方便。例如一个指针指向了某一个结构体，那么我写代码的时候就可以方便的使用该结构体的属性字段；可以说通常意义上的C指针，是个“万能类型”的，啥类型的指针都和<code>void*</code>一样，万能！<br>所以，在C语言中，假如不使用指针，可以认为是机器在帮我们“打理”内存。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_system.png" alt></p>
+<p>但是假如我们使用了指针，由于指针的自由度非常大，我们就可以自己“打理”内存了（PS:这里的打理仅限内存指向问题，分配和清除肯定必然不行）。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_persioncontrol.png" alt></p>
+<h2 id="Go中常用的指针"><a href="#Go中常用的指针" class="headerlink" title="Go中常用的指针"></a>Go中常用的指针</h2><p>在C语言中，指针的操作是完全不被约束的，这就非常的危险：程序猿在写的时候就得细心一点，拿着指针操作太多，指来指去，指到不该指的地方，就不好了~</p>
+<p>所以Go语言在设计的时候，也考虑到了这个问题，就给现有的指针加了约束：把指针类型的数据当成了一种数据类型，在编译的时候做严格判断。</p>
+<p>举个例子来说：<code>*int</code> 和<code>*string</code>是两种不同的类型，那既然类型都不同，那么<code>*int</code>的数据就不能够和<code>*string</code>类型的数据进行“互通”了，既不能相互赋值，也不能相互比较；<br>能不能加减运算呀？当然不能，因为“数字儿”是整型，<code>*int</code>或者<code>*string</code>是其他类型而非整型。</p>
+<p>Go语言就给指针套了个“类型”的帽子，一下子把指针限制的死死的了。</p>
+<p>而且Go最后规定：指针类型还不能相互强制转换。<br>我们知道：int和string是可以相互转换的，既然指针归根到底是地址，也就是数字儿，那指针类型和int之间能否相互强制类型转换呢？答案是不行！<br>那<code>*int</code>和<code>*string</code>之间是否可以强制类型转换呢？答案是更不行，如果能强制转换了，前面说的给指针套的那顶“类型”的帽子，是不是就白做了？</p>
+<h2 id="unsafe-Pointer"><a href="#unsafe-Pointer" class="headerlink" title="unsafe.Pointer"></a>unsafe.Pointer</h2><p>好了，扯了那么多，终于到正题了。那么unsafe.Pointer指针是什么呢？<br>其实就一句话：就是C语言中那个牛逼到爆的什么都能指的不安全的指针。再确切一点是：<code>void*</code>。</p>
+<p><code>unsafe.Pointer</code>源码就两行：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ArbitraryType <span class="keyword">int</span> <span class="comment">//表示任何类型</span></span><br><span class="line"><span class="keyword">type</span> Pointer *ArbitraryType <span class="comment">//表示任何类型的指针</span></span><br></pre></td></tr></table></figure>
+
+<p><code>unsafe.Pointer</code>的源码注释还提供了关于<code>unsafe.Pointer</code>的四点重要的使用规则：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、Go语言常规的任何类型的指针都可以转化为unsafe.Pointer类型</span><br><span class="line">2、unsafe.Pointer类型可以转化为Go语言常规的任何类型的指针。</span><br><span class="line">3、uintptr这个类型可以转化为unsafe.Pointer</span><br><span class="line">4、unsafe.Pointer可以转化为uintptr</span><br></pre></td></tr></table></figure>
+
+<p>看完规则，你可能会问：<code>uintptr</code>是啥？<br>来，没有比源码更好的解释的了：</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_uintptr.png" alt></p>
+<p>注意看<code>uintptr</code>的位置，和<code>int</code>以及<code>uint</code>在一个包内，你可以认为<code>uintptr</code>与它们”同类”，只不过是指针的专属而已，但是你想自己定义用也能用。</p>
+<p>对于<code>unsafe.Pointer</code>，多用于Go的编译时期；由于它可以绕过类型系统，直接去访问内存，所以它用起来效率会比较高，但是官方的态度是不太建议使用的，因为不太安全。我个人建议也是能不用就不用：毕竟为了这点儿效率带来的额外的附加成本比较高。</p>
+<p>好了，我们最后总结一下Go的指针：</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_total.png" alt></p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝"><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝"></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code></h2><p><img src="https://i6448038.github.io/img/weichat/qrcode.jpg" alt></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2020/05/05/why-array-begins-zerro/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2020/02/15/golang-reflection/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

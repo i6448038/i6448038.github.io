@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="Go并发原理">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>Go并发原理 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            Go并发原理
+            
+          </h1>
+          <p class="posted-on">
+          2017-12-04
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/Golang/" rel="tag">
+                  Golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>Go语言是为并发而生的语言，Go语言是为数不多的在语言层面实现并发的语言；也正是Go语言的并发特性，吸引了全球无数的开发者。</p>
+<h1 id="并发-concurrency-和并行-parallellism"><a href="#并发-concurrency-和并行-parallellism" class="headerlink" title="并发(concurrency)和并行(parallellism)"></a>并发(concurrency)和并行(parallellism)</h1><p><strong>并发(concurrency)</strong>：两个或两个以上的任务在一段时间内被执行。我们不必care这些任务在某一个时间点是否是同时执行，可能同时执行，也可能不是，我们只关心在一段时间内，哪怕是很短的时间（一秒或者两秒）是否执行解决了两个或两个以上任务。</p>
+<p><strong>并行(parallellism)：</strong>两个或两个以上的任务在同一时刻被同时执行。</p>
+<p>并发说的是逻辑上的概念，而并行，强调的是物理运行状态。并发“包含”并行。</p>
+<p>（详情请见：Rob Pike 的<a href="https://talks.golang.org/2012/concurrency.slide#1" target="_blank" rel="noopener">PPT</a>）</p>
+<h1 id="Go的CSP并发模型"><a href="#Go的CSP并发模型" class="headerlink" title="Go的CSP并发模型"></a>Go的CSP并发模型</h1><p>Go实现了两种并发形式。第一种是大家普遍认知的：多线程共享内存。其实就是Java或者C++等语言中的多线程开发。另外一种是Go语言特有的，也是Go语言推荐的：CSP（communicating sequential processes）并发模型。</p>
+<p>CSP并发模型是在1970年左右提出的概念，属于比较新的概念，不同于传统的多线程通过共享内存来通信，CSP讲究的是“以通信的方式来共享内存”。</p>
+<p>请记住下面这句话：<br><strong>Do not communicate by sharing memory; instead, share memory by communicating.</strong><br>“不要以共享内存的方式来通信，相反，要通过通信来共享内存。”</p>
+<p>普通的线程并发模型，就是像Java、C++、或者Python，他们线程间通信都是通过共享内存的方式来进行的。非常典型的方式就是，在访问共享数据（例如数组、Map、或者某个结构体或对象）的时候，通过锁来访问，因此，在很多时候，衍生出一种方便操作的数据结构，叫做“线程安全的数据结构”。例如Java提供的包”java.util.concurrent”中的数据结构。Go中也实现了传统的线程并发模型。</p>
+<p>Go的CSP并发模型，是通过<code>goroutine</code>和<code>channel</code>来实现的。</p>
+<ul>
+<li><code>goroutine</code> 是Go语言中并发的执行单位。有点抽象，其实就是和传统概念上的”线程“类似，可以理解为”线程“。</li>
+<li><code>channel</code>是Go语言中各个并发结构体(<code>goroutine</code>)之前的通信机制。 通俗的讲，就是各个<code>goroutine</code>之间通信的”管道“，有点类似于Linux中的管道。</li>
+</ul>
+<p>生成一个<code>goroutine</code>的方式非常的简单：Go一下，就生成了。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> f();</span><br></pre></td></tr></table></figure>
+
+<p>通信机制<code>channel</code>也很方便，传数据用<code>channel &lt;- data</code>，取数据用<code>&lt;-channel</code>。</p>
+<p>在通信过程中，传数据<code>channel &lt;- data</code>和取数据<code>&lt;-channel</code>必然会成对出现，因为这边传，那边取，两个<code>goroutine</code>之间才会实现通信。</p>
+<p>而且不管传还是取，必阻塞，直到另外的<code>goroutine</code>传或者取为止。</p>
+<p>有两个<code>goroutine</code>，其中一个发起了向<code>channel</code>中发起了传值操作。（<code>goroutine</code>为矩形，<code>channel</code>为箭头）</p>
+<p><img src="/img/csp/send.png" alt></p>
+<p>左边的<code>goroutine</code>开始阻塞，等待有人接收。</p>
+<p>这时候，右边的<code>goroutine</code>发起了接收操作。</p>
+<p><img src="/img/csp/accept.png" alt></p>
+<p>右边的<code>goroutine</code>也开始阻塞，等待别人传送。</p>
+<p>这时候，两边<code>goroutine</code>都发现了对方，于是两个<code>goroutine</code>开始一传，一收。</p>
+<p><img src="/img/csp/communicate.png" alt></p>
+<p>这便是Golang CSP并发模型最基本的形式。</p>
+<h1 id="Go并发模型的实现原理"><a href="#Go并发模型的实现原理" class="headerlink" title="Go并发模型的实现原理"></a>Go并发模型的实现原理</h1><p>我们先从线程讲起，无论语言层面何种并发模型，到了操作系统层面，一定是以线程的形态存在的。而操作系统根据资源访问权限的不同，体系架构可分为用户空间和内核空间；内核空间主要操作访问CPU资源、I/O资源、内存资源等硬件资源，为上层应用程序提供最基本的基础资源，用户空间呢就是上层应用程序的固定活动空间，用户空间不可以直接访问资源，必须通过“系统调用”、“库函数”或“Shell脚本”来调用内核空间提供的资源。</p>
+<p>我们现在的计算机语言，可以狭义的认为是一种“软件”，它们中所谓的“线程”，往往是用户态的线程，和操作系统本身内核态的线程（简称KSE），还是有区别的。</p>
+<p>线程模型的实现，可以分为以下几种方式：</p>
+<h3 id="用户级线程模型"><a href="#用户级线程模型" class="headerlink" title="用户级线程模型"></a>用户级线程模型</h3><p><img src="/img/csp/yonghutai.png" alt></p>
+<p>如图所示，多个用户态的线程对应着一个内核线程，程序线程的创建、终止、切换或者同步等线程工作必须自身来完成。</p>
+<h3 id="内核级线程模型"><a href="#内核级线程模型" class="headerlink" title="内核级线程模型"></a>内核级线程模型</h3><p><img src="/img/csp/neiheji.png" alt></p>
+<p>这种模型直接调用操作系统的内核线程，所有线程的创建、终止、切换、同步等操作，都由内核来完成。C++就是这种。</p>
+<h3 id="两级线程模型"><a href="#两级线程模型" class="headerlink" title="两级线程模型"></a>两级线程模型</h3><p><img src="/img/csp/liangji.png" alt></p>
+<p>这种模型是介于用户级线程模型和内核级线程模型之间的一种线程模型。这种模型的实现非常复杂，和内核级线程模型类似，一个进程中可以对应多个内核级线程，但是进程中的线程不和内核线程一一对应；这种线程模型会先创建多个内核级线程，然后用自身的用户级线程去对应创建的多个内核级线程，自身的用户级线程需要本身程序去调度，内核级的线程交给操作系统内核去调度。</p>
+<p>Go语言的线程模型就是一种特殊的两级线程模型。暂且叫它“MPG”模型吧。</p>
+<h2 id="Go线程实现模型MPG"><a href="#Go线程实现模型MPG" class="headerlink" title="Go线程实现模型MPG"></a>Go线程实现模型MPG</h2><p><code>M</code>指的是<code>Machine</code>，一个<code>M</code>直接关联了一个内核线程。<br><code>P</code>指的是”processor”，代表了<code>M</code>所需的上下文环境，也是处理用户级代码逻辑的处理器。<br><code>G</code>指的是<code>Goroutine</code>，其实本质上也是一种轻量级的线程。</p>
+<p>三者关系如下图所示：</p>
+<p><img src="/img/csp/GMPrelation.png" alt></p>
+<p>以上这个图讲的是两个线程(内核线程)的情况。一个M会对应一个内核线程，一个M也会连接一个上下文P，一个上下文P相当于一个“处理器”，一个上下文连接一个或者多个Goroutine。P(Processor)的数量是在启动时被设置为环境变量GOMAXPROCS的值，或者通过运行时调用函数<code>runtime.GOMAXPROCS()</code>进行设置。Processor数量固定意味着任意时刻只有固定数量的线程在运行go代码。Goroutine中就是我们要执行并发的代码。图中P正在执行的<code>Goroutine</code>为蓝色的；处于待执行状态的<code>Goroutine</code>为灰色的，灰色的<code>Goroutine</code>形成了一个队列<code>runqueues</code></p>
+<p>三者关系的宏观的图为：</p>
+<p><img src="/img/csp/total.png" alt></p>
+<h4 id="抛弃P-Processor"><a href="#抛弃P-Processor" class="headerlink" title="抛弃P(Processor)"></a>抛弃P(Processor)</h4><p>你可能会想，为什么一定需要一个上下文，我们能不能直接除去上下文，让<code>Goroutine</code>的<code>runqueues</code>挂到M上呢？答案是不行，需要上下文的目的，是让我们可以直接放开其他线程，当遇到内核线程阻塞的时候。</p>
+<p>一个很简单的例子就是系统调用<code>sysall</code>，一个线程肯定不能同时执行代码和系统调用被阻塞，这个时候，此线程M需要放弃当前的上下文环境P，以便可以让其他的<code>Goroutine</code>被调度执行。</p>
+<p><img src="/img/csp/giveupP.png" alt></p>
+<p>如上图左图所示，M0中的G0执行了syscall，然后就创建了一个M1(也有可能本身就存在，没创建)，（转向右图）然后M0丢弃了P，等待syscall的返回值，M1接受了P，将·继续执行<code>Goroutine</code>队列中的其他<code>Goroutine</code>。</p>
+<p>当系统调用syscall结束后，M0会“偷”一个上下文，如果不成功，M0就把它的Gouroutine G0放到一个全局的runqueue中，然后自己放到线程池或者转入休眠状态。全局runqueue是各个P在运行完自己的本地的Goroutine runqueue后用来拉取新goroutine的地方。P也会周期性的检查这个全局runqueue上的goroutine，否则，全局runqueue上的goroutines可能得不到执行而饿死。</p>
+<h4 id="均衡的分配工作"><a href="#均衡的分配工作" class="headerlink" title="均衡的分配工作"></a>均衡的分配工作</h4><p>按照以上的说法，上下文P会定期的检查全局的goroutine 队列中的goroutine，以便自己在消费掉自身Goroutine队列的时候有事可做。假如全局goroutine队列中的goroutine也没了呢？就从其他运行的中的P的runqueue里偷。</p>
+<p>每个P中的<code>Goroutine</code>不同导致他们运行的效率和时间也不同，在一个有很多P和M的环境中，不能让一个P跑完自身的<code>Goroutine</code>就没事可做了，因为或许其他的P有很长的<code>goroutine</code>队列要跑，得需要均衡。<br>该如何解决呢？</p>
+<p>Go的做法倒也直接，从其他P中偷一半！</p>
+<p><img src="/img/csp/stealwork.png" alt></p>
+<p>参考文献：<br><a href="http://morsmachine.dk/go-scheduler" target="_blank" rel="noopener">The Go scheduler</a><br>《Go并发编程第一版》</p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2018/04/05/WeiboSummary/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2017/11/11/httpAndGolang/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>

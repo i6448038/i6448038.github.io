@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="Go语言的那些坑">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>Go语言的那些坑 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            Go语言的那些坑
+            
+          </h1>
+          <p class="posted-on">
+          2017-07-28
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/Golang/" rel="tag">
+                  Golang
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>Golang是我最喜欢的一门语言，它简洁、高效、易学习、开发效率高、还可以编译成机器码…<br>虽然它一出世，就饱受关注，而且现在在市面上逐渐流行开来，但是，它毕竟是一门新兴语言，还有很多让人不太习惯的地方（即坑，(<em>^__^</em>)），我作为新手，一边学习，一边踩坑，希望对其他人有借鉴作用。s</p>
+<h1 id="文件名字不要轻易以-test-go为结尾"><a href="#文件名字不要轻易以-test-go为结尾" class="headerlink" title="文件名字不要轻易以__test.go为结尾"></a>文件名字不要轻易以<code>__test.go</code>为结尾</h1><p>Golang的source文件的命名和其他语言本无差别，但是Golang自带<code>Unit test</code>，它的<code>unit test</code>有个小规范：所有<code>unit test</code>文件都要以<code>__test.go</code>为结尾！<br>所以，当你命名一个非<code>unit test</code>文件为XXX_test.go，而且执意要编译时，就会报错：<code>no buildable Go source files in XXXXXX(你的文件路径)</code>。<br>所以，切记，以<code>__test.go</code>为结尾的都是<code>unit test</code>的文件，且切记不要把<code>unit test</code>文件和普通Go文件放到一起，一定要把<code>unit test</code>文件集体放到一个目录中，否则会编译不过的。</p>
+<h1 id="语句fmt-Println-quot-这里是汉字-quot-字符串变量-字符串变量的值打印不出来的问题"><a href="#语句fmt-Println-quot-这里是汉字-quot-字符串变量-字符串变量的值打印不出来的问题" class="headerlink" title="语句fmt.Println(&quot;这里是汉字:&quot; + 字符串变量) 字符串变量的值打印不出来的问题"></a>语句<code>fmt.Println(&quot;这里是汉字:&quot; + 字符串变量)</code> 字符串变量的值打印不出来的问题</h1><p>现有如下程序：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">    m1 := getString()</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">"现在是:"</span> + m1)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getString</span><span class="params">()</span><span class="title">string</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"abd"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行指令<code>go run test.go</code></p>
+<img src="/img/go_keng/console.png">
+
+<p>但是单独打印变量<code>m1</code>却可以正常显示</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>  &#123;</span><br><span class="line">    m1 := getString()</span><br><span class="line"></span><br><span class="line">    fmt.Println(m1)</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">"现在是:"</span> + m1)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getString</span><span class="params">()</span><span class="title">string</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"abd"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<img src="/img/go_keng/console1.png">
+
+<p>这是为什么呢？很奇怪啊！<br>其实这要怪IDE，我的IDE是phpstorm + Golang插件包，IDE自带的console对中文的支持很不友好，带中文的字符串打印出来后，容易显示不全，其实通过<code>terminal</code>打印出来，是正确的！</p>
+<img src="/img/go_keng/terminal.png">
+
+<h1 id="多个defer出现的时候，多个defer之间按照LIFO（后进先出）的顺序执行"><a href="#多个defer出现的时候，多个defer之间按照LIFO（后进先出）的顺序执行" class="headerlink" title="多个defer出现的时候，多个defer之间按照LIFO（后进先出）的顺序执行"></a>多个<code>defer</code>出现的时候，多个<code>defer</code>之间按照LIFO（后进先出）的顺序执行</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>&#123;</span><br><span class="line">        fmt.Println(<span class="string">"1"</span>)</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>&#123;</span><br><span class="line">        fmt.Println(<span class="string">"2"</span>)</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>&#123;</span><br><span class="line">        fmt.Println(<span class="string">"3"</span>)</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对应的输出是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">3</span><br><span class="line">2</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<h1 id="panic中可以传任何值，不仅仅可以传string"><a href="#panic中可以传任何值，不仅仅可以传string" class="headerlink" title="panic中可以传任何值，不仅仅可以传string"></a><code>panic</code>中可以传任何值，不仅仅可以传string</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">if</span> r := <span class="built_in">recover</span>();r != <span class="literal">nil</span>&#123;</span><br><span class="line">            fmt.Println(r)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">    <span class="built_in">panic</span>([]<span class="keyword">int</span>&#123;<span class="number">12312</span>&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[12312]</span><br></pre></td></tr></table></figure>
+
+<h1 id="用for-range来遍历数组或者map的时候，被遍历的指针是不变的，每次遍历仅执行struct值的拷贝"><a href="#用for-range来遍历数组或者map的时候，被遍历的指针是不变的，每次遍历仅执行struct值的拷贝" class="headerlink" title="用for range来遍历数组或者map的时候，被遍历的指针是不变的，每次遍历仅执行struct值的拷贝"></a>用<code>for range</code>来遍历数组或者map的时候，被遍历的指针是不变的，每次遍历仅执行struct值的拷贝</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> student <span class="keyword">struct</span>&#123;</span><br><span class="line">    Name <span class="keyword">string</span></span><br><span class="line">    Age  <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> stus []student</span><br><span class="line"></span><br><span class="line">    stus = []student&#123;</span><br><span class="line">        &#123;Name:<span class="string">"one"</span>, Age: <span class="number">18</span>&#125;,</span><br><span class="line">        &#123;Name:<span class="string">"two"</span>, Age: <span class="number">19</span>&#125;,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    data := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]*student)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> i, v := <span class="keyword">range</span> stus&#123;</span><br><span class="line">        data[i] = &amp;v   <span class="comment">//应该改为：data[i] = &amp;stus[i]</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> i, v := <span class="keyword">range</span> data&#123;</span><br><span class="line">        fmt.Printf(<span class="string">"key=%d, value=%v \n"</span>, i,v)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以，结果输出为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">key=0, value=&amp;&#123;two 19&#125; </span><br><span class="line">key=1, value=&amp;&#123;two 19&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Go中没有继承！没有继承！Go中是叫组合！是组合！"><a href="#Go中没有继承！没有继承！Go中是叫组合！是组合！" class="headerlink" title="Go中没有继承！没有继承！Go中是叫组合！是组合！"></a>Go中没有继承！没有继承！Go中是叫组合！是组合！</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> student <span class="keyword">struct</span>&#123;</span><br><span class="line">    Name <span class="keyword">string</span></span><br><span class="line">    Age  <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *student)</span> <span class="title">love</span><span class="params">()</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">"love"</span>)</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(p *student)</span> <span class="title">like</span><span class="params">()</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">"like first"</span>)</span><br><span class="line">    p.love()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> boy <span class="keyword">struct</span> &#123;</span><br><span class="line">    student</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(b * boy)</span> <span class="title">love</span><span class="params">()</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">"hate"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    b := boy&#123;&#125;</span><br><span class="line"></span><br><span class="line">    b.like()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">like first</span><br><span class="line">love</span><br></pre></td></tr></table></figure>
+
+<h1 id="不管运行顺序如何，当参数为函数的时候，要先计算参数的值"><a href="#不管运行顺序如何，当参数为函数的时候，要先计算参数的值" class="headerlink" title="不管运行顺序如何，当参数为函数的时候，要先计算参数的值"></a>不管运行顺序如何，当参数为函数的时候，要先计算参数的值</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a := <span class="number">1</span></span><br><span class="line">    <span class="keyword">defer</span> <span class="built_in">print</span>(function(a))</span><br><span class="line">    a = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">function</span><span class="params">(num <span class="keyword">int</span>)</span> <span class="title">int</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> num</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">print</span><span class="params">(num <span class="keyword">int</span>)</span></span>&#123;</span><br><span class="line">    fmt.Println(num)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<h1 id="注意是struct的函数，还是-struct的函数"><a href="#注意是struct的函数，还是-struct的函数" class="headerlink" title="注意是struct的函数，还是* struct的函数"></a>注意是<code>struct</code>的函数，还是<code>* struct</code>的函数</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> people <span class="keyword">interface</span> &#123;</span><br><span class="line">    speak()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> student <span class="keyword">struct</span>&#123;</span><br><span class="line">    name <span class="keyword">string</span></span><br><span class="line">    age <span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(stu *student)</span> <span class="title">speak</span><span class="params">()</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">"I am a student, I am "</span>, stu.age)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> p people</span><br><span class="line">    p = student&#123;name:<span class="string">"RyuGou"</span>, age:<span class="number">12</span>&#125; <span class="comment">//应该改为 p = &amp;student&#123;name:"RyuGou", age:12&#125;</span></span><br><span class="line">    p.speak()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cannot use student literal (type student) as type people in assignment:</span><br><span class="line">student does not implement people (speak method has pointer receiver)</span><br></pre></td></tr></table></figure>
+
+<h1 id="make-chan-int-和-make-chan-int-1-是不一样的"><a href="#make-chan-int-和-make-chan-int-1-是不一样的" class="headerlink" title="make(chan int) 和 make(chan int, 1)是不一样的"></a><code>make(chan int)</code> 和 <code>make(chan int, 1)</code>是不一样的</h1><p><code>chan</code>一旦被写入数据后，当前<code>goruntine</code>就会被阻塞，知道有人接收才可以（即 “ &lt;- ch”），如果没人接收，它就会一直阻塞着。而如果chan带一个缓冲，就会把数据放到缓冲区中，直到缓冲区满了，才会阻塞</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>) <span class="comment">//改为 ch := make(chan int, 1) 就好了</span></span><br><span class="line"></span><br><span class="line">    ch &lt;- <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">"success"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fatal error: all goroutines are asleep - deadlock!</span><br></pre></td></tr></table></figure>
+
+<h1 id="golang-的-select-的功能和-select-poll-epoll-相似，-就是监听-IO-操作，当-IO-操作发生时，触发相应的动作。"><a href="#golang-的-select-的功能和-select-poll-epoll-相似，-就是监听-IO-操作，当-IO-操作发生时，触发相应的动作。" class="headerlink" title="golang 的 select 的功能和 select, poll, epoll 相似， 就是监听 IO 操作，当 IO 操作发生时，触发相应的动作。"></a>golang 的 select 的功能和 select, poll, epoll 相似， 就是监听 IO 操作，当 IO 操作发生时，触发相应的动作。</h1><p> select 的代码形式和 switch 非常相似， 不过 select 的 case 里的操作语句只能是”IO操作”（不仅仅是取值<code>&lt;-channel</code>，赋值<code>channel&lt;-</code>也可以）， select 会一直等待等到某个 case 语句完成，也就是等到成功从channel中读到数据。 则 select 语句结束</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    ch &lt;- <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">select</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> msg :=&lt;-ch:</span><br><span class="line">        fmt.Println(msg)</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        fmt.Println(<span class="string">"default"</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">"success"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1</span><br><span class="line">success</span><br></pre></td></tr></table></figure>
+
+<p><code>default</code>可以判断chan是否已经满了</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">import &quot;fmt&quot;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">func main()&#123;</span><br><span class="line">    ch := make(chan int, 1)</span><br><span class="line"></span><br><span class="line">    select &#123;</span><br><span class="line">    case msg :=&lt;-ch:</span><br><span class="line">        fmt.Println(msg)</span><br><span class="line">    default:</span><br><span class="line">        fmt.Println(&quot;default&quot;)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fmt.Println(&quot;success&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">default</span><br><span class="line">success</span><br></pre></td></tr></table></figure>
+
+<p>此时因为<code>ch</code>中没有写入数据，为空，所以 case不会读取成功。 则 select 执行 default 语句。</p>
+<h1 id="Go语言中不存在未初始化的变量"><a href="#Go语言中不存在未初始化的变量" class="headerlink" title="Go语言中不存在未初始化的变量"></a>Go语言中不存在未初始化的变量</h1><p>变量定义基本方式为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var 发量名字 类型 = 表达式</span><br></pre></td></tr></table></figure>
+
+<p>其中类型和表达式均可省略，如果初始化表达式被省略，将用零值初始化该变量。</p>
+<ul>
+<li>数值变量对应的是0值</li>
+<li>布尔变量对应的是false</li>
+<li>字符串对应的零值是空字符串</li>
+<li>接口或者引用类型（包括slice，map，chan）变量对应的是nil</li>
+<li>数组或者结构体等聚合类型对应的零值是每个元素或字段对应该类型的零值。</li>
+</ul>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> s <span class="keyword">string</span> </span><br><span class="line">fmt.Println(s) <span class="comment">// ""</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="注意的问题"><a href="#注意的问题" class="headerlink" title=":=注意的问题"></a><code>:=</code>注意的问题</h1><ul>
+<li>使用<code>:=</code>定义的变量，仅能使用在函数内部。</li>
+<li>在定义多个变量的时候<code>:=</code>周围不一定是全部都是刚刚声明的，有些可能只是赋值，例如下面的err变量 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">in, err := os.Open(infile)</span><br><span class="line"><span class="comment">// TODO</span></span><br><span class="line">out, err := os.Create(outfile)</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h1 id="new在Go语言中只是一个预定义的函数，它并不是一个关键字，我们可以将new作为变量或者其他"><a href="#new在Go语言中只是一个预定义的函数，它并不是一个关键字，我们可以将new作为变量或者其他" class="headerlink" title="new在Go语言中只是一个预定义的函数，它并不是一个关键字，我们可以将new作为变量或者其他"></a><code>new</code>在Go语言中只是一个预定义的函数，它并不是一个关键字，我们可以将<code>new</code>作为变量或者其他</h1><p>例如:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">delta</span><span class="params">(old, <span class="built_in">new</span> <span class="keyword">int</span>)</span> <span class="title">int</span></span> &#123; </span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">new</span> - old </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上是正确的。</p>
+<h1 id="并不是使用new就一定会在堆上分配内存"><a href="#并不是使用new就一定会在堆上分配内存" class="headerlink" title="并不是使用new就一定会在堆上分配内存"></a>并不是使用<code>new</code>就一定会在堆上分配内存</h1><p>编译器会自动选择在栈上还是在堆上分配存储空间，但可能令人惊讶的是，这个选择并不是由用<code>var</code>还是<code>new</code>声明变量的方式决定的。</p>
+<p>请看例子:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">var</span> global *<span class="keyword">int</span> </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">f</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="keyword">int</span> x=<span class="number">1</span> </span><br><span class="line">    global = &amp;x</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">g</span><span class="params">()</span></span> &#123;</span><br><span class="line">    y := <span class="built_in">new</span>(<span class="keyword">int</span>)</span><br><span class="line">    *y = <span class="number">1</span> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>f()</code>函数中的<code>x</code>就是在堆上分配内存，而<code>g()</code>函数中的<code>y</code>就是分配在栈上。</p>
+<h1 id="init函数在同一个文件中可以包含多个"><a href="#init函数在同一个文件中可以包含多个" class="headerlink" title="init函数在同一个文件中可以包含多个"></a><code>init</code>函数在同一个文件中可以包含多个</h1><p>在同一个包文件中，可以包含有多个<code>init</code>函数，多个<code>init</code>函数的执行顺序和定义顺序一致。</p>
+<h1 id="Golang中没有“对象”"><a href="#Golang中没有“对象”" class="headerlink" title="Golang中没有“对象”"></a>Golang中没有“对象”</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="keyword">type</span> test <span class="keyword">struct</span> &#123;</span><br><span class="line">    name <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *test)</span> <span class="title">getName</span><span class="params">()</span></span>&#123;</span><br><span class="line">    fmt.Println(<span class="string">"hello world"</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> t *test</span><br><span class="line">    t = <span class="literal">nil</span></span><br><span class="line">    t.getName()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>能正常输出吗？会报错吗？</p>
+<p>输出为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hello world</span><br></pre></td></tr></table></figure>
+
+<p>可以正常输出。Go本质上不是面向对象的语言，Go中是不存在object的含义的，Go语言书籍中的对象也和Java、PHP中的对象有区别，不是真正的”对象”，是Go中struct的实体。</p>
+<p>调用getName方法，在Go中还可以转换，转换为：Type.method(t Type, arguments)<br>所以，以上代码main函数中还可以写成：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    (*test).getName(<span class="literal">nil</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Go中的指针-符号的含义"><a href="#Go中的指针-符号的含义" class="headerlink" title="Go中的指针*符号的含义"></a>Go中的指针<code>*</code>符号的含义</h1><p>&amp;的意思大家都明白的，取地址，假如你想获得一个变量的地址，只需在变量前加上&amp;即可。</p>
+<p>例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">a := 1</span><br><span class="line">b := &amp;a</span><br></pre></td></tr></table></figure>
+
+<p>现在，我拿到a的地址了，但是我想取得a指针指向的值，该如何操作呢？用<code>*</code>号，<code>*b</code>即可。<br>*的意思是对指针取值。</p>
+<p>下面对a的值加一</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a := 1</span><br><span class="line">b := &amp;a</span><br><span class="line">*b++</span><br></pre></td></tr></table></figure>
+
+<p><code>*</code>和<code>&amp;</code>可以相互抵消，同时注意，<code>*&amp;</code>可以抵消，但是<code>&amp;*</code>不可以；所以<code>a</code>和<code>*&amp;a</code>是一样的，和<code>*&amp;*&amp;*&amp;a</code>也是一样的。</p>
+<h1 id="os-Args获取命令行指令参数，应该从数组的1坐标开始"><a href="#os-Args获取命令行指令参数，应该从数组的1坐标开始" class="headerlink" title="os.Args获取命令行指令参数，应该从数组的1坐标开始"></a><code>os.Args</code>获取命令行指令参数，应该从数组的1坐标开始</h1><p><code>os.Args</code>的第一个元素，<code>os.Args[0]</code>, 是命令本身的名字</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"os"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    fmt.Println(os.Args[<span class="number">0</span>])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上代码，经过<code>go build</code>之后，打包成一个可执行文件<code>main</code>，然后运行指令<code>./main 123</code></p>
+<p>输出：<code>./main</code></p>
+<h1 id="数组切片slice的容量问题带来的bug"><a href="#数组切片slice的容量问题带来的bug" class="headerlink" title="数组切片slice的容量问题带来的bug"></a>数组切片slice的容量问题带来的bug</h1><p>请看下列代码:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    array := [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>&#125;</span><br><span class="line">    slice := array[<span class="number">0</span>:<span class="number">2</span>]</span><br><span class="line">    newSlice := <span class="built_in">append</span>(slice, <span class="number">50</span>)</span><br><span class="line">    newSlice[<span class="number">1</span>] += <span class="number">1</span></span><br><span class="line">    fmt.Println(slice)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>请问输出什么?<br>答案是:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[10 21]</span><br></pre></td></tr></table></figure>
+
+<p>如果稍作修改，将以上newSlice改为扩容三次，newSlice := append(append(append(slice, 50), 100), 150)如下:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    array := [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>&#125;</span><br><span class="line">    slice := array[<span class="number">0</span>:<span class="number">2</span>]</span><br><span class="line">    newSlice := <span class="built_in">append</span>(<span class="built_in">append</span>(<span class="built_in">append</span>(slice, <span class="number">50</span>), <span class="number">100</span>), <span class="number">150</span>)</span><br><span class="line">    newSlice[<span class="number">1</span>] += <span class="number">1</span></span><br><span class="line">    fmt.Println(slice)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出为:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[10 20]</span><br></pre></td></tr></table></figure>
+
+<p>这特么是什么鬼？<br>这就要从Golang切片的扩容说起了；切片的扩容，就是当切片添加元素时，切片容量不够了，就会扩容，扩容的大小遵循下面的原则：（如果切片的容量小于1024个元素，那么扩容的时候slice的cap就翻番，乘以2；一旦元素个数超过1024个元素，增长因子就变成1.25，即每次增加原来容量的四分之一。）如果扩容之后，还没有触及原数组的容量，那么，切片中的指针指向的位置，就还是原数组（这就是产生bug的原因）；如果扩容之后，超过了原数组的容量，那么，Go就会开辟一块新的内存，把原来的值拷贝过来，这种情况丝毫不会影响到原数组。<br>建议尽量避免bug的产生。</p>
+<h1 id="map引用不存在的key，不报错"><a href="#map引用不存在的key，不报错" class="headerlink" title="map引用不存在的key，不报错"></a><code>map</code>引用不存在的key，不报错</h1><p>请问下面的例子输出什么，会报错吗？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    newMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">int</span>)</span><br><span class="line">    fmt.Println(newMap[<span class="string">"a"</span>])</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>答案是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0</span><br></pre></td></tr></table></figure>
+
+<p>不报错。不同于PHP，Golang的map和Java的HashMap类似，Java引用不存在的会返回null，而Golang会返回初始值</p>
+<h1 id="map使用range遍历顺序问题，并不是录入的顺序，而是随机顺序"><a href="#map使用range遍历顺序问题，并不是录入的顺序，而是随机顺序" class="headerlink" title="map使用range遍历顺序问题，并不是录入的顺序，而是随机顺序"></a>map使用range遍历顺序问题，并不是录入的顺序，而是随机顺序</h1><p>请看下面的例子:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    newMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">int</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">10</span>; i++&#123;</span><br><span class="line">        newMap[i] = i</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> key, value := <span class="keyword">range</span> newMap&#123;</span><br><span class="line">        fmt.Printf(<span class="string">"key is %d, value is %d\n"</span>, key, value)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">key is 1, value is 1</span><br><span class="line">key is 3, value is 3</span><br><span class="line">key is 5, value is 5</span><br><span class="line">key is 7, value is 7</span><br><span class="line">key is 9, value is 9</span><br><span class="line">key is 0, value is 0</span><br><span class="line">key is 2, value is 2</span><br><span class="line">key is 4, value is 4</span><br><span class="line">key is 6, value is 6</span><br><span class="line">key is 8, value is 8</span><br></pre></td></tr></table></figure>
+
+<p>是杂乱无章的顺序。map的遍历顺序不固定，这种设计是有意为之的，能为能防止程序依赖特定遍历顺序。</p>
+<h1 id="channel作为函数参数传递，可以声明为只取-lt-chan-或者只发送-chan-lt"><a href="#channel作为函数参数传递，可以声明为只取-lt-chan-或者只发送-chan-lt" class="headerlink" title="channel作为函数参数传递，可以声明为只取(&lt;- chan)或者只发送(chan &lt;-)"></a>channel作为函数参数传递，可以声明为只取(&lt;- chan)或者只发送(chan &lt;-)</h1><p>一个函数在将channel作为一个类型的参数来声明的时候，可以将channl声明为只可以取值(&lt;- chan)或者只可以发送值(chan &lt;-)，不特殊说明，则既可以取值，也可以发送值。</p>
+<p>例如：只可以发送值</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">setData</span><span class="params">(ch <span class="keyword">chan</span> &lt;- <span class="keyword">string</span>)</span></span>&#123;</span><br><span class="line">    <span class="comment">//TODO</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果在以上函数中存在&lt;-ch则会编译不通过。</p>
+<p>如下是只可以取值:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">setData</span><span class="params">(ch &lt;- <span class="keyword">chan</span>  <span class="keyword">string</span>)</span></span>&#123;</span><br><span class="line">    <span class="comment">//TODO</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果以上函数中存在ch&lt;-则在编译期会报错</p>
+<h1 id="使用channel时，注意goroutine之间的执行流程问题"><a href="#使用channel时，注意goroutine之间的执行流程问题" class="headerlink" title="使用channel时，注意goroutine之间的执行流程问题"></a>使用channel时，注意goroutine之间的执行流程问题</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">)</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>)</span><br><span class="line">    <span class="keyword">go</span> setData(ch)</span><br><span class="line">    fmt.Println(&lt;-ch)</span><br><span class="line">    fmt.Println(&lt;-ch)</span><br><span class="line">    fmt.Println(&lt;-ch)</span><br><span class="line">    fmt.Println(&lt;-ch)</span><br><span class="line">    fmt.Println(&lt;-ch)</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">setData</span><span class="params">(ch  <span class="keyword">chan</span>  <span class="keyword">string</span>)</span></span>&#123;</span><br><span class="line">    ch &lt;- <span class="string">"test"</span></span><br><span class="line">    ch &lt;- <span class="string">"hello wolrd"</span></span><br><span class="line">    ch &lt;- <span class="string">"123"</span></span><br><span class="line">    ch &lt;- <span class="string">"456"</span></span><br><span class="line">    ch &lt;- <span class="string">"789"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上代码的执行流程是怎样的呢？<br>一个基于无缓存channel的发送或者取值操作，会导致当前goroutine阻塞，一直等待到另外的一个goroutine做相反的取值或者发送操作以后，才会正常跑。<br>以上例子中的流程是这样的：</p>
+<p>主goroutine等待接收，另外的那一个goroutine发送了“test”并等待处理；完成通信后，打印出”test”；两个goroutine各自继续跑自己的。<br>主goroutine等待接收，另外的那一个goroutine发送了“hello world”并等待处理；完成通信后，打印出”hello world”；两个goroutine各自继续跑自己的。<br>主goroutine等待接收，另外的那一个goroutine发送了“123”并等待处理；完成通信后，打印出”123”；两个goroutine各自继续跑自己的。<br>主goroutine等待接收，另外的那一个goroutine发送了“456”并等待处理；完成通信后，打印出”456”；两个goroutine各自继续跑自己的。<br>主goroutine等待接收，另外的那一个goroutine发送了“789”并等待处理；完成通信后，打印出”789”；两个goroutine各自继续跑自己的。</p>
+<p>记住：Golang的channel是用来goroutine之间通信的，且通信过程中会阻塞。</p>
+<p><a href="https://i6448038.github.io/2017/10/06/GolangDetailsTwo/" target="_blank" rel="noopener">Go语言的那些坑二</a><br><a href="https://i6448038.github.io/2018/07/18/golang-mistakes/" target="_blank" rel="noopener">Go语言的那些坑三</a></p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+        <div class="nav-previous">
+          <a href="/2017/08/13/PHP性能优化/" rel="prev"><span class="meta-arraw meta-arraw-left"></span> Older Posts</a>
+        </div>
+      
+      
+        <div class="nav-next">
+          <a href="/2017/07/09/Phalcon的那些坑/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>
