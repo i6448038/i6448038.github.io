@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!--Description-->
+  
+
+  <!--Author-->
+  
+  <meta name="author" content="菜刚">
+  
+
+  <!--Open Graph Title-->
+  
+      <meta property="og:title" content="Go语言设计模式之单例模式">
+  
+  <!--Open Graph Description-->
+  
+  <!--Open Graph Site Name-->
+  <meta property="og:site_name" content="菜刚RyuGou的博客">
+  <!--Type page-->
+  
+      <meta property="og:type" content="article">
+  
+  <!--Page Cover-->
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- Title -->
+  
+  <title>Go语言设计模式之单例模式 - 菜刚RyuGou的博客</title>
+
+
+  <link rel="shortcut icon" href="https://avatars2.githubusercontent.com/u/6186049?v=4">
+
+  <!-- Custom CSS/Sass -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!----------------------------
+  https://github.com/GallenHu/hexo-theme-Daily
+
+ _____            _   _
+|  __ \          (_) | |
+| |  | |   __ _   _  | |  _   _
+| |  | |  / _` | | | | | | | | |
+| |__| | | (_| | | | | | | |_| |
+|_____/   \__,_| |_| |_|  \__, |
+                          __/ |
+                         |___/
+
+    --------------------------->
+
+</head>
+
+
+<body>
+
+  <!-- Nav -->
+  <header class="site-header">
+  <div class="header-inside">
+    <div class="logo">
+      <a href="/" rel="home">
+        
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" alt="菜刚RyuGou的博客" height="60">
+        
+      </a>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse">
+        <ul class="navbar-nav">
+          
+          
+            <li>
+              <a href="/.">
+                
+                  首页
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/archives">
+                
+                  文章列表
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/about">
+                
+                  关于我
+                
+              </a>
+            </li>
+          
+            <li>
+              <a href="/atom.xml">
+                
+                  rss
+                
+              </a>
+            </li>
+          
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+    <div class="button-wrap">
+      <button class="menu-toggle">Primary Menu</button>
+    </div>
+  </div>
+</header>
+
+
+  <!-- Main Content -->
+  <div class="content-area">
+  <div class="post">
+    <!-- Post Content -->
+    <div class="container">
+      <article>
+        <!-- Title date & tags -->
+        <div class="post-header">
+          <h1 class="entry-title">
+            Go语言设计模式之单例模式
+            
+          </h1>
+          <p class="posted-on">
+          2023-12-16
+          </p>
+          <div class="tags-links">
+            
+              
+                <a href="/tags/Go设计模式/" rel="tag">
+                  Go设计模式
+                </a>
+              
+            
+          </div>
+        </div>
+        <!-- Post Main Content -->
+        <div class="entry-content has_line_number">
+          <p>  单例模式的概念非常好理解，但凡接触过设计模式的同学，都能讲出一二来。</p>
+<h1 id="1-模式介绍"><a href="#1-模式介绍" class="headerlink" title="1.模式介绍"></a>1.模式介绍</h1><p>单例设计模式（Singleton Design Pattern）：一个类只允许创建一个对象（或者实例），那这个类就是一个单例类，这种设计模式就叫作单例模式。<br>  单例模式最常见的使用就是在程序启动时候创建加载基础组件：配置文件、实例日志组件、数据库组件、缓存组件等等(很多时候这种加载方式会用IOC容器来实现)。<br>  这些全局唯一的组件实例在程序使用能够带来：提高系统效率(数据库连接池、线程池)、杜绝多线程资源访问冲突(日志处理)等好处。</p>
+<h1 id="2-模式demo"><a href="#2-模式demo" class="headerlink" title="2.模式demo"></a>2.模式demo</h1><p>根据单例模式实现的方式，可分为：<code>饿汉模式</code>和<code>懒汉模式</code>。</p>
+<p><code>饿汉模式</code>：单例模式最常见实现的方式，在类加载的时候静态实例就已经加载好了。<br><code>懒汉模式</code>：只在使用的时候进行加载，有延迟加载的效果。</p>
+<h2 id="2-1-饿汉模式实现"><a href="#2-1-饿汉模式实现" class="headerlink" title="2.1 饿汉模式实现"></a>2.1 饿汉模式实现</h2><p>由于<code>饿汉模式</code>是在程序加载的时候就创建并实例化了，所以无需考虑多并发的情况。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"fmt"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Singleton <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 在这里定义单例对象的属性</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> instance *Singleton = createInstance()</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">createInstance</span><span class="params">()</span> *<span class="title">Singleton</span></span> &#123;</span><br><span class="line">	<span class="comment">// 在这里创建并初始化单例对象</span></span><br><span class="line">	<span class="keyword">return</span> &amp;Singleton&#123;</span><br><span class="line">		<span class="comment">// 初始化单例对象的属性</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetInstance</span><span class="params">()</span> *<span class="title">Singleton</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 使用单例模式获取实例</span></span><br><span class="line">	singletonInstance := GetInstance()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 使用单例实例</span></span><br><span class="line">	fmt.Println(singletonInstance)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-2-懒汉模式实现"><a href="#2-2-懒汉模式实现" class="headerlink" title="2.2 懒汉模式实现"></a>2.2 懒汉模式实现</h2><p>由于<code>懒汉模式</code>是在使用的时候再创建实例，属于懒加载；此时程序已经启动并正在运行，此时创建实例可能会出现多线程的情况，所以要考虑并发问题。</p>
+<h3 id="2-2-1-普通实现方式"><a href="#2-2-1-普通实现方式" class="headerlink" title="2.2.1 普通实现方式"></a>2.2.1 普通实现方式</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"sync"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Singleton <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 在这里定义单例对象的属性</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> instance *Singleton</span><br><span class="line"><span class="keyword">var</span> mu sync.Mutex</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetInstance</span><span class="params">()</span> *<span class="title">Singleton</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> instance == <span class="literal">nil</span> &#123;</span><br><span class="line">		mu.Lock()</span><br><span class="line">		<span class="keyword">defer</span> mu.Unlock()</span><br><span class="line">		<span class="keyword">if</span> instance == <span class="literal">nil</span> &#123;</span><br><span class="line">			instance = &amp;Singleton&#123;</span><br><span class="line">				<span class="comment">// 初始化单例对象的属性</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 使用单例模式获取实例</span></span><br><span class="line">	singletonInstance := GetInstance()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 使用单例实例</span></span><br><span class="line">	fmt.Println(singletonInstance)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-2-Go语言特定实现方式"><a href="#2-2-2-Go语言特定实现方式" class="headerlink" title="2.2.2 Go语言特定实现方式"></a>2.2.2 Go语言特定实现方式</h3><p>以上都是一般语言通用的实现方式，还有一种Go语言独有实现的方式——使用<code>sync.Once</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"sync"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Singleton <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 在这里定义单例对象的属性</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> instance *Singleton</span><br><span class="line"><span class="keyword">var</span> once sync.Once</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetInstance</span><span class="params">()</span> *<span class="title">Singleton</span></span> &#123;</span><br><span class="line">	once.Do(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		instance = &amp;Singleton&#123;</span><br><span class="line">			<span class="comment">// 初始化单例对象的属性</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 使用单例模式获取实例</span></span><br><span class="line">	singletonInstance := GetInstance()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 使用单例实例</span></span><br><span class="line">	fmt.Println(singletonInstance)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>是不是很神奇？为什么不用判断<code>instance</code>是否存在？为什么不用加锁？</p>
+<p>这一切在源码面前都没有秘密：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> sync</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"sync/atomic"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Once <span class="keyword">struct</span> &#123;</span><br><span class="line">	done <span class="keyword">uint32</span> <span class="comment">// 记录实例数量</span></span><br><span class="line">	m    Mutex <span class="comment">// 锁</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Once)</span> <span class="title">Do</span><span class="params">(f <span class="keyword">func</span>()</span>)</span> &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 原子操作判断实例数量是否0，</span></span><br><span class="line">	<span class="comment">// 如果是0就创建新的实例</span></span><br><span class="line">	<span class="keyword">if</span> atomic.LoadUint32(&amp;o.done) == <span class="number">0</span> &#123;</span><br><span class="line">		o.doSlow(f)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Once)</span> <span class="title">doSlow</span><span class="params">(f <span class="keyword">func</span>()</span>)</span> &#123;</span><br><span class="line">	<span class="comment">// 加锁</span></span><br><span class="line">	o.m.Lock()</span><br><span class="line">	<span class="keyword">defer</span> o.m.Unlock()</span><br><span class="line">	<span class="keyword">if</span> o.done == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="comment">// 操作完传参的函数之后，</span></span><br><span class="line">		<span class="comment">// 原子操作将实例变成1</span></span><br><span class="line">		<span class="keyword">defer</span> atomic.StoreUint32(&amp;o.done, <span class="number">1</span>)</span><br><span class="line">		f()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实际上就是Go语言在基础库层面帮我们封装了通用的单例模式实现方式。</p>
+<h1 id="3-源码解析"><a href="#3-源码解析" class="headerlink" title="3.源码解析"></a>3.源码解析</h1><h2 id="3-1-beego的orm链接实例"><a href="#3-1-beego的orm链接实例" class="headerlink" title="3.1 beego的orm链接实例"></a>3.1 beego的orm链接实例</h2><p>在beego框架中，orm组件就使用了单例模式。</p>
+<p>beego会将数据库的配置信息通过<code>orm.RegisterDataBase(&quot;default&quot;, &quot;mysql&quot;, &quot;root:123456@tcp(127.0.0.1:3306)/beego?charset=utf8&quot;)</code>函数存储至beego的orm结构体<code>orm.alias</code>中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> alias <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name            <span class="keyword">string</span></span><br><span class="line">	Driver          DriverType</span><br><span class="line">	DriverName      <span class="keyword">string</span></span><br><span class="line">	DataSource      <span class="keyword">string</span></span><br><span class="line">	MaxIdleConns    <span class="keyword">int</span></span><br><span class="line">	MaxOpenConns    <span class="keyword">int</span></span><br><span class="line">	ConnMaxLifetime time.Duration</span><br><span class="line">	StmtCacheSize   <span class="keyword">int</span></span><br><span class="line">	DB              *DB</span><br><span class="line">	DbBaser         dbBaser</span><br><span class="line">	TZ              *time.Location</span><br><span class="line">	Engine          <span class="keyword">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>期间还生成数据库连接所使用的Go基础库实例<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">```Go</span><br><span class="line">type DB struct &#123;</span><br><span class="line">	// Atomic access only. At top of struct to prevent mis-alignment</span><br><span class="line">	// on 32-bit platforms. Of type time.Duration.</span><br><span class="line">	waitDuration int64 // Total time waited for new connections.</span><br><span class="line"></span><br><span class="line">	connector driver.Connector</span><br><span class="line">	// numClosed is an atomic counter which represents a total number of</span><br><span class="line">	// closed connections. Stmt.openStmt checks it before cleaning closed</span><br><span class="line">	// connections in Stmt.css.</span><br><span class="line">	numClosed uint64</span><br><span class="line"></span><br><span class="line">	mu           sync.Mutex    // protects following fields</span><br><span class="line">	freeConn     []*driverConn // free connections ordered by returnedAt oldest to newest</span><br><span class="line">	connRequests map[uint64]chan connRequest</span><br><span class="line">	nextRequest  uint64 // Next key to use in connRequests.</span><br><span class="line">	numOpen      int    // number of opened and pending open connections</span><br><span class="line">	// Used to signal the need for new connections</span><br><span class="line">	// a goroutine running connectionOpener() reads on this chan and</span><br><span class="line">	// maybeOpenNewConnections sends on the chan (one send per needed connection)</span><br><span class="line">	// It is closed during db.Close(). The close tells the connectionOpener</span><br><span class="line">	// goroutine to exit.</span><br><span class="line">	openerCh          chan struct&#123;&#125;</span><br><span class="line">	closed            bool</span><br><span class="line">	dep               map[finalCloser]depSet</span><br><span class="line">	lastPut           map[*driverConn]string // stacktrace of last conn&apos;s put; debug only</span><br><span class="line">	maxIdleCount      int                    // zero means defaultMaxIdleConns; negative means 0</span><br><span class="line">	maxOpen           int                    // &lt;= 0 means unlimited</span><br><span class="line">	maxLifetime       time.Duration          // maximum amount of time a connection may be reused</span><br><span class="line">	maxIdleTime       time.Duration          // maximum amount of time a connection may be idle before being closed</span><br><span class="line">	cleanerCh         chan struct&#123;&#125;</span><br><span class="line">	waitCount         int64 // Total number of connections waited for.</span><br><span class="line">	maxIdleClosed     int64 // Total number of connections closed due to idle count.</span><br><span class="line">	maxIdleTimeClosed int64 // Total number of connections closed due to idle time.</span><br><span class="line">	maxLifetimeClosed int64 // Total number of connections closed due to max connection lifetime limit.</span><br><span class="line"></span><br><span class="line">	stop func() // stop cancels the connection opener.</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>并将<code>sql.DB</code>实例以属性的方式与<code>orm.alias</code>关联起来。<br>实例化如下的结构体：</p>
+<p><img src="/img/singleton/singleton.png" alt="image"></p>
+<p>以上结构体在每次添加(使用<code>addAliasWthDB</code>函数)的时候会根据“别名<code>alias</code>”创建唯一的实例。<br>具体的调用函数为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addAliasWthDB</span><span class="params">(aliasName, driverName <span class="keyword">string</span>, db *sql.DB, params ...DBOption)</span> <span class="params">(*alias, error)</span></span> &#123;</span><br><span class="line">	existErr := fmt.Errorf(<span class="string">"DataBase alias name `%s` already registered, cannot reuse"</span>, aliasName)</span><br><span class="line">	<span class="comment">// 根据hash表判断是否存在，如果存在，则直接返回</span></span><br><span class="line">	<span class="keyword">if</span> _, ok := dataBaseCache.get(aliasName); ok &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, existErr</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果hash表中不存在，则创建新的实例对象。</span></span><br><span class="line">	al, err := newAliasWithDb(aliasName, driverName, db, params...)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> !dataBaseCache.add(aliasName, al) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, existErr</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> al, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上函数中使用一张hash表判断别名<code>alias</code>为xxx的实例存不存在，这个hash表就在orm包中内部结构体<code>_dbCache</code>的<code>cache</code>属性中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// database alias cacher.</span></span><br><span class="line"><span class="keyword">type</span> _dbCache <span class="keyword">struct</span> &#123;</span><br><span class="line">	mux   sync.RWMutex</span><br><span class="line">	<span class="comment">// 判断alias是否存在所使用的hash表</span></span><br><span class="line">	cache <span class="keyword">map</span>[<span class="keyword">string</span>]*alias </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查询hash表中是否存在实例</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ac *_dbCache)</span> <span class="title">get</span><span class="params">(name <span class="keyword">string</span>)</span> <span class="params">(al *alias, ok <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	ac.mux.RLock()</span><br><span class="line">	<span class="keyword">defer</span> ac.mux.RUnlock()</span><br><span class="line">	al, ok = ac.cache[name]</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 向hash表中存入</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ac *_dbCache)</span> <span class="title">add</span><span class="params">(name <span class="keyword">string</span>, al *alias)</span> <span class="params">(added <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	ac.mux.Lock()</span><br><span class="line">	<span class="keyword">defer</span> ac.mux.Unlock()</span><br><span class="line">	<span class="keyword">if</span> _, ok := ac.cache[name]; !ok &#123;</span><br><span class="line">		ac.cache[name] = al</span><br><span class="line">		added = <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>beego的orm注册的流程图如下：<br><img src="/img/singleton/singleton2.png" alt="image"><br>可见，beego中相同<code>alias</code>的orm实例都是相同的，每次获取实例都是同一个实例，虽然代码书写上与传统的单例模式有些差别，但是本质上还是使用了单例这种设计模式。</p>
+
+        </div>
+      </article>
+    </div>
+    <!-- Comments -->
+    <div class="container">
+      
+<section id="comment">
+  <!-- <h1 class="title">Comments</h1> -->
+
+  
+</section>
+
+
+    </div>
+    <!-- Pre or Next -->
+    <div class="nav-links">
+      
+      
+        <div class="nav-next">
+          <a href="/2023/10/21/decorator/" rel="prev">Newer Posts <span class="meta-arraw meta-arraw-right"></span></a>
+        </div>
+      
+    </div>
+
+  </div>
+</div>
+
+
+  <!-- Footer -->
+  <!-- Footer-widgets -->
+<div class="footer-widgets">
+  <div class="row inside-wrapper">
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">其他博客</h1>
+        <div class="custom-widget-content">
+          
+          <ul><li><a href="https://blog.csdn.net/i6448038" target="_blank">csdn</a></li></ul>
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Contact</h1>
+        <div class="widget-text">
+          
+            
+              <a href="https://github.com/i6448038" class="icon icon-github" target="_blank">github</a>
+            
+              <a href="https://weibo.com/2157917883/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" class="icon icon-weibo" target="_blank">weibo</a>
+            
+          
+        </div>
+      </aside>
+    </div>
+    <div class="col-1-3">
+      <aside>
+        <h1 class="widget-title">Search</h1>
+        <div class="widget-text">
+          <form onSubmit="return appDaily.submitSearch('')">
+            <p>
+              <input type="text" placeholder="search..." id="homeSearchInput">
+            </p>
+            <!-- <input type="submit" value="GO"> -->
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<!-- Footer -->
+<footer class="site-info">
+  <p>
+    <span>菜刚RyuGou的博客 &copy; 2023</span>
+    
+      <span class="split">|</span>
+      <span>Powered by <a href="/about" target="_blank">RyuGou</a></span>
+    
+  </p>
+</footer>
+
+
+  <!-- After footer scripts -->
+  <!-- scripts -->
+<script src="/js/app.js"></script>
+
+
+
+
+
+</body>
+
+</html>
