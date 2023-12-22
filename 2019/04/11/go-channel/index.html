@@ -232,7 +232,7 @@
 <p><img src="/img/channel/hchan_block8.gif" alt></p>
 <p>G1并没有锁住channel，然后将数据放到缓存中，而是直接把数据从G1直接copy到了G2的栈中。<br>这种方式非常的赞！在唤醒过程中，G2无需再获得channel的锁，然后从缓存中取数据。减少了内存的copy，提高了效率。</p>
 <p>之后的事情显而易见：<br><img src="/img/channel/hchan_block9.gif" alt></p>
-<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg" alt></p>
+<h2 id="更多精彩内容，请关注我的微信公众号-码农RyuGou"><a href="#更多精彩内容，请关注我的微信公众号-码农RyuGou" class="headerlink" title="更多精彩内容，请关注我的微信公众号 码农RyuGou"></a>更多精彩内容，请关注我的微信公众号 <code>码农RyuGou</code></h2><p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
 <p>参考文献：</p>
 <ul>
 <li><a href="https://www.youtube.com/watch?v=KBZlN0izeiY" target="_blank" rel="noopener">https://www.youtube.com/watch?v=KBZlN0izeiY</a></li>
