@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Allow: /archives/
+Allow: /tags/
+Allow: /js/
+Allow: /style/

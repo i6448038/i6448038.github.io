@@ -1,1162 +1,250 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  
 
-  
-  <title>菜刚RyuGou的博客</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="菜刚RyuGou的博客">
-<meta property="og:url" content="http://yoursite.com/page/5/index.html">
-<meta property="og:site_name" content="菜刚RyuGou的博客">
-<meta property="og:locale">
-<meta property="article:author" content="菜刚">
-<meta name="twitter:card" content="summary">
-  
-    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png">
-  
-  
-    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
-  
-  
-<link rel="stylesheet" href="/css/style.css">
 
-<meta name="generator" content="Hexo 7.3.0"></head>
+  <!DOCTYPE html>
+  <html lang="">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="renderer" content="webkit">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="description" content=RyuGou的博客 >
+  <meta name="keywords" content=Go,Golang,后端研发,运维,devops >
 
-<body>
-  <div id="container">
-    <div id="wrap">
-      <header id="header">
-  <div id="banner"></div>
-  <div id="header-outer" class="outer">
-    <div id="header-title" class="inner">
-      <h1 id="logo-wrap">
-        <a href="/" id="logo">菜刚RyuGou的博客</a>
-      </h1>
+  <head>
+    <title>
+      未来的不可知，是你前进的动力源 [ 菜刚RyuGou的博客 ]
+    </title>
+  <meta name="generator" content="Hexo 7.3.0"></head>
+
+  <body>
+
+    <link rel="stylesheet" href="/css/header.css">
+<div class="header">
+  <div class="logo">
+    <span class="pull-left">
+      <a id="site-name" href="/">
+        RyuGou&#39;s blog
+      </a>
+    </span>
+  </div>
+  <ul class="nav-list">
+    
+      <li>
+        <a href="/">
+          首页
+        </a>
+      </li>
       
-    </div>
-    <div id="header-inner" class="inner">
-      <nav id="main-nav">
-        <a id="main-nav-toggle" class="nav-icon"></a>
-        
-          <a class="main-nav-link" href="/">Home</a>
-        
-          <a class="main-nav-link" href="/archives">Archives</a>
-        
-      </nav>
-      <nav id="sub-nav">
-        
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
-        
-        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
-      </nav>
-      <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      <li>
+        <a href="/about">
+          关于
+        </a>
+      </li>
+      
+  </ul>
+</div>
+
+      <!--<link rel="stylesheet" href="/css/top-header.css">
+<div id="top-bar" class="fixed">
+
+  <a class="goto-top" href="#"></a>
+  <ul class="bar-list bar-list-1">
+    
+      <li>
+        <p>
+          <a href="/">
+            <text class="bar-text bar-p1">
+              首页
+            </text>
+            <text class="bar-text bar-p2"></text>
+          </a>
+          <text class="bar-p3">/</text>
+        </p>
+      </li>
+      
+      <li>
+        <p>
+          <a href="/about">
+            <text class="bar-text bar-p1">
+              关于
+            </text>
+            <text class="bar-text bar-p2"></text>
+          </a>
+          <text class="bar-p3">/</text>
+        </p>
+      </li>
+      
+  </ul>
+</div>-->
+
+        <div id="content-outer">
+          <div class="content-inner">
+            <link rel="stylesheet" href="/css/index.css">
+<div class="paginator">
+  <div class="content">
+    <div class="contain-box1">
+
+      <div class="hd logodiv">
+        <img src="https://raw.githubusercontent.com/i6448038/easy/master/about.png" class="logopng" alt="logo">
+          <p class="logot">
+            RyuGou的博客
+              <span class="logo_2"></span>
+              <h3 class="words" style="font-weight: bold;font-family: Georgia;">
+                未来的不可知，是你前进的动力源！
+              </h3>
+          </p>
       </div>
+      <link rel="stylesheet" href="/css/nav.css">
+<div class="hd">
+  <ol class="breadcrumb">
+    
+      <li><a class="ba" href="/about">
+          关于我👀
+        </a></li>
+      
+      <li><a class="ba" href="/">
+          访问主站🎃
+        </a></li>
+      
+      <li><a class="ba" href="https://github.com/i6448038">
+          GitHub🧨
+        </a></li>
+      
+  </ol>
+  <hr>
+</div>
+
     </div>
-  </div>
-</header>
-      <div class="outer">
-        <section id="main">
-  
-    <article id="post-MySQL主从复制读写分离搭建" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/06/27/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E8%AF%BB%E5%86%99%E5%88%86%E7%A6%BB%E6%90%AD%E5%BB%BA/" class="article-date">
-  <time datetime="2017-06-26T16:50:08.000Z" itemprop="datePublished">2017-06-27</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/06/27/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E8%AF%BB%E5%86%99%E5%88%86%E7%A6%BB%E6%90%AD%E5%BB%BA/">MySQL主从复制读写分离搭建</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="MySQL主从设置"><a href="#MySQL主从设置" class="headerlink" title="MySQL主从设置"></a>MySQL主从设置</h1><p>MySQL主从复制，读写分离的设置非常简单：</p>
-<h2 id="修改配置my-cnf文件"><a href="#修改配置my-cnf文件" class="headerlink" title="修改配置my.cnf文件"></a>修改配置<code>my.cnf</code>文件</h2><p>master 和 slave设置的差不多：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">log-bin=mysql-bin  </span><br><span class="line">server-id=222  </span><br></pre></td></tr></table></figure>
-
-<p><code>log-bin=mysql-bin</code>的意思是：启用二进制日志。<br><code>server-id=222</code>的意思是设置了服务器的唯一ID，默认是1，一般取IP最后一段，可以写成别的，只要不和其他mysql服务器重复就好。<br>这里，有的MySQL默认的<code>my.cnf</code>文件引用了<code>/etc/mysql/conf.d</code>路径下的所有cnf文件，因此，也可以在<code>/etc/mysql/conf.d</code>目录下添加一个cnf文件，添加上以上内容</p>
-<h2 id="分别重启master和slave机器的mysql"><a href="#分别重启master和slave机器的mysql" class="headerlink" title="分别重启master和slave机器的mysql"></a>分别重启master和slave机器的mysql</h2><p>&#x2F;etc&#x2F;init.d&#x2F;mysql restart</p>
-<h2 id="master上建立账户并授权slave，slave上也做好相关配置"><a href="#master上建立账户并授权slave，slave上也做好相关配置" class="headerlink" title="master上建立账户并授权slave，slave上也做好相关配置"></a>master上建立账户并授权slave，slave上也做好相关配置</h2><p>用root用户分别登录master和slave机器：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql -uroot -p //输入之后会让你输入root密码，输入root密码就算登陆了</span><br></pre></td></tr></table></figure>
-
-<h3 id="master机器上"><a href="#master机器上" class="headerlink" title="master机器上"></a>master机器上</h3><p>建立账户并授权slave机器，注意用户名和密码，可以随意设置，但是一定要记下来，因为后面slave还需要用到</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GRANT</span> REPLICATION SLAVE <span class="keyword">ON</span> <span class="operator">*</span>.<span class="operator">*</span> <span class="keyword">to</span> <span class="string">&#x27;ryugou&#x27;</span>@<span class="string">&#x27;%&#x27;</span> identified <span class="keyword">by</span> <span class="string">&#x27;ryugou&#x27;</span>; </span><br></pre></td></tr></table></figure>
-<p>一般不用root帐号，@’%’表示所有客户端都可能连，只要帐号，密码正确，此处可用具体客户端IP代替，如192.168.145.226，加强安全。</p>
-<h3 id="slave机器上"><a href="#slave机器上" class="headerlink" title="slave机器上"></a>slave机器上</h3><p>查看<code>master</code>状态</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> master status;</span><br></pre></td></tr></table></figure>
-
-<img src="/img/storage/master-status.png">
-
-<p>在mysql终端输入</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">change master <span class="keyword">to</span> master_host<span class="operator">=</span><span class="string">&#x27;xxx.xxx.xxx.xxx&#x27;</span>,master_user<span class="operator">=</span><span class="string">&#x27;ryugou&#x27;</span>,master_password<span class="operator">=</span><span class="string">&#x27;ryugou&#x27;</span>,</span><br><span class="line">         master_log_file<span class="operator">=</span><span class="string">&#x27;mysql-bin.000004&#x27;</span>,master_log_pos<span class="operator">=</span><span class="number">120</span>;  </span><br></pre></td></tr></table></figure>
-
-<p><code>master_log_file</code>就是<code>master</code>机器上的对应的内容，<code>master_log_pos</code>也是，注意查看master状态上的内容。<br><code>master_user</code>和<code>master_password</code>就是master机器上授权时设置用户名和密码。</p>
-<p>启动从服务器</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">start</span> slave;</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="检查从服务器复制功能状态"><a href="#检查从服务器复制功能状态" class="headerlink" title="检查从服务器复制功能状态"></a>检查从服务器复制功能状态</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> slave status\G;</span><br></pre></td></tr></table></figure>
-
-
-<p>会出现一个列表<br><img src="/img/storage/slave-status.png"><br>主要看<code>Slave_IO_Running</code>和<code>Slave_SQL_Running</code> 这俩状态必须都为<code>Yes</code>。</p>
-<h2 id="master创建数据库，从服务器设置用户访问权限"><a href="#master创建数据库，从服务器设置用户访问权限" class="headerlink" title="master创建数据库，从服务器设置用户访问权限"></a>master创建数据库，从服务器设置用户访问权限</h2><p>在master上创建数据库 test，会发现在slave上也创建了 test，现在想要读写分离，slave上的机器某用户gou可以访问它，但是只能读</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">grant</span> <span class="keyword">select</span> <span class="keyword">on</span> test.<span class="operator">*</span>  <span class="keyword">to</span> gou;</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/06/27/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E8%AF%BB%E5%86%99%E5%88%86%E7%A6%BB%E6%90%AD%E5%BB%BA/" data-id="clzo46bt40009vajhff0kdkv5" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-用PHPExcel读取excel表格" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/06/18/%E7%94%A8PHPExcel%E8%AF%BB%E5%8F%96excel%E8%A1%A8%E6%A0%BC/" class="article-date">
-  <time datetime="2017-06-18T13:37:35.000Z" itemprop="datePublished">2017-06-18</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/06/18/%E7%94%A8PHPExcel%E8%AF%BB%E5%8F%96excel%E8%A1%A8%E6%A0%BC/">用PHPExcel读取excel表格</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><a href="https://github.com/PHPOffice/PHPExcel"><code>PHPExcel</code></a>这个神器，可以帮助我们用PHP程序轻松的使用<code>excel</code>表格。<br>在此仅提供读取<code>Excel</code>表格内容到内存的两种方式:</p>
-<h1 id="通过坐标获取单元格的值"><a href="#通过坐标获取单元格的值" class="headerlink" title="通过坐标获取单元格的值"></a>通过坐标获取单元格的值</h1><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel.php&#x27;</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel/IOFactory.php&#x27;</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel/Reader/Excel5.php&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$fileExtensions</span>==<span class="string">&quot;.xlsx&quot;</span>)&#123;</span><br><span class="line">    <span class="variable">$objReader</span> = <span class="title class_">\PHPExcel_IOFactory</span>::<span class="title function_ invoke__">createReader</span>(<span class="string">&#x27;Excel2007&#x27;</span>);</span><br><span class="line">    <span class="variable">$objReader</span>-&gt;<span class="title function_ invoke__">setReadDataOnly</span>(<span class="literal">true</span>);</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="variable">$objReader</span> = <span class="title class_">\PHPExcel_IOFactory</span>::<span class="title function_ invoke__">createReader</span>(<span class="string">&#x27;Excel5&#x27;</span>);</span><br><span class="line">    <span class="variable">$objReader</span>-&gt;<span class="title function_ invoke__">setReadDataOnly</span>(<span class="literal">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$objPHPExcel</span> = <span class="variable">$objReader</span>-&gt;<span class="title function_ invoke__">load</span>(<span class="variable">$filepath</span>); <span class="comment">//$filename可以是上传的文件，或者是指定的文件</span></span><br><span class="line"><span class="variable">$sheetCount</span> = <span class="variable">$objPHPExcel</span>-&gt;<span class="title function_ invoke__">getSheetCount</span>();<span class="comment">//获取所有工作表的个数</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(<span class="variable">$i</span> = <span class="number">0</span>; <span class="variable">$i</span> &lt; <span class="variable">$sheetCount</span>; <span class="variable">$i</span>++)<span class="comment">//遍历Excels的sheet页</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="variable">$sheet</span> = <span class="variable">$objPHPExcel</span>-&gt;<span class="title function_ invoke__">getSheet</span>(<span class="variable">$i</span>);</span><br><span class="line">    <span class="comment">//获取sheet页的名字：$sheetName = $sheet-&gt;getTitle();</span></span><br><span class="line">    <span class="variable">$highestRow</span> = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getHighestRow</span>(); <span class="comment">// 取得总行数</span></span><br><span class="line">    <span class="variable">$highestColumn</span> = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getHighestColumn</span>(); <span class="comment">// 取得总列数</span></span><br><span class="line">    <span class="variable">$maxColumns</span> = <span class="title class_">\PHPExcel_Cell</span>::<span class="title function_ invoke__">columnIndexFromString</span>(<span class="variable">$highestColumn</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="variable">$key</span> = <span class="number">1</span>; <span class="variable">$key</span> &lt;= <span class="variable">$highestRow</span>; <span class="variable">$key</span>++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="variable">$k</span> = <span class="number">0</span>; <span class="variable">$k</span> &lt; <span class="variable">$maxColumns</span>; <span class="variable">$k</span>++)</span><br><span class="line">        &#123;</span><br><span class="line">            columnValue = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getCellByColumnAndRow</span>(<span class="variable">$k</span>, <span class="variable">$key</span>)-&gt;<span class="title function_ invoke__">getValue</span>();<span class="comment">//获取数据</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h1 id="通过遍历的方式获取单元格的值"><a href="#通过遍历的方式获取单元格的值" class="headerlink" title="通过遍历的方式获取单元格的值"></a>通过遍历的方式获取单元格的值</h1><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//把上传的excel读进来，然后处理数据</span></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel.php&#x27;</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel/IOFactory.php&#x27;</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel/Reader/Excel5.php&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$fileExtensions</span>==<span class="string">&quot;xlsx&quot;</span>)&#123;</span><br><span class="line">    <span class="variable">$objReader</span> = <span class="title class_">\PHPExcel_IOFactory</span>::<span class="title function_ invoke__">createReader</span>(<span class="string">&#x27;Excel2007&#x27;</span>);</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="variable">$objReader</span> = <span class="title class_">\PHPExcel_IOFactory</span>::<span class="title function_ invoke__">createReader</span>(<span class="string">&#x27;Excel5&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="variable">$objPHPExcel</span> = <span class="variable">$objReader</span>-&gt;<span class="title function_ invoke__">load</span>(<span class="variable">$basepath</span>.<span class="variable">$_FILES</span>[<span class="string">&#x27;file&#x27;</span>][<span class="string">&#x27;name&#x27;</span>]); <span class="comment">//$filename可以是上传的文件，或者是指定的文件</span></span><br><span class="line"><span class="variable">$sheetCount</span> = <span class="variable">$objPHPExcel</span>-&gt;<span class="title function_ invoke__">getSheetCount</span>();<span class="comment">//获取所有工作表的个数</span></span><br><span class="line"><span class="keyword">for</span>(<span class="variable">$i</span> = <span class="number">0</span>; <span class="variable">$i</span> &lt; <span class="variable">$sheetCount</span>; <span class="variable">$i</span>++)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="variable">$sheet</span> = <span class="variable">$objPHPExcel</span>-&gt;<span class="title function_ invoke__">getSheet</span>(<span class="variable">$i</span>);</span><br><span class="line">    <span class="comment">//获取sheet页的名字：$sheetName = $sheet-&gt;getTitle();</span></span><br><span class="line">    <span class="variable">$highestRow</span> = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getHighestRow</span>(); <span class="comment">// 取得总行数</span></span><br><span class="line">    <span class="variable">$highestColumn</span> = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getHighestColumn</span>(); <span class="comment">// 取得总列数</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">foreach</span>(<span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getRowIterator</span>() <span class="keyword">as</span> <span class="variable">$key</span> =&gt; <span class="variable">$row</span>) &#123;</span><br><span class="line">        <span class="variable">$cellIterator</span> = <span class="variable">$row</span>-&gt;<span class="title function_ invoke__">getCellIterator</span>();</span><br><span class="line">        <span class="variable">$cellIterator</span>-&gt;<span class="title function_ invoke__">setIterateOnlyExistingCells</span>(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">foreach</span> (<span class="variable">$cellIterator</span> <span class="keyword">as</span> <span class="variable">$cell</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span>(<span class="variable">$key</span> == <span class="number">1</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="variable">$columnValue</span> = (<span class="keyword">string</span>)<span class="variable">$cell</span>-&gt;<span class="title function_ invoke__">getValue</span>();<span class="comment">//获取数据</span></span><br><span class="line">            &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<pre><code>                                                                                                                                                                                                        $colums = [];
-                                                                                                                                                                                                                    $goodsAttrRef = [];//excel中的技术参数数据存到内存中
-</code></pre>
-<pre><code>
-</code></pre>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/06/18/%E7%94%A8PHPExcel%E8%AF%BB%E5%8F%96excel%E8%A1%A8%E6%A0%BC/" data-id="clzo46bu10032vajh4ngrcddj" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-phpstrom-和-xdebug-调试PHP程序" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/05/24/phpstrom-%E5%92%8C-xdebug-%E8%B0%83%E8%AF%95PHP%E7%A8%8B%E5%BA%8F/" class="article-date">
-  <time datetime="2017-05-24T03:03:40.000Z" itemprop="datePublished">2017-05-24</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/05/24/phpstrom-%E5%92%8C-xdebug-%E8%B0%83%E8%AF%95PHP%E7%A8%8B%E5%BA%8F/">使用phpstrom 和 xdebug 调试PHP程序</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>平时使用php调试程序，都是使用<code>var_dump()</code>、<code>print_r()</code>、<code>echo</code>等函数，这样调试起来效率很低，php提供了<code>xdebug</code>扩展，来帮我我们调试。<br>利用ide 和 <code>xdebug</code>，可以实现像平时调试<code>Java</code>一样的效果。</p>
-<h1 id="安装xdebug扩展"><a href="#安装xdebug扩展" class="headerlink" title="安装xdebug扩展"></a>安装<code>xdebug</code>扩展</h1><p>Mac环境下可以使用<code>homebrew</code>直接下载安装，Windows环境去<a href="https://xdebug.org/download.php"><code>Xdebug</code></a>下载安装。</p>
-<p>注意：不论是用<code>homebrew</code>安装，还是自己下载安装，安装完毕后，默认和调试相关的 <code>xdebug_remote_enable</code>设置是不开启的。可以通过<code>phpinfo</code>查看<code>xdebug</code>扩展是否开启。</p>
-<h2 id="设置xdebug扩展"><a href="#设置xdebug扩展" class="headerlink" title="设置xdebug扩展"></a>设置<code>xdebug</code>扩展</h2><p>找到<code>php.ini</code>文件，（用<code>homebrew</code>安装的修改<code>/usr/local/etc/php/7.1/conf.d</code> 目录中的<code>ext-xdebug.ini</code>文件就好）主要设置以下参数:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">xdebug.remote_enable = on //设置xdebug扩展远程开启</span><br><span class="line">xdebug.idekey=&quot;PHPSTORM&quot; //注意这里添的值，phpstorm中要一致</span><br><span class="line">xdebug.remote_port=9001 //这一点至关重要，默认是9000会和默认的php-fpm端口冲突</span><br></pre></td></tr></table></figure>
-<h1 id="设置phpstorm"><a href="#设置phpstorm" class="headerlink" title="设置phpstorm"></a>设置phpstorm</h1><h2 id="设置phpstorm上的xdebug端口"><a href="#设置phpstorm上的xdebug端口" class="headerlink" title="设置phpstorm上的xdebug端口"></a>设置phpstorm上的xdebug端口</h2><img src='/img/xdebug/9001port.png' />
-
-<p><code>9001</code>为<code>xdebug</code>扩展中<code>xdebug.remote_port</code>的值</p>
-<h2 id="设置phpstorm上的xdebug-idekey"><a href="#设置phpstorm上的xdebug-idekey" class="headerlink" title="设置phpstorm上的xdebug idekey"></a>设置phpstorm上的xdebug idekey</h2><img src='/img/xdebug/dbgp.png' />
-
-<p>IDE key的值要和<code>xdebug.idekey</code>的值一致，port的值要和你即将访问的网站端口一致</p>
-<h2 id="添加一个server"><a href="#添加一个server" class="headerlink" title="添加一个server"></a>添加一个server</h2><img src='/img/xdebug/server1.png' />
-
-<img src='/img/xdebug/server2.png' />
-
-<h2 id="Run-Debug-Configurations"><a href="#Run-Debug-Configurations" class="headerlink" title="Run&#x2F;Debug Configurations"></a>Run&#x2F;Debug Configurations</h2><img src='/img/xdebug/web1.png' />
-
-<img src='/img/xdebug/web2.png' />
-
-<p>选择的server为刚才创建的那个server</p>
-<img src='/img/xdebug/web3.png' />
-
-<img src='/img/xdebug/web4.png' />
-一定要选择建图中所标的``web application`` 而不是``remote xdebug``
-
-<img src='/img/xdebug/web5.png' />
-
-<h2 id="结束"><a href="#结束" class="headerlink" title="结束"></a>结束</h2><p>好了，现在在代码中打上断点试试：<br><img src='/img/xdebug/success.png' /></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/05/24/phpstrom-%E5%92%8C-xdebug-%E8%B0%83%E8%AF%95PHP%E7%A8%8B%E5%BA%8F/" data-id="clzo46btp001zvajhcr395bqs" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-互联网产品研发流程" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/05/14/%E4%BA%92%E8%81%94%E7%BD%91%E4%BA%A7%E5%93%81%E7%A0%94%E5%8F%91%E6%B5%81%E7%A8%8B/" class="article-date">
-  <time datetime="2017-05-14T03:04:21.000Z" itemprop="datePublished">2017-05-14</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/05/14/%E4%BA%92%E8%81%94%E7%BD%91%E4%BA%A7%E5%93%81%E7%A0%94%E5%8F%91%E6%B5%81%E7%A8%8B/">互联网产品研发流程</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="研发流程"><a href="#研发流程" class="headerlink" title="研发流程"></a>研发流程</h1><p>研发流程相当关键，关系到整个研发团的开发效率，现在的产品的研发一般会以产品经理（Product Manager）为中心来展开,招一个靠谱的PM在有些时候可以扭转乾坤~<br>在之前经历的公司中，有一家公司的流程让我受益匪浅：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">st=&gt;start: PM研发产品A，和相关部门负责人沟通完毕后，确定了项目内容</span><br><span class="line">e=&gt;end: 结束</span><br><span class="line">PM_begin=&gt;inputoutput: 制作简易的prd流程图</span><br><span class="line">pm_prd=&gt;inputoutput: 精确制作确定的制作prd</span><br><span class="line">prd_modify=&gt;inputoutput: 根据开会的内容，做调整，重新制作prd</span><br><span class="line">sure=&gt;operation: 和大家开会讨论产品是否可行，做可行性分析</span><br><span class="line">pm_io=&gt;inputoutput: 产品经理在JIRA上给前端工程师、后端工程师、运维、美工创建JIRA任务。</span><br><span class="line">all_action=&gt;operation: 研发部门前后端开始在Rap上制定接口，美工开始画图，PM开始新的需求制作和讨论，三者并行执行。</span><br><span class="line">后端流程图： 和前端定义好RAP接口=》开发=》联调=》测试</span><br><span class="line">前端流程图： 和后端定义好RAP接口=》和美工对界面=》开发=》联调=》测试</span><br><span class="line">美工流程图： 和产品经理对好内容=》作图=》和前端交互</span><br><span class="line">产品流程图： follow工作中的每个环节并开始制定下一个版本的需求   </span><br><span class="line">developers_finish=&gt;inputoutput: 开发完毕，填写JIRA</span><br><span class="line">test_action=&gt;condition: 测试工作开始，看是否没有问题</span><br><span class="line">test_JIRA=&gt;inputoutput: 由测试人员创建JIRA bug，并制定前端或者后端修复</span><br><span class="line">online=&gt;operation: 上线</span><br><span class="line">online_test=&gt;condition: 线上测试,看是否已经没有问题</span><br><span class="line">pm_test=&gt;inputoutput: PM查看产品，并关闭所有JIRA任务 </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">st-&gt;PM_begin-&gt;sure-&gt;pm_prd-&gt;pm_io-&gt;all_action-&gt;developers_finish-&gt;test_action</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">developers_finish-&gt;test_action(no)-&gt;test_JIRA-&gt;developers_finish</span><br><span class="line">test_action(yes)-&gt;online-&gt;online_test-&gt;test_JIRA</span><br><span class="line"></span><br><span class="line">online_test(no)-&gt;test_JIRA-&gt;developers_finish</span><br><span class="line">online_test(yes)-&gt;pm_test-&gt;e</span><br></pre></td></tr></table></figure>
-
-<h3 id="管理工具"><a href="#管理工具" class="headerlink" title="管理工具"></a>管理工具</h3><p>在流程图中提及了几个工具：一个是<code>JIRA</code>、一个是<code>confluence</code>、还有一个是RAP。这是项目管理协作中用的非常广泛的三种工具。<br>在项目开发过程中，使用项目管理工具，可以大大的提高开发效率，让开发流程变的清晰明了。</p>
-<h3 id="JIRA"><a href="#JIRA" class="headerlink" title="JIRA"></a>JIRA</h3><p> <a href="https://www.atlassian.com/software/jira">JIRA</a>是项目管理协作工具中的重中之重，它主要用来发布和管理任务用的，可以根据产品的版本，给不同的人，不同的角色创建任务，每个人完成任务之后，把任务状态由“未完成改为完成”，每次状态的改变都会发邮件到任务下一步相关人员的邮箱，让其注意。例如开发人员把JIRA任务由“进行中”改为了“完成”，那么就会提醒测试人员去查看这个JIRA任务，并且开始测试。</p>
-<h3 id="confluence"><a href="#confluence" class="headerlink" title="confluence"></a>confluence</h3><p> <a href="https://www.atlassian.com/software/confluence">confluence</a>这是一个产品、技术、美工等整个项目团队的wiki。在这里有制作产品的原型prd、各类技术中遇到的问题的解决方案、甚至周报、日报、个人技术博客、技术分享等等等，所有文档性的内容，在这里都可以看到。</p>
-<h3 id="RAP"><a href="#RAP" class="headerlink" title="RAP"></a>RAP</h3><p> <a href="http://rapapi.org/org/index.do">RAP</a>这是一个API接口文档，用来前后端定义接口的，可以使用在线版本，但是在线版本安全性低，万一你的接口文档别网络中的不法分子发现了，后果不可设想，所以最好在内部服务器中搭建自己的接口文档工具 <a href="https://github.com/thx/RAP/wiki/deploy_manual_cn">搭建RAP服务器</a><br> 类似的还有<a href="http://swagger.io/">swagger</a></p>
-<h3 id="即时聊天"><a href="#即时聊天" class="headerlink" title="即时聊天"></a>即时聊天</h3><p> 别人的时间很宝贵，除非特别紧急的问题，一般不要下座位去问，特别是对于CTO等领导，会让集中精力的他人很反感，所以尽量用即时聊天工具来沟通，这样不仅可以节省他人的时间，还可以在遗忘问题的时候查看聊天记录，方便解决问题。<br> 聊天工具什么都可以，QQ、微信、钉钉</p>
-<h3 id="gitlab"><a href="#gitlab" class="headerlink" title="gitlab"></a>gitlab</h3><p> 代码仓库管理，最好设在公司本地的网络环境中，不然出现gitlab运维程序猿<code>rm -rf /</code>的操作可就麻烦了。(<em>^__^</em>) ……</p>
-<h3 id="hipchat"><a href="#hipchat" class="headerlink" title="hipchat"></a>hipchat</h3><p> <a href="http://www.hipchat.com/">hipchat</a>可以和gitlab等工具紧密联系可以及时查看谁谁谁提交了哪些代码、谁谁谁做了哪些事，也可以聊天。</p>
-<h2 id="辅助研发的工具"><a href="#辅助研发的工具" class="headerlink" title="辅助研发的工具"></a>辅助研发的工具</h2><p>作为一个开发人员，不仅要懂得研发，还要学会懂的活用工具，让我更高效、更好的研发。</p>
-<h3 id="日志查看"><a href="#日志查看" class="headerlink" title="日志查看"></a>日志查看</h3><p>  首推ELK，当然也可以自己搭建日志系统（如果不嫌麻烦的话，(<em>^__^</em>) ）。<a href="https://www.elastic.co/webinars/introduction-elk-stack">ELK</a> 的搭建方式网上一搜一大堆，当时我们用的是一个docker镜像,可以去dockerhub上搜一搜看看。原理很简单就是logstash 收集日志，发送到<code>elasticsearch</code>中，然后利用<code>Elasticsearch</code>的查询工具<code>kibana</code>查询日志。<br>在之前的项目中使用的是dockerhub中的”sebp&#x2F;elk”，其中说明文档很详细，需要收集日志的服务器安装<code>filebeat</code>，配置发送哪些日志文件给elk，<code>filebeat</code>就相当于<code>logstash</code>。</p>
-<h3 id="new-relic"><a href="#new-relic" class="headerlink" title="new relic"></a>new relic</h3><p>  查看接口性能问题，这个工具也被推荐作为MySQL的性能检测工具。</p>
-<h3 id="sentry"><a href="#sentry" class="headerlink" title="sentry"></a>sentry</h3><p>  查看线上接口是否异常，哪些接口在什么时候报了哪些异常。<br>  在PHP的laravel框架中可以引用<br>  <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sentry/sentry-laravel</span><br></pre></td></tr></table></figure><br>  直接来使用。详情请自行Google</p>
-<h3 id="envoyer"><a href="#envoyer" class="headerlink" title="envoyer"></a>envoyer</h3><p>  第三方的上线服务。用来上线用的。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/05/14/%E4%BA%92%E8%81%94%E7%BD%91%E4%BA%A7%E5%93%81%E7%A0%94%E5%8F%91%E6%B5%81%E7%A8%8B/" data-id="clzo46btx002svajh78co105k" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-用Ping-做支付" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/05/04/%E7%94%A8Ping-%E5%81%9A%E6%94%AF%E4%BB%98/" class="article-date">
-  <time datetime="2017-05-04T02:26:16.000Z" itemprop="datePublished">2017-05-04</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/05/04/%E7%94%A8Ping-%E5%81%9A%E6%94%AF%E4%BB%98/">用Ping++做支付</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="支付Ping"><a href="#支付Ping" class="headerlink" title="支付Ping++"></a>支付Ping++</h1><p>Ping++是一个聚合了主流支付平台（例如：支付宝、微信支付、银联、Apple Pay、招行一网通支付、 百度钱包、京东支付、易宝支付、Visa、MasterCard、JCB等）提供统一化SDK的接口、并可以提供部分支付的数据运维工作的第三方支付平台。</p>
-<p>目前类似的支付平台还有：BeanCloud、现在支付等。但是就目前的市场反应而言，首选Ping++。</p>
-<h2 id="Ping-支付流程"><a href="#Ping-支付流程" class="headerlink" title="Ping++支付流程"></a>Ping++支付流程</h2><p>ping++的使用非常的简单，号称“花费10分钟，让APP拥有支付功能”：</p>
-<ul>
-<li>第一、注册Ping++登陆账户</li>
-<li>第二、创建应用，并认证：</li>
-</ul>
-<ul>
-<li>1、验证企业信息 约2天</li>
-<li>2、开通支付渠道 约 1~10工作日</li>
-<li>3、发起真实交易 约 1日</li>
-</ul>
-<ul>
-<li>第三、 接入Ping++ SDK 并使用<br> <a href="https://www.pingxx.com/docs/overview/index">https://www.pingxx.com/docs/overview/index</a><br> （ 注意支付流程，client端SDK和服务端SDK都要下。）</li>
-</ul>
-<h3 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h3><img src='/img/Ping++/charge_paymentflow.png' />
-
-<h4 id="Note"><a href="#Note" class="headerlink" title="Note"></a>Note</h4><ul>
-<li>Ping++是针对2B业务的，所以，注册之后，要提供APP相关的企业信息。不提供个人业务，所以个人应用不能使用。</li>
-<li>Ping++不支持单纯的client端直接连接Ping++服务器完成支付，所有只有APP没有server端是不能完成支付的。我想这么设计的原因可能是：确保了Ping++的每次支付请求都是来自认证过的商户的server，而不是任意匹配了某些参数条件的其他IP。</li>
-</ul>
-<h3 id="可粘贴的例子"><a href="#可粘贴的例子" class="headerlink" title="可粘贴的例子"></a>可粘贴的例子</h3><p>Client端:<br>加上包 npm install pingpp-js</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> pingpp = <span class="built_in">require</span>(<span class="string">&#x27;pingpp-js&#x27;</span>);</span><br><span class="line"><span class="title function_">fetch</span>(<span class="string">&#x27;get/charge&#x27;</span>).<span class="title function_">then</span>(<span class="keyword">function</span>(<span class="params">response</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> response.<span class="title function_">json</span>();</span><br><span class="line">&#125;).<span class="title function_">then</span>(<span class="keyword">function</span>(<span class="params">json</span>) &#123;</span><br><span class="line">    pingpp.<span class="title function_">createPayment</span>(json, <span class="keyword">function</span>(<span class="params">result, err</span>)&#123;</span><br><span class="line">        <span class="keyword">if</span>(result === <span class="string">&quot;success&quot;</span>)&#123;</span><br><span class="line">            <span class="comment">//do something</span></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span>(result === <span class="string">&quot;fail&quot;</span>)&#123;</span><br><span class="line">           <span class="comment">//do something</span></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span>(result === <span class="string">&quot;cancel&quot;</span>)&#123;</span><br><span class="line">          <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<p>Server端：</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> Request $request</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">test</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">       <span class="variable">$appId</span> = <span class="string">&quot;app_y9ivL0yHGGSCfj5q&quot;</span>;</span><br><span class="line">       <span class="variable">$appTestKey</span> = <span class="string">&quot;sk_test_zn9iLGj5qPKKSGyzzP54iXHG&quot;</span>;</span><br><span class="line">       <span class="title class_">Pingpp</span>::<span class="title function_ invoke__">setApiKey</span>(<span class="variable">$appTestKey</span>);</span><br><span class="line">       <span class="variable">$charge</span> = <span class="title class_">Charge</span>::<span class="title function_ invoke__">create</span>(<span class="keyword">array</span>(</span><br><span class="line">       <span class="string">&#x27;order_no&#x27;</span> =&gt; <span class="string">&#x27;77777777&#x27;</span>,</span><br><span class="line">       <span class="string">&#x27;amount&#x27;</span> =&gt; <span class="string">&#x27;100&#x27;</span>,</span><br><span class="line">       <span class="string">&#x27;app&#x27;</span> =&gt; <span class="keyword">array</span>(<span class="string">&#x27;id&#x27;</span> =&gt; <span class="variable">$appId</span>),</span><br><span class="line">       <span class="string">&#x27;channel&#x27;</span> =&gt; <span class="string">&#x27;alipay&#x27;</span>,</span><br><span class="line">       <span class="string">&#x27;currency&#x27;</span> =&gt; <span class="string">&#x27;cny&#x27;</span>,</span><br><span class="line">       <span class="string">&#x27;client_ip&#x27;</span> =&gt; <span class="string">&#x27;127.0.0.1&#x27;</span>,</span><br><span class="line">       <span class="string">&#x27;subject&#x27;</span> =&gt; <span class="string">&#x27;Your Subject&#x27;</span>,</span><br><span class="line">       <span class="string">&#x27;body&#x27;</span> =&gt; <span class="string">&#x27;Your Body&#x27;</span></span><br><span class="line">       ));</span><br><span class="line"></span><br><span class="line">       <span class="keyword">return</span> <span class="title function_ invoke__">json_encode</span>(<span class="variable">$charge</span>);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="项目中的使用"><a href="#项目中的使用" class="headerlink" title="项目中的使用"></a>项目中的使用</h2><ul>
-<li><p>在项目利用的过程中，我们定义了两张表，一张是orders订单表，一个是user_service用户服务表。orders表记录的是购买渠道、订单号、订单状态等订单相关的记录信息；user_service表存放的则是购买成功的用户，以及用户买了哪些服务，及其服务的类型。由于这两张表要保持高度的数据一致性，所以，加了事务。</p>
-</li>
-<li><p>为了让整个支付流程有据可查，支付的每个环节都打了日志，放入的单独的日志文件中。日志命名payment。如下图：</p>
-<img src='/img/Ping++/log.png' /></li>
-</ul>
-<h2 id="需要注意的技术细节"><a href="#需要注意的技术细节" class="headerlink" title="需要注意的技术细节"></a>需要注意的技术细节</h2><h3 id="webhooks"><a href="#webhooks" class="headerlink" title="webhooks:"></a><strong>webhooks:</strong></h3><ul>
-<li>Ping++的webhooks是需要自己手动去设置的，设置的时候一定要注意咱们的url地址是http还是https，回调url写准确。</li>
-<li>再就是虽然webhooks在设置通知事件的时候，写了这么一大堆<img src='/img/Ping++/webhooks.png' />
-但是其实官方只支持：
-<img src='/img/Ping++/event.png' />
-只有九种。写的时候要注意</li>
-<li>还有在回调函数中一定要注明response的状态码，这是ping++判断返回结果是否正确的唯一标识。不加有时候也可以，但是为了代码健壮性，最好是加上。<br>所以代码中应该加上以下header<img src='/img/Ping++/response.png' /></li>
-<li>Ping++支持直接使用订单号来查询回调的结果正不正确，而且提供了日志功能，解决了回调没法追踪的问题。微信公众号等平台的回调就没有提供这个功能，这个功能很有用。<img src='/img/Ping++/webhook_config.png' /></li>
-</ul>
-<h3 id="charge"><a href="#charge" class="headerlink" title="charge:"></a><strong>charge:</strong></h3><ul>
-<li>这个charge就是在调起支付的时候，Ping++服务器返回的一个调用成功的标记对象。里面有很多支付订单的信息：<img src='/img/Ping++/charge_resp.png' />
-这里面对应的信息可以直接查阅文档：https://www.pingxx.com/api#查询-charge-对象
-这个charge需要注意的一点是：不可以通过order_no订单号来查询charge对象。所以在的服务端，需要同时记录 charge id 和order_no，并做对应。charge 代表一个订单，在某种意义上可以算作一笔交易。可以直接存下这个charge对象到数据库中。我们现在并没有存charge，建议以后charge对象要存到库中，方便查询。</li>
-<li>在调用支付请求charge对象的时候，订单号是不可以重复的。也正是这个原因，咱们现在的支付系统出现了一次支付出现多条数据的情况，Ping++讨论组里提供了一条解决方案，可以作为以后改进的参考：<a href="https://help.pingxx.com/article/123347/">https://help.pingxx.com/article/123347/</a></li>
-<li>在微信中是可以调用支付宝的，Ping++提供了专门的方法：<img src='/img/Ping++/note.png' />
-可以直接访问[alipay_in_weixin](https://github.com/PingPlusPlus/pingpp-js/blob/master/README.md) ，很详细，其实就是帮你做了一个页面，告诉患者：复制链接，跳出浏览器，使用其他浏览器打开。
-特别注意一下一点，就是默认调起的都是支付宝的网页版，但是大部分需求应该是调用的支付宝app，如何更改？其实ping++已经想到了这个问题：
-<img src='/img/Ping++/payment.png' />
-在传参数的时候把“app_pay”这个参数指定为true就可以了。</li>
-</ul>
-<h3 id="运维相关"><a href="#运维相关" class="headerlink" title="运维相关"></a>运维相关</h3><ul>
-<li>如果在微信平台上点击退款，由于没有走Ping++的接口，Ping++是无法知道该笔订单已经退款的，所以Ping++平台的状态是未退款，暂时无法更改，这算是一个Ping++的小漏洞吧。</li>
-<li>管理平台上的TEST、LIVE 模式切换只是用来查看不同模式下的数据的。这里的切换不影响代码中的支付执行~ 这一点可能很多人会不习惯</li>
-</ul>
-<h2 id="支付流程"><a href="#支付流程" class="headerlink" title="支付流程"></a>支付流程</h2><img src='/img/Ping++/charge.png' />
-现在存在一个问题：第一次支付没钱，又一次支付成功会出现两条数据。
-改进版本：
-<img src='/img/Ping++/charge_payment.png'/>
-但是这个方式解决了订单重复的问题，但是存在另一个致命问题，不存在“待支付”的类型，寻找待支付的用户只能去Ping++管理后台去看了 
-    
-    
-    
-   
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/05/04/%E7%94%A8Ping-%E5%81%9A%E6%94%AF%E4%BB%98/" data-id="clzo46btz002zvajh710rhbxe" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-PHP发邮件的几种方式总结" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/04/29/PHP%E5%8F%91%E9%82%AE%E4%BB%B6%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E6%80%BB%E7%BB%93/" class="article-date">
-  <time datetime="2017-04-29T15:21:00.000Z" itemprop="datePublished">2017-04-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/04/29/PHP%E5%8F%91%E9%82%AE%E4%BB%B6%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E6%80%BB%E7%BB%93/">PHP发邮件的几种方式总结</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="第一类，使用php内置的mail-函数。"><a href="#第一类，使用php内置的mail-函数。" class="headerlink" title="第一类，使用php内置的mail()函数。"></a>第一类，使用php内置的<code>mail()</code>函数。</h1><p>这是php内置的函数，看<a href="http://php.net/manual/zh/function.mail.php">文档</a>感觉此函数用起来十分简单。确实，用起来非常简单，但是要用此函数，需要在本机配置一个sendmail服务器，这么看来，就不是那么简单了。</p>
-<p><code>mail()</code>函数用法：</p>
-<pre><code>&lt;?php
-// The message
-$message = &quot;Line 1\nLine 2\nLine 3&quot;;
-
-// In case any of our lines are larger than 70 characters, we should use wordwrap()
-$message = wordwrap($message, 70);
-
-// Send
-mail(&#39;caffinated@example.com&#39;, &#39;My Subject&#39;, $message);
-?&gt;
-</code></pre>
-<h1 id="第二类，利用第三方类库"><a href="#第二类，利用第三方类库" class="headerlink" title="第二类，利用第三方类库"></a>第二类，利用第三方类库</h1><p>相比与第一类，我相信第二类是很多人的选择。<br>因为无需再配置什么，直接拿来用，而且开发环境不一定允许你配置。<br>这一类的类库，往往需要依托一个第三方的邮件服务器，例如，163邮箱，qq邮箱，sina邮箱等等</p>
-<h2 id="PHPMailer"><a href="#PHPMailer" class="headerlink" title="PHPMailer"></a>PHPMailer</h2><p>此类库是目前github上星最多的第三方库，本人强烈推荐此类库。github地址是：<a href="https://github.com/PHPMailer/PHPMailer">https://github.com/PHPMailer/PHPMailer</a><br>使用方法很简单:</p>
-<ul>
-<li><p>使用composer，在<code>composer.json</code>中加入:</p>
-<pre><code>&quot;phpmailer/phpmailer&quot;: &quot;~5.2&quot;
-</code></pre>
-<p>或者是<code>5.2</code>之外的其他版本。也可以使用</p>
-<pre><code>composer require phpmailer/phpmailer
-</code></pre>
-</li>
-<li><p>以163邮箱为例，去设置一个登陆163邮箱的授权码。具体设置请看: <a href="http://jingyan.baidu.com/article/1876c8526895ce890b1376b1.html">http://jingyan.baidu.com/article/1876c8526895ce890b1376b1.html</a></p>
-</li>
-<li><p>按照如下例子，就可以发邮件了</p>
-<pre><code>&lt;?php
-require &#39;PHPMailerAutoload.php&#39;;
-
-$mail = new PHPMailer;
-
-//$mail-&gt;SMTPDebug = 3;                               // Enable verbose debug output
-
-$mail-&gt;isSMTP();                                      // Set mailer to use SMTP
-$mail-&gt;Host = &#39;smtp.163.com&#39;;                         // Specify main and backup SMTP servers
-$mail-&gt;SMTPAuth = true;                               // Enable SMTP authentication
-$mail-&gt;Username = &#39;user@163.com&#39;;                 // SMTP username
-$mail-&gt;Password = &#39;secret&#39;;                           // SMTP password
-$mail-&gt;SMTPSecure = &#39;tls&#39;;                            // Enable TLS encryption, `ssl` also accepted
-$mail-&gt;Port = 587;                                    // TCP port to connect to
-
-$mail-&gt;setFrom(&#39;from@example.com&#39;, &#39;Mailer&#39;);
-$mail-&gt;addAddress(&#39;joe@example.net&#39;, &#39;Joe User&#39;);     // Add a recipient
-$mail-&gt;addAddress(&#39;ellen@example.com&#39;);               // Name is optional
-$mail-&gt;addReplyTo(&#39;info@example.com&#39;, &#39;Information&#39;);
-$mail-&gt;addCC(&#39;cc@example.com&#39;);
-$mail-&gt;addBCC(&#39;bcc@example.com&#39;);
-
-$mail-&gt;addAttachment(&#39;/var/tmp/file.tar.gz&#39;);         // Add attachments
-$mail-&gt;addAttachment(&#39;/tmp/image.jpg&#39;, &#39;new.jpg&#39;);    // Optional name
-$mail-&gt;isHTML(true);                                  // Set email format to HTML
-
-$mail-&gt;Subject = &#39;Here is the subject&#39;;
-$mail-&gt;Body    = &#39;This is the HTML message body &lt;b&gt;in bold!&lt;/b&gt;&#39;;
-$mail-&gt;AltBody = &#39;This is the body in plain text for non-HTML mail clients&#39;;
-
-if(!$mail-&gt;send()) &#123;
-        echo &#39;Message could not be sent.&#39;;
-            echo &#39;Mailer Error: &#39; . $mail-&gt;ErrorInfo;
-&#125; else &#123;
-        echo &#39;Message has been sent&#39;;
-&#125;
-</code></pre>
-</li>
-</ul>
-<h2 id="SwiftMailer"><a href="#SwiftMailer" class="headerlink" title="SwiftMailer"></a>SwiftMailer</h2><p>这个邮件类库也很强大，虽然星星不算太多，但是却是PHP 杀手级框架<code>Laravel</code>所内置的邮件类库，可见其威力。<br>就目前而言，此类库官方强调的是只支持php5.x的版本，至于说为什么在使用php7.0 的 <code>laravel</code>框架下可用（亲身经历），暂时不可知。<br>此类库的使用方法:</p>
-<ul>
-<li><p>如果是使用composer，<code>SwiftMailer</code>将会被自动安装。github地址：<a href="https://github.com/swiftmailer/swiftmailer">https://github.com/swiftmailer/swiftmailer</a><br>如果不是时候用composer，你需要引入<code>swift_required.php</code>文件。（类库文件可以从GitHub中找到）</p>
-<pre><code>require_once &#39;/path/to/swift-mailer/lib/swift_required.php&#39;;
-
-/* rest of code goes here */
-</code></pre>
-</li>
-<li><p>以163邮箱为例，去设置一个登陆163邮箱的授权码。具体设置请看: <a href="http://jingyan.baidu.com/article/1876c8526895ce890b1376b1.html">http://jingyan.baidu.com/article/1876c8526895ce890b1376b1.html</a></p>
-</li>
-<li><p>按照如下代码，就可以发邮件了：</p>
-<pre><code> require_once &#39;lib/swift_required.php&#39;;
-
- // Create the Transport
- $transport = Swift_SmtpTransport::newInstance(&#39;smtp.example.org&#39;, 25)
-      -&gt;setUsername(&#39;your username&#39;)
-      -&gt;setPassword(&#39;your password&#39;);
-    
-/*
-You could alternatively use a different transport such as Sendmail or Mail:
-    
-// Sendmail
-$transport = Swift_SendmailTransport::newInstance(&#39;/usr/sbin/sendmail -bs&#39;);
-    
-// Mail
-$transport = Swift_MailTransport::newInstance();
-*/
-    
-// Create the Mailer using your created Transport
-$mailer = Swift_Mailer::newInstance($transport);
-    
-// Create a message
-$message = Swift_Message::newInstance(&#39;Wonderful Subject&#39;)
-  -&gt;setFrom(array(&#39;john@doe.com&#39; =&gt; &#39;John Doe&#39;))
-  -&gt;setTo(array(&#39;receiver@domain.org&#39;, &#39;other@domain.org&#39; =&gt; &#39;A name&#39;))
-  -&gt;setBody(&#39;Here is the message itself&#39;);
-            
-// Send the message
-$result = $mailer-&gt;send($message);
-</code></pre>
-</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/04/29/PHP%E5%8F%91%E9%82%AE%E4%BB%B6%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E6%80%BB%E7%BB%93/" data-id="clzo46bt5000avajh2fbiamug" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-Mac环境下利用本地php5-6安装扩展出现的Operation-not-permitted解决" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/04/10/Mac%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%88%A9%E7%94%A8%E6%9C%AC%E5%9C%B0php5-6%E5%AE%89%E8%A3%85%E6%89%A9%E5%B1%95%E5%87%BA%E7%8E%B0%E7%9A%84Operation-not-permitted%E8%A7%A3%E5%86%B3/" class="article-date">
-  <time datetime="2017-04-10T14:18:21.000Z" itemprop="datePublished">2017-04-10</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/04/10/Mac%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%88%A9%E7%94%A8%E6%9C%AC%E5%9C%B0php5-6%E5%AE%89%E8%A3%85%E6%89%A9%E5%B1%95%E5%87%BA%E7%8E%B0%E7%9A%84Operation-not-permitted%E8%A7%A3%E5%86%B3/">Mac环境下利用本地php5.6安装扩展出现的Operation not permitted解决</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>  利用本地的Mac的php5.6来安装php扩展，发现其实安不上。<br>  无论怎么修改php.ini中的配置，都会提示”xxx.so文件不在&#x2F;usr&#x2F;xxx&#x2F;xx&#x2F;xx(扩展目录)中”，加了sudo，或者以管理员方式修改都不可以。<br>  这是怎么回事呢？该如何修改呢？</p>
-<p>  事实上, 这是由Mac 10.11新增的Rootless引起的。那么什么是 Rootless 呢? 简单的来说, Rootless 机制限制了 Root 账户的权限, 使其没有了对系统的完全控制权。<br>  收到影响的有以下几点：</p>
-<ul>
-<li>禁止直接对 <code>/System</code>, <code>/bin</code>, <code>/sbin</code>, <code>/usr</code> 目录的修改(<code>/usr/local</code> 目录除外). 只有通过苹果开发者认证的 app 才有权限对其修改。</li>
-<li>禁止注入系统进程. 某些需要注入系统进程(finder, messages 等等系统级别的进程)的程序, debugger 无法使用了。</li>
-<li>禁止加载内核扩展(kexts), 除非它们被苹果开发者正确的签名。</li>
-</ul>
-<p>这些修改最明显的好处就是: 恶意 app 无法通过用户授权的方式从而获得所有系统权限了。</p>
-<p>当然, 它带来的副作用也是巨大的, 一些合法的 app 也无法获得系统权限了. 比如: Homebrew, CocoaPods 以及所有需要在 &#x2F;usr&#x2F;bin 目录下有可执行权限的 app。</p>
-<h1 id="解决策略"><a href="#解决策略" class="headerlink" title="解决策略"></a>解决策略</h1><p>  利用homebrew 安装php5.6，然后修改环境变量，让homebrew下载的php5.6作为系统默认的php版本,然后再下扩展。</p>
-<ul>
-<li>homebrew 安装php5.6</li>
-<li>修改环境变量，将homebrew安装的php5.6的路径写到前面Mac自带php的前面。<code>export PATH=XXXXX:$PATH</code>(ps:具体什么路径homebrew安装运行结束的时候会有提示的）</li>
-<li>以homebrew 安装的php为默认php来安装扩展。</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/04/10/Mac%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%88%A9%E7%94%A8%E6%9C%AC%E5%9C%B0php5-6%E5%AE%89%E8%A3%85%E6%89%A9%E5%B1%95%E5%87%BA%E7%8E%B0%E7%9A%84Operation-not-permitted%E8%A7%A3%E5%86%B3/" data-id="clzo46bt30006vajh9wushz58" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-PHP那些奇怪的语法" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/03/25/PHP%E9%82%A3%E4%BA%9B%E5%A5%87%E6%80%AA%E7%9A%84%E8%AF%AD%E6%B3%95/" class="article-date">
-  <time datetime="2017-03-25T14:35:46.000Z" itemprop="datePublished">2017-03-25</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/03/25/PHP%E9%82%A3%E4%BA%9B%E5%A5%87%E6%80%AA%E7%9A%84%E8%AF%AD%E6%B3%95/">PHP那些琐碎的知识点</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p> PHP有很多很奇特、很难记的知识点，我做了一下记录：</p>
-<h1 id="单引号’’和””的区别"><a href="#单引号’’和””的区别" class="headerlink" title="单引号’’和””的区别:"></a>单引号’’和””的区别:</h1><p>  PHP不会检查单引号<code>&#39;&#39;</code>字符串中变量内插或（几乎）任何转义序列，所以采用单引号这种方式来定义字符串相当简单快捷。但是，双引号<code>&quot;&quot;</code>则不然，php会检查字符串中的变量或者转义序列，并输出变量和转义序列的值。</p>
-<pre><code>$a = &quot;123&quot;;
-print &#39;$a\t&#39;;
-print &#39;$a&#39;;
-</code></pre>
-<p>  输出：</p>
-<pre><code>$a\t$a
-</code></pre>
-<p>  如果是双引号<code>&quot;&quot;</code>:</p>
-<pre><code>$a = &quot;123&quot;;
-print &quot;$a\t&quot;;
-print &quot;$a&quot;;    
-</code></pre>
-<p>  输出：</p>
-<pre><code>123 123
-</code></pre>
-<h2 id="注意："><a href="#注意：" class="headerlink" title="注意："></a>注意：</h2><p>  单引号<code>&#39;&#39;</code>可以解释<code>&#39;\</code>和<code>\\</code>这俩转义字符，就这俩！<br>  能使单引号字符尽量使用单引号，单引号的效率比双引号要高（因为双引号要先遍历一遍，判断里面有没有变量，然后再进行操作，而单引号则不需要判断）。<br>  单引号<code>&#39;&#39;</code>和双引号<code>&quot;&quot;</code>都可以用来</p>
-<h1 id="echo-和-print的区别："><a href="#echo-和-print的区别：" class="headerlink" title="echo 和 print的区别："></a>echo 和 print的区别：</h1><p>  这两都是语句，不是函数；这俩语句的作用都是输出字符串。但是：</p>
-<p>  <code>echo</code>可以传入多个参数。而<code>print</code>只有一个：</p>
-<pre><code>echo &quot;123&quot;, &quot;123&quot;;//输出123123
-print &quot;123&quot;, &quot;123&quot;;//报错，只可以写一个参数 print &quot;123&quot;;
-</code></pre>
-<p>  <code>echo</code>无返回值，而<code>print</code>返回值恒为1；</p>
-<h2 id="注意：-1"><a href="#注意：-1" class="headerlink" title="注意："></a>注意：</h2><p>  PHP的八中数据类型，除了数组<code>array</code>和没有实现<code>__toString</code>魔法函数的对象都可以用echo或者print来输出，并且<code>boolean</code>类型的用echo或者print来输出，只会显示1或者不显示。</p>
-<pre><code>echo true; //输出1
-echo false; //什么都不输出 
-</code></pre>
-<h1 id="数字和字符串相加："><a href="#数字和字符串相加：" class="headerlink" title="数字和字符串相加："></a>数字和字符串相加：</h1><p>  PHP会自动完成字符串和数字的转换，这样有时候会带来好处，有时候却很让人苦恼。</p>
-<pre><code>echo 1 + &quot;2&quot;;//输出3
-echo 1 + &quot;a&quot;;//输出1
-</code></pre>
-<p>  <code>$a = 1 + &quot;A&quot;;</code>试问变量<code>$a</code>的数据类型？</p>
-<pre><code>if(is_numeric($a))&#123;
-    echo &quot;是整型&quot;;
-&#125;
-else&#123;
-    echo &quot;是其他类型&quot;;
-&#125;
-
-//最后输出：是整型
-</code></pre>
-<h1 id="随机数生成函数rand-和mt-rand-的区别"><a href="#随机数生成函数rand-和mt-rand-的区别" class="headerlink" title="随机数生成函数rand()和mt_rand()的区别:"></a>随机数生成函数<code>rand()</code>和<code>mt_rand()</code>的区别:</h1><p>  <code>rand()</code>和<code>mt_rand()</code>用法完全一致，它俩分别有两种用法:</p>
-<pre><code>//第一种用法：
-rand();//产生的随机数为0到getrandmax()之间
-mt_rand();//产生的随机数为0到mt_getrandmax()之间
-
-//第二种用法：
-rand($min, $max);//产生从$min到$max之间的随机数
-mt_rand($min, $max);//产生从$min到$max之间的随机数
-</code></pre>
-<p>  区别：<code>mt_rand()</code>是更好地随机数生成器，因为它跟<code>rand()</code>相比播下了一个更好地随机数种子；而且性能上比<code>rand()</code>快4倍，<code>mt_getrandmax()</code>所表示的数值范围也更大    </p>
-<h1 id="BCMath库和GMP库的区别"><a href="#BCMath库和GMP库的区别" class="headerlink" title="BCMath库和GMP库的区别:"></a>BCMath库和GMP库的区别:</h1><p>  BCMath库很容易使用。将数字作为字符串传入函数，它会将数字的和（或差，积等）作为字符串返回。不过，使用BCMath时，对数字所能完成的操作仅限于基本算术运算。</p>
-<pre><code>$sum = bcadd(&quot;12345678&quot;, &quot;87654321&quot;);//$sum = &quot;99999999&quot;
-</code></pre>
-<p>  GMP函数可以接受整数或者字符串作为参数，不过它们更乐意将数字作为资源来传递，这实际上是指向数字内部表示的指针。所以与BCMath函数不同，BCMath函数返回字符串，而GMP只返回资源。可以将这个资源作为数字传递到任何GMP函数。</p>
-<pre><code>$four = gmp_add(2, 2);//可以传入整数
-$eight = gmp_add(&#39;4&#39;, &#39;4&#39;);//或字符串
-$twelve = gmp_add($four, $eight);//或GMP资源
-</code></pre>
-<p>  GMP唯一的缺点是，想要用非GMP函数查看或使用资源时，需要使用<code>gmp_strval()</code>或<code>gmp_intval()</code>显示地进行转换。</p>
-<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p>  BCMath与PHP捆绑发行，若GMP不与PHP捆绑，需要另外下载和安装。完成高精度数学运算的另一种选择是使用PECL的<code>big_int</code>库。</p>
-<h1 id="include和require的区别："><a href="#include和require的区别：" class="headerlink" title="include和require的区别："></a>include和require的区别：</h1><p>  <code>include()</code> 、<code>require()</code>语句包含并运行指定文件。这两结构在包含文件上完全一样，唯一的区别是对于错误的处理：</p>
-<ul>
-<li><code>require()</code>语句在遇到包含文件不存在，或是出错的时候，就停止即行，并报错。    </li>
-<li><code>include()</code>在遇到包含文件不存在的时候，只生成警告，并且脚本会继续。</li>
-</ul>
-<p>换句话说，如果你想在丢失文件时停止处理页面，那就别犹豫了，用<code>require()</code>吧。<code>include()</code>就不是这样，脚本会继续运行。</p>
-<h2 id="include-once和require-once"><a href="#include-once和require-once" class="headerlink" title="include_once和require_once"></a>include_once和require_once</h2><ul>
-<li><code>include_once()</code>和<code>require_once()</code>一样，应该用于在脚本执行期间同一个文件有可能被包含超过一次的情况下，想确保它只被包含一次以避免函数重定义，变量重新赋值等问题。这就是<code>include_once()</code>和<code>require_once()</code>与<code>include()</code>和<code>require()</code>的主要区别。</li>
-<li><code>require_once()</code>、<code>include_once()</code>运行效率要比<code>require()</code>和<code>include()</code>低，因为前两者需要判断寻找引入的文件是否已经存在。&#96;</li>
-</ul>
-<h1 id="PHP合并数组-和array-merge-的区别"><a href="#PHP合并数组-和array-merge-的区别" class="headerlink" title="PHP合并数组+和array_merge()的区别"></a>PHP合并数组<code>+</code>和<code>array_merge()</code>的区别</h1><p>  同为数组合并，但是还是有差别的:  </p>
-<ul>
-<li><p>键名为数字时，array_merge()不会覆盖掉原来的值，但＋合并数组则会把最先出现的值作为最终结果返回，而把后面的数组拥有相同键名的那些值“抛弃”掉（不是覆盖）</p>
-<pre><code>$a = array(&#39;a&#39;,&#39;b&#39;); 
-$b = array(&#39;c&#39;, &#39;d&#39;); 
-$c = $a + $b; 
-var_dump($c);
-//输出：
-// array (size=2)
-//  0 =&gt; string &#39;a&#39; (length=1)
-//  1 =&gt; string &#39;b&#39; (length=1) 
-var_dump(array_merge($a, $b));
-//输出：
-//array (size=4)
-// 0 =&gt; string &#39;a&#39; (length=1)
-// 1 =&gt; string &#39;b&#39; (length=1)
-// 2 =&gt; string &#39;c&#39; (length=1)
-// 3 =&gt; string &#39;d&#39; (length=1) 
-</code></pre>
-</li>
-<li><p>键名为字符时，＋仍然把最先出现的键名的值作为最终结果返回，而把后面的数组拥有相同键名的那些值“抛弃”掉，但array_merge()此时会覆盖掉前面相同键名的值 </p>
-<pre><code>$a = array(&#39;a&#39; =&gt; &#39;a&#39; ,&#39;b&#39; =&gt; &#39;b&#39;);
-$b = array(&#39;a&#39; =&gt; &#39;A&#39;, &#39;b&#39; =&gt; &#39;B&#39;);
-$c = $a + $b;
-var_dump($c);
-//输出：
-//array (size=2)
-//&#39;a&#39; =&gt; string &#39;a&#39; (length=1)
-//&#39;b&#39; =&gt; string &#39;b&#39; (length=1)
-var_dump(array_merge($a, $b));
-//输出：
-//array (size=2)
-//&#39;a&#39; =&gt; string &#39;A&#39; (length=1)
-//&#39;b&#39; =&gt; string &#39;B&#39; (length=1)
-</code></pre>
-</li>
-</ul>
-<h1 id="字符串常用函数"><a href="#字符串常用函数" class="headerlink" title="字符串常用函数"></a>字符串常用函数</h1><p>  PHP提供了很多方便的字符串函数，常用的有：</p>
-<ul>
-<li><code>strstr ( string $haystack , mixed $needle [, bool $before_needle = false ] )</code>。返回 haystack 字符串从 needle 第一次出现的位置开始到 haystack 结尾的字符串。若为before_needle为 TRUE，strstr() 将返回 needle 在 haystack 中的位置之前的部分。</li>
-<li><code>substr( string $string , int $start [, int $length ] )</code>。返回字符串 string 由 start 和 length 参数指定的子字符串。</li>
-<li><code>substr_replace ( mixed $string , mixed $replacement , mixed $start [, mixed $length ] )</code>。substr_replace() 在字符串 string 的副本中将由 start 和可选的 length 参数限定的子字符串使用 replacement 进行替换。</li>
-<li><code>strrev ( string $string )</code>。返回 string 反转后的字符串。</li>
-<li><code>str_replace ( mixed $search , mixed $replace , mixed $subject [, int &amp;$count ] )</code>。该函数返回一个字符串或者数组。该字符串或数组是将 subject 中全部的 search 都被 replace 替换之后的结果。subject为执行替换的数组或者字符串。也就是 haystack。如果 subject 是一个数组，替换操作将遍历整个 subject，返回值也将是一个数组。如果count被指定，它的值将被设置为替换发生的次数。</li>
-<li><code>strpos ( string $haystack , mixed $needle [, int $offset = 0 ] )</code>。返回 needle 在 haystack 中首次出现的数字位置；如果提供了offset参数，搜索会从字符串该字符数的起始位置开始统计。 如果是负数，搜索会从字符串结尾指定字符数开始。</li>
-<li><code>ltrim()</code>、<code>rtrim()</code>、<code>trim()</code>。这仨都是删除字符串中的空白符。<code>ltrim()</code>删除字符串开头的空白字符;<code>rtrim()</code>删除字符串末端的空白字符；<code>trim()</code>去除字符串首尾处的空白字符。</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/03/25/PHP%E9%82%A3%E4%BA%9B%E5%A5%87%E6%80%AA%E7%9A%84%E8%AF%AD%E6%B3%95/" data-id="clzo46bt7000cvajh70bcgkl6" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-让vim炫酷起来" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/03/05/%E8%AE%A9vim%E7%82%AB%E9%85%B7%E8%B5%B7%E6%9D%A5/" class="article-date">
-  <time datetime="2017-03-05T01:27:17.000Z" itemprop="datePublished">2017-03-05</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/03/05/%E8%AE%A9vim%E7%82%AB%E9%85%B7%E8%B5%B7%E6%9D%A5/">让vim炫酷起来</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>  vim很强大，vim是门学问。<br>  但是可能打开vim一看，满屏幕灰蒙蒙的一片，不像强大的样子，又挺失落，于是便有了此文。<br>  首先，打开<del>目录或者是&#x2F;etc目录下的.vimrc文件，这个文件的作用就是vim的配置文件，其实在vim命令行下也可以敲指令设置vim，但是关闭vim后就“失效了”，要想长久设置，就再这俩配置文件中设置。</del>目录下的配置文件是配置当前系统用户下的。而&#x2F;etc目录下的是配置全局的。</p>
-<h1 id="改变vim的外观"><a href="#改变vim的外观" class="headerlink" title="改变vim的外观"></a>改变vim的外观</h1><p>  首先改变灰蒙蒙的外观</p>
-<h2 id="高亮"><a href="#高亮" class="headerlink" title="高亮"></a>高亮</h2><p> 先让颜色亮丽起来</p>
-<pre><code>syntax enable
-syntax on
-</code></pre>
-<h2 id="增加默认色素"><a href="#增加默认色素" class="headerlink" title="增加默认色素"></a>增加默认色素</h2><p>  设置颜色，默认8</p>
-<pre><code>set t_Co=256
-</code></pre>
-<h2 id="显示行号"><a href="#显示行号" class="headerlink" title="显示行号"></a>显示行号</h2><pre><code>set nu
-</code></pre>
-<h2 id="号和line-number-同一列"><a href="#号和line-number-同一列" class="headerlink" title="~号和line number 同一列"></a>~号和line number 同一列</h2><pre><code>set go=
-</code></pre>
-<h1 id="方便使用"><a href="#方便使用" class="headerlink" title="方便使用"></a>方便使用</h1><p>  目前而言，应该是不难看了，但是使用起来可能还有点蹩脚，不过没关系。</p>
-<h2 id="支持中文"><a href="#支持中文" class="headerlink" title="支持中文"></a>支持中文</h2><pre><code>set fileencodings=utf-8,ucs-bom,gb18030,gbk,gb2312,cp936
-set termencoding=utf-8
-set encoding=utf-8
-</code></pre>
-<h2 id="自动缩进"><a href="#自动缩进" class="headerlink" title="自动缩进"></a>自动缩进</h2><pre><code>set smartindent
-set tabstop=4
-set shiftwidth=4
-set expandtab
-</code></pre>
-<h2 id="搜索到的所有匹配关键字高亮"><a href="#搜索到的所有匹配关键字高亮" class="headerlink" title="搜索到的所有匹配关键字高亮"></a>搜索到的所有匹配关键字高亮</h2><p>  在使用”:&#x2F;search_name” 的时候，某些数据不高亮，看起来很不清楚，输入一下指令，让搜索到的所有匹配的关键字高亮：</p>
-<pre><code>set hlsearch
-</code></pre>
-<h2 id="可以用backspace删除"><a href="#可以用backspace删除" class="headerlink" title="可以用backspace删除"></a>可以用backspace删除</h2><p>  可能你会发现默认的退格键不能使用，很不爽，没事，键入以下指令</p>
-<pre><code>set backspace=indent,eol,start
-</code></pre>
-<h1 id="用vim来编程"><a href="#用vim来编程" class="headerlink" title="用vim来编程"></a>用vim来编程</h1><p> 大神们好像都是用vim来写程序的，显得逼格高的一笔。其实也就是配置一下或者下个插件就好了，很多很好的插件github上一搜也是一堆，没事儿可以研究一下。</p>
-<h2 id="vim默认设置"><a href="#vim默认设置" class="headerlink" title="vim默认设置"></a>vim默认设置</h2><p>  让vim认识html、css、c、php等语言，编写的的时候给予提示。</p>
-<pre><code>autocmd FileType Python set omnifunc=pythoncomplete#Complete
-autocmd FileType JavaScript set omnifunc=javascriptcomplete#CompleteJS
-autocmd FileType html set omnifunc=htmlcomplete#CompleteTags
-autocmd FileType css set omnifunc=csscomplete#CompleteCSS
-autocmd FileType xml set omnifunc=xmlcomplete#CompleteTags
-autocmd FileType PHP set omnifunc=phpcomplete#CompletePHP
-autocmd FileType c set omnifunc=ccomplete#Complete
-</code></pre>
-<h2 id="添加插件管理工具Vundle"><a href="#添加插件管理工具Vundle" class="headerlink" title="添加插件管理工具Vundle"></a>添加插件管理工具Vundle</h2><p> “Vundle”是个牛逼的东西呀，可以下载和管理你想要的vim插件。装上“Vundle”后，以后在github等开源网站上，看见牛逼的vim插件，就可以直接下下来安装到自己的vim上使用了。<br>  下面简单介绍一下Vundle的安装：<em><strong>（详情请看：<a href="https://github.com/VundleVim/Vundle.vim">Vundle</a>）</strong></em></p>
-<h3 id="Set-up-Vundle"><a href="#Set-up-Vundle" class="headerlink" title="Set up Vundle:"></a>Set up Vundle:</h3><pre><code>$ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-</code></pre>
-<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>  把以下内容贴到.vimrc 文件中去，贴完之后仔细阅读以下贴的内容，很容易明白。</p>
-<pre><code>set nocompatible              &quot; be iMproved, required
-filetype off                  &quot; required
-
-&quot; set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-&quot; alternatively, pass a path where Vundle should install plugins
-&quot;call vundle#begin(&#39;~/some/path/here&#39;)
-
-&quot; let Vundle manage Vundle, required
-Plugin &#39;VundleVim/Vundle.vim&#39;
-
-&quot; The following are examples of different formats supported.
-&quot; Keep Plugin commands between vundle#begin/end.
-&quot; plugin on GitHub repo
-Plugin &#39;tpope/vim-fugitive&#39;
-&quot; plugin from http://vim-scripts.org/vim/scripts.html
-Plugin &#39;L9&#39;
-&quot; Git plugin not hosted on GitHub
-Plugin &#39;git://git.wincent.com/command-t.git&#39;
-&quot; git repos on your local machine (i.e. when working on your own plugin)
-Plugin &#39;file:///home/gmarik/path/to/plugin&#39;
-&quot; The sparkup vim script is in a subdirectory of this repo called vim.
-&quot; Pass the path to set the runtimepath properly.
-Plugin &#39;rstacruz/sparkup&#39;, &#123;&#39;rtp&#39;: &#39;vim/&#39;&#125;
-&quot; Install L9 and avoid a Naming conflict if you&#39;ve already installed a
-&quot; different version somewhere else.
-Plugin &#39;ascenator/L9&#39;, &#123;&#39;name&#39;: &#39;newL9&#39;&#125;
-
-&quot; All of your Plugins must be added before the following line
-call vundle#end()            &quot; required
-filetype plugin indent on    &quot; required
-&quot; To ignore plugin indent changes, instead use:
-&quot;filetype plugin on
-&quot;
-&quot; Brief help
-&quot; :PluginList       - lists configured plugins
-&quot; :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-&quot; :PluginSearch foo - searches for foo; append `!` to refresh local cache
-&quot; :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-&quot;
-&quot; see :h vundle for more details or wiki for FAQ
-&quot; Put your non-Plugin stuff after this line      
-</code></pre>
-<h3 id="安装插件"><a href="#安装插件" class="headerlink" title="安装插件"></a>安装插件</h3><p>  重启vim，输入指令：<code>PluginInstall</code></p>
-<h2 id="安装插件“Valloric-YouCompleteMe”"><a href="#安装插件“Valloric-YouCompleteMe”" class="headerlink" title="安装插件“Valloric&#x2F;YouCompleteMe”"></a>安装插件“Valloric&#x2F;YouCompleteMe”</h2><p>  这是一款非常牛逼的插件，保证让你爽爽的写代码。<br>  下面简单介绍一下安装过程：<em><strong>（详情请看<a href="https://github.com/Valloric/YouCompleteMe">YouCompleteMe</a>）</strong></em></p>
-<h3 id="Vundle-上加上插件包"><a href="#Vundle-上加上插件包" class="headerlink" title="Vundle 上加上插件包"></a>Vundle 上加上插件包</h3><p>  在.vimrc Vundle“代码块”内，你找一个合适的地儿，加上 </p>
-<pre><code>Plugin &#39;Valloric/YouCompleteMe&#39;
-</code></pre>
-<p>  然后启动vim安装。</p>
-<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><p>  跑到下号的插件包的目录下。</p>
-<pre><code>cd ~/.vim/bundle/YouCompleteMe
-</code></pre>
-<p>  目前YouCompleteMe 支持的语言有很多，下面简单介绍这几种 <em><strong>（假如你想支持全部语言：运行<code>./install.py --all</code>）</strong></em></p>
-<ul>
-<li>C# ：运行 <code>./install.py --omnisharp-completer</code></li>
-<li>C-family语言系：运行<code>./install.py --clang-completer</code></li>
-<li>Go：运行<code>./install.py --gocode-completer</code></li>
-<li>JS：运行<code>./install.py --tern-completer</code></li>
-</ul>
-<p>最后，试试你的vim吧，是不是比以前炫酷多了</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/03/05/%E8%AE%A9vim%E7%82%AB%E9%85%B7%E8%B5%B7%E6%9D%A5/" data-id="clzo46bu10034vajhh27yaxwb" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-教你10分钟搭建属于自己的Blog" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/02/09/%E6%95%99%E4%BD%A010%E5%88%86%E9%92%9F%E6%90%AD%E5%BB%BA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84Blog/" class="article-date">
-  <time datetime="2017-02-09T13:55:00.000Z" itemprop="datePublished">2017-02-09</time>
-</a>
-    
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a>
-  </div>
-
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/02/09/%E6%95%99%E4%BD%A010%E5%88%86%E9%92%9F%E6%90%AD%E5%BB%BA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84Blog/">教你10分钟搭建属于自己的Blog</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>   码农都很健忘，为了方便记忆，很多人都会把工作中遇到的问题或者学到的知识，写到博客里，以方便自己查阅，同时也可以帮助他人。<br>   写博客的方式，基本可以分为三种方式：第一，直接去csdn、博客园等博客平台写；第二，自己买服务器和域名，自己搭建；第三，使用gitPages等平台工具搭建。每种方式都可以,每一种方式也都有自己的优缺点，今天来简单介绍一下第三种方式：使用gitPages和Hexo来搭建。</p>
-<h2 id="gitPages"><a href="#gitPages" class="headerlink" title="gitPages"></a>gitPages</h2><p>   如果你对编程有所了解，就一定听说过github。它号称程序员的Facebook，有着极高的人气，许多重要的项目都托管在上面。<br>   简单说，它是一个具有版本管理功能的代码仓库，每个项目都有一个主页，列出项目的源文件。<br>   但是对于一个新手来说，看到一大堆源码，只会让人头晕脑涨，不知何处入手。他希望看到的是，一个简明易懂的网页，说明每一步应该怎么做。因此，github就设计了Pages功能，允许用户自定义项目首页，用来替代默认的源码列表。所以，github Pages可以被认为是用户编写的、托管在github上的静态网页。现在，很多人开始用它来写博客。<br>   gitPages用的十分广泛，很多知名项目的帮助文档，都是拿gitPages来做的。例如：<a href="https://facebook.github.io/react/">React</a> </p>
-<h3 id="创建一个repository"><a href="#创建一个repository" class="headerlink" title="创建一个repository"></a>创建一个repository</h3><p>   打开自己的github,创建一个名为“username.github.io”的项目，<em><strong>注意：username必须是自己的github的用户名</strong></em><br>   <img src="/img/pages_create_repo.png" /></p>
-<h3 id="Clone-the-repository"><a href="#Clone-the-repository" class="headerlink" title="Clone the repository"></a>Clone the repository</h3><p>  克隆项目</p>
-<pre><code>git clone https://github.com/username/username.github.io
-</code></pre>
-<h3 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World"></a>Hello World</h3><p>  进入到你克隆下来的项目目录里，添加一个html文件</p>
-<pre><code>cd username.github.io
-echo &quot;Hello World&quot; &gt; index.html
-</code></pre>
-<h3 id="Push-it"><a href="#Push-it" class="headerlink" title="Push it"></a>Push it</h3><p>  把它推到github上，Add, commit, and push your changes:</p>
-<pre><code>git add --all
-git commit -m &quot;Initial commit&quot;
-git push -u origin master
-</code></pre>
-<h3 id="访问"><a href="#访问" class="headerlink" title="访问"></a>访问</h3><p>  最后访问你的website <em><strong><a href="http://username.github.io/">http://username.github.io</a></strong></em></p>
-<h2 id="Hexo"><a href="#Hexo" class="headerlink" title="Hexo"></a>Hexo</h2><p>  好了，现在你相当于有了一个免费的域名外加一个只能写静态页面的server。现在你只需要更新一下你的html，git push到你对应的gitHub的repository上，外网就可以访问到你最新的内容。有人会说：“假如每次写博客都手动写一遍前端代码，太麻烦了，写完了还得自己发布到github,有没有一种工具可以帮我们干这件事呢？” 答案是有的，例如<a href="https://hexo.io/zh-cn/"><em><strong>Hexo</strong></em></a>。</p>
-<p>  Hexo 是一个快速、简洁且高效的博客框架。Hexo 使用 Markdown（或其他渲染引擎）解析文章，在几秒内，即可利用靓丽的主题生成静态网页。Hexo的作用，就是提供一个你写博客的小工具，在你写完之后，可以把你使用Markdown语法写在md文件上的内容制作成带有主题的静态页面，并发布到github（或者其他git托管平台）上。这样，你就可以仅关注写博客本身，而无需做一些开发性的工作。</p>
-<p>  Hexo的使用，也很简单：</p>
-<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>  安装 Hexo 相当简单。然而在安装前，您必须检查电脑中是否安装了Node.js和Git。<br>  如果电脑上已经装完了Node.js和Git,则：</p>
-<pre><code>npm install -g hexo-cli
-</code></pre>
-<h3 id="建站"><a href="#建站" class="headerlink" title="建站"></a>建站</h3><p>  安装 Hexo 完成后，请执行下列命令，Hexo 将会在指定文件夹中新建所需要的文件。</p>
-<pre><code> $ hexo init &lt;folder&gt;
- $ cd &lt;folder&gt;
- $ npm install 
-</code></pre>
-<p> 新建完成后，指定文件夹的目录如下：</p>
-<pre><code>.
-├── _config.yml       网站的配置信息。您可以在此配置大部分的参数。
-├── package.json      应用程序的信息。
-├── scaffolds         scaffolds模版文件夹。当您新建文章时，Hexo 会根据 scaffold 来建立文件。 Hexo的模板是指在新建的markdown文件中默认填充的内容。
-├── source            source资源文件夹。是存放用户资源的地方。除 _posts 文件夹之外，开头命名为 _ (下划线)的文件 / 文件夹和隐藏的文件将会被忽略。
-|   ├── _drafts       Markdown 和 HTML 文件会被解析并放到 public 文件夹，而其他文件会被拷贝过去。
-|   └── _posts
-└── themes           主题文件夹。Hexo 会根据主题来生成静态页面。
-</code></pre>
-<p> 输入一下指令</p>
-<pre><code>hexo generate  (此指令可以简化为:hexo g)
-hexo server （此指令可以简化为:hexo s）
-</code></pre>
-<p>  启动服务器。默认情况下，访问网址为： <a href="http://localhost:4000/">http://localhost:4000/</a></p>
-<h3 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h3><p>  推送生成的html代码到github，以便外网访问。</p>
-<p>  到blog的根目录下。打开_config.yml配置文件。翻到最后一行，编辑deploy相关的信息。内容如下:</p>
-<pre><code>deploy:
-  type: git
-  repo: https://github.com/i6448038/i6448038.github.io.git   你的github仓库地址
-  branch: master
-</code></pre>
-<p>  配置结束以后。输入以下指令，把代码自动部署到github。</p>
-<pre><code>hexo deploy （此指令可以简化为：hexo d）
-</code></pre>
-<p>  如果你输入以上指令后没有反应，那么你应该：</p>
-<pre><code>npm install hexo-deployer-git --save
-</code></pre>
-<p>  成功后，你就可以访问自己的gitPages了，<a href="https://username.github.io/">https://username.github.io</a></p>
-<h3 id="写博客"><a href="#写博客" class="headerlink" title="写博客"></a>写博客</h3><p>  打开gitPages后发现都是程序默认生成的东西，现在需要自己写自己博客的内容了。</p>
-<pre><code>hexo new &quot;文章题目&quot;  (此指令可以简化:hexo n &quot;文章题目&quot;)
-</code></pre>
-<p>  其中”RyuGou”为文章标题，执行命令 hexo n “RyuGou” 后，会在项目 \Hexo\source_posts 中生成 RyuGou.md文件，用编辑器打开编写即可。<br>  编辑内容使用的是MarkDown语法。有关MarkDown的内容再次就不做赘述了。<br>  详情请看：<a href="http://wowubuntu.com/markdown/basic.html">http://wowubuntu.com/markdown/basic.html</a><br>  或者 <a href="http://wowubuntu.com/markdown/index.html#philosophy">http://wowubuntu.com/markdown/index.html#philosophy</a><br>  或者 <a href="http://www.markdown.cn/">http://www.markdown.cn/</a><br>  关于MarkDown的编辑器，也多种多样，Atom、sublime、Mou、甚至vim也可以。</p>
-<p>  写完内容后，如果想改变当前博客的风格，可以去Hexo Themes的官网选择自己喜欢的风格。 <a href="https://hexo.io/themes/">https://hexo.io/themes/</a><br>  打开网址：<br>  <img src="/img/website.png" /><br>  点击喜欢的内容，会自动打开到该theme的gitHub仓库。<br>  <img src="/img/theme.png" /><br>  Aloha对应的gitHub仓库：<br>  <img src="/img/github.png"/><br>  然后你需要做如下操作:</p>
-<pre><code>$ cd $YOUR_BLOG_ROOT_DIR 
-$ git clone https://github.com/henryhuang/hexo-theme-aloha.git themes/aloha
-</code></pre>
-<p> 然后更改当前文件夹下的_config.yml，把该文件中theme的值改为aloha。除此之外，如果你想更改该风格的站点菜单栏字段等文本内容，可以去theme文件夹下的aloha子文件夹下的__config.yml文件中修改。<br> 然后执行</p>
-<pre><code>$ hexo g
-$ hexo s
-</code></pre>
-<p> 浏览器打开 <a href="http://localhost:4000/">http://localhost:4000</a> 看看风格是否改变</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2017/02/09/%E6%95%99%E4%BD%A010%E5%88%86%E9%92%9F%E6%90%AD%E5%BB%BA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84Blog/" data-id="clzo46btz002wvajhbpi7casr" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-
-
-  <nav id="page-nav">
-    
-    <a class="extend prev" rel="prev" href="/page/4/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span>
-  </nav>
-
-</section>
-        
-          <aside id="sidebar">
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Categories</h3>
-    <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Tags</h3>
-    <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Tag Cloud</h3>
-    <div class="widget tagcloud">
-      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
-    </div>
-  </div>
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Recent Posts</h3>
-    <div class="widget">
-      <ul>
+    <div class="contain-box2">
+      <link rel="stylesheet" href="/css/index-post.css">
+
+  <div class="recent-posts">
+    <p class="p1">文章列表</p>
+    <div class="recent-post-item">
+      <ul class="notice-list" id="notice-1">
         
           <li>
-            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+            <a href="/2017/06/27/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E8%AF%BB%E5%86%99%E5%88%86%E7%A6%BB%E6%90%AD%E5%BB%BA/">
+              MySQL主从复制读写分离搭建
+            </a>
+            <p class="notice-time" datetime="2017-06-26T16:50:08.000Z">
+              2017-06-27
+            </p>
           </li>
-        
+          
           <li>
-            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+            <a href="/2017/06/18/%E7%94%A8PHPExcel%E8%AF%BB%E5%8F%96excel%E8%A1%A8%E6%A0%BC/">
+              用PHPExcel读取excel表格
+            </a>
+            <p class="notice-time" datetime="2017-06-18T13:37:35.000Z">
+              2017-06-18
+            </p>
           </li>
-        
+          
           <li>
-            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+            <a href="/2017/05/24/phpstrom-%E5%92%8C-xdebug-%E8%B0%83%E8%AF%95PHP%E7%A8%8B%E5%BA%8F/">
+              使用phpstrom 和 xdebug 调试PHP程序
+            </a>
+            <p class="notice-time" datetime="2017-05-24T03:03:40.000Z">
+              2017-05-24
+            </p>
           </li>
-        
+          
           <li>
-            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+            <a href="/2017/05/14/%E4%BA%92%E8%81%94%E7%BD%91%E4%BA%A7%E5%93%81%E7%A0%94%E5%8F%91%E6%B5%81%E7%A8%8B/">
+              互联网产品研发流程
+            </a>
+            <p class="notice-time" datetime="2017-05-14T03:04:21.000Z">
+              2017-05-14
+            </p>
           </li>
-        
+          
           <li>
-            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+            <a href="/2017/05/04/%E7%94%A8Ping-%E5%81%9A%E6%94%AF%E4%BB%98/">
+              用Ping++做支付
+            </a>
+            <p class="notice-time" datetime="2017-05-04T02:26:16.000Z">
+              2017-05-04
+            </p>
           </li>
-        
+          
+          <li>
+            <a href="/2017/04/29/PHP%E5%8F%91%E9%82%AE%E4%BB%B6%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E6%80%BB%E7%BB%93/">
+              PHP发邮件的几种方式总结
+            </a>
+            <p class="notice-time" datetime="2017-04-29T15:21:00.000Z">
+              2017-04-29
+            </p>
+          </li>
+          
+          <li>
+            <a href="/2017/04/10/Mac%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%88%A9%E7%94%A8%E6%9C%AC%E5%9C%B0php5-6%E5%AE%89%E8%A3%85%E6%89%A9%E5%B1%95%E5%87%BA%E7%8E%B0%E7%9A%84Operation-not-permitted%E8%A7%A3%E5%86%B3/">
+              Mac环境下利用本地php5.6安装扩展出现的Operation not permitted解决
+            </a>
+            <p class="notice-time" datetime="2017-04-10T14:18:21.000Z">
+              2017-04-10
+            </p>
+          </li>
+          
+          <li>
+            <a href="/2017/03/25/PHP%E9%82%A3%E4%BA%9B%E5%A5%87%E6%80%AA%E7%9A%84%E8%AF%AD%E6%B3%95/">
+              PHP那些琐碎的知识点
+            </a>
+            <p class="notice-time" datetime="2017-03-25T14:35:46.000Z">
+              2017-03-25
+            </p>
+          </li>
+          
+          <li>
+            <a href="/2017/03/05/%E8%AE%A9vim%E7%82%AB%E9%85%B7%E8%B5%B7%E6%9D%A5/">
+              让vim炫酷起来
+            </a>
+            <p class="notice-time" datetime="2017-03-05T01:27:17.000Z">
+              2017-03-05
+            </p>
+          </li>
+          
+          <li>
+            <a href="/2017/02/09/%E6%95%99%E4%BD%A010%E5%88%86%E9%92%9F%E6%90%AD%E5%BB%BA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84Blog/">
+              教你10分钟搭建属于自己的Blog
+            </a>
+            <p class="notice-time" datetime="2017-02-09T13:55:00.000Z">
+              2017-02-09
+            </p>
+          </li>
+          
       </ul>
-    </div>
-  </div>
-
-  
-</aside>
-        
+      <div class="list-bottom">
+        <a class="extend prev" rel="prev" href="/page/4/">Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span>
       </div>
-      <footer id="footer">
-  
-  <div class="outer">
-    <div id="footer-info" class="inner">
-      &copy; 2024 菜刚<br>
-      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
-  </div>
-</footer>
-    </div>
-    <nav id="mobile-nav">
-  
-    <a href="/" class="mobile-nav-link">Home</a>
-  
-    <a href="/archives" class="mobile-nav-link">Archives</a>
-  
-</nav>
-    
-
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
-
-
-  
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
-
-  
-<script src="/fancybox/jquery.fancybox.pack.js"></script>
-
-
-
-
-<script src="/js/script.js"></script>
-
-
-
 
   </div>
-</body>
-</html>
+  
+    </div>
+  </div>
+</div>
+          </div>
+        </div>
+
+        <link rel="stylesheet" href="/css/footer.css">
+<div class="bottom-outer">
+  <div class="copyright">©2021 - 2021 By Tanger</div>
+  <div class="framework-info">
+    <span>Power by</span>
+    <a class="a1" href="https://hexo.io/">Hexo</a>
+    <span class="footer-separator">|</span>
+    <span>Theme by</span>
+    <a class="a2" href="https://github.com/redhat123456/hexo-theme-MiHoYo">MiHoYo</a>
+  </div>
+</div>
+
+          
+            <!-- scripts list from theme config.yml -->
+            
+              <script src="/js/MiHoYo.js"></script>
+              
+                
+
+  </body>
+
+  </html>
