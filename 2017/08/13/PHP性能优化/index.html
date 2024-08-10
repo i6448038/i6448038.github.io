@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>PHP性能优化 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="PHP虽然是世界上最好的语言，但是它本身作为一门脚本语言，其运行效率一直被人们所诟病。 作为以PHP为开发语言的应用程序而言，PHP程序的性能能影响到整个架构性能的百分之30左右，不会超过百分之50，其余的是硬件的、操作系统的、存储的等等其他性能优化；因此，PHP程序的性能好坏，对于整个系统架构而言，还是很重要的。 PHP的性能优化分为一下三个层次：   这三个层次性能优化的难度依次上升，效果却依">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PHP性能优化">
+<meta property="og:url" content="http://yoursite.com/2017/08/13/PHP%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="PHP虽然是世界上最好的语言，但是它本身作为一门脚本语言，其运行效率一直被人们所诟病。 作为以PHP为开发语言的应用程序而言，PHP程序的性能能影响到整个架构性能的百分之30左右，不会超过百分之50，其余的是硬件的、操作系统的、存储的等等其他性能优化；因此，PHP程序的性能好坏，对于整个系统架构而言，还是很重要的。 PHP的性能优化分为一下三个层次：   这三个层次性能优化的难度依次上升，效果却依">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/php/php1.png">
+<meta property="og:image" content="http://yoursite.com/img/php/php_flow.png">
+<meta property="og:image" content="http://yoursite.com/img/php/php_duty.png">
+<meta property="og:image" content="http://yoursite.com/img/php/php_around.png">
+<meta property="article:published_time" content="2017-08-13T07:13:49.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.805Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="php">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/php/php1.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-PHP性能优化" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/08/13/PHP%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" class="article-date">
+  <time datetime="2017-08-13T07:13:49.000Z" itemprop="datePublished">2017-08-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      PHP性能优化
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>PHP虽然是世界上最好的语言，但是它本身作为一门脚本语言，其运行效率一直被人们所诟病。</p>
+<p>作为以PHP为开发语言的应用程序而言，PHP程序的性能能影响到整个架构性能的百分之30左右，不会超过百分之50，其余的是硬件的、操作系统的、存储的等等其他性能优化；因此，PHP程序的性能好坏，对于整个系统架构而言，还是很重要的。</p>
+<p>PHP的性能优化分为一下三个层次：</p>
+<img src='/img/php/php1.png' />
+
+<p>这三个层次性能优化的难度依次上升，效果却依次降低。在此，我们重点讨论前两种层次。</p>
+<h1 id="PHP代码的优化"><a href="#PHP代码的优化" class="headerlink" title="PHP代码的优化"></a>PHP代码的优化</h1><h2 id="多使用PHP内置的函数，少使用PHP代码，且精简PHP代码"><a href="#多使用PHP内置的函数，少使用PHP代码，且精简PHP代码" class="headerlink" title="多使用PHP内置的函数，少使用PHP代码，且精简PHP代码"></a>多使用PHP内置的函数，少使用PHP代码，且精简PHP代码</h2><p>PHP的执行流程为：<br><img src='/img/php/php_flow.png' /></p>
+<p>这个原理是很简单的，PHP是解释型语言，PHP代码得经过好几步转化才能变成最终的机器码，假如PHP代码写的很多，不够精简，转化的步骤就会变长，自然会影响PHP程序的性能。而PHP内置的函数是由C语言编写的，运行速度自然快。</p>
+<h2 id="PHP内置函数的执行效率也有优先级，可以尽量使用快的"><a href="#PHP内置函数的执行效率也有优先级，可以尽量使用快的" class="headerlink" title="PHP内置函数的执行效率也有优先级，可以尽量使用快的"></a>PHP内置函数的执行效率也有优先级，可以尽量使用快的</h2><p>这个原因也是显而易见的，虽然都是C语言写的程序，但是C实现的方式还是不同的，有的实现方式快一些，有的实现的慢一些，所以调用快的效率肯定会高一点。<br>例如：</p>
+<ul>
+<li><code>array_key_exists</code>效率要比<code>in_array</code>高</li>
+<li><code>require</code>比<code>require_once </code>效率高</li>
+<li>单引号<code>&#39;&#39;</code>比双引号<code>&quot;&quot;</code>效率高</li>
+</ul>
+<h2 id="减少PHP魔法函数的使用"><a href="#减少PHP魔法函数的使用" class="headerlink" title="减少PHP魔法函数的使用"></a>减少PHP魔法函数的使用</h2><p>PHP的魔法函数用起来很爽，但是既然用的这么爽，那么PHP在底层肯定帮你做了诸多事情，做的这么一堆事情，不能不消耗性能吧。<br>PHP魔法函数为了让程序员爽，在语言级别帮程序猿做了很多，会带啦性能开销，我们应该看情况酌情使用。</p>
+<h2 id="不要使用错误抑制符"><a href="#不要使用错误抑制符" class="headerlink" title="不要使用错误抑制符@"></a>不要使用错误抑制符<code>@</code></h2><p><code>@</code>错误抑制符这玩意儿的实现原理和魔法函数差不多，都是方便了程序猿苦了自己；原理也很简单，就是在添加了错误@符号的前面和后面添加了Opcode，Opcode的作用就是和<code>error_reporting</code>忽略错误一样一样的，然后在添加了@符号的代码之后再添加上一些Opcode，将错误等级恢复。</p>
+<p>可以用PHP的Opcode查看扩展<code>vld</code>来查看添加了@符号的代码情况。(<code>vld</code>的使用也很简单，就俩指令<code>vld.active=1</code>和<code>vld.execute=0.</code>, <code>vld.active=1</code>表示想要用扩展，<code>vld.execute=0.</code>表示只是查看Opcode代码，<code>vld.execute=1.</code>表示要执行php程序。&#96;&#96;php -vld.active&#x3D;1 -vld.execute&#x3D;0 xxx.php)</p>
+<h2 id="合理使用PHP内存，释放掉没用的变量"><a href="#合理使用PHP内存，释放掉没用的变量" class="headerlink" title="合理使用PHP内存，释放掉没用的变量"></a>合理使用PHP内存，释放掉没用的变量</h2><p>要尽量合理的使用内存，例如：</p>
+<ul>
+<li>从数据库中取字段，只取某个字段，就不要取出全部字段。 select xxx 和 select * 的区别</li>
+<li>读取文件，文件使用完后，文件close的问题</li>
+<li>使用<code>unset</code>及时释放掉无用的变量。（但是也会有unset不掉的情况）</li>
+</ul>
+<h2 id="尽量减少使用正则表达式"><a href="#尽量减少使用正则表达式" class="headerlink" title="尽量减少使用正则表达式"></a>尽量减少使用正则表达式</h2><p>正则表达式需要回溯，当正则表达式越长，它回溯的开销就会越大，优化表达式也是个技术活儿，所以建议尽量使用PHP内置的处理函数来替代。</p>
+<h2 id="避免循环内做重复的计算"><a href="#避免循环内做重复的计算" class="headerlink" title="避免循环内做重复的计算"></a>避免循环内做重复的计算</h2><p>例如：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$str</span> = <span class="string">&quot;hello world&quot;</span>;</span><br><span class="line"><span class="keyword">for</span> (<span class="variable">$i</span> = <span class="number">0</span>; <span class="variable">$i</span>&lt;<span class="title function_ invoke__">strlen</span>(<span class="variable">$str</span>); <span class="variable">$i</span> ++)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>strlen($str)</code>是不是被重复计算了？有意义吗？写在外边不好吗？</p>
+<h2 id="避免数据密集型计算"><a href="#避免数据密集型计算" class="headerlink" title="避免数据密集型计算"></a>避免数据密集型计算</h2><p>PHP是由C语言来实现的，PHP本身在处理一些计算的时候，额外的开销是很大的，例如它的变量寄存、语言处理，都需要C来实现…PHP的“慢”，不是由于一些特性而“慢”，是整体就慢。所以在处理一些大批量数据例如大批量日志处理，大批量数据分析的时候，是十分不适合的，和C等语言比起来不是一个数量级。</p>
+<p>PHP的语言特性决定了PHP不适合做大数据量的计算。<br>PHP适合做的事：<br><img src='/img/php/php_duty.png' /></p>
+<p>PHP适合做一个纽带，适合做一些字符串、文本处理。</p>
+<h2 id="使用Opcode-cache"><a href="#使用Opcode-cache" class="headerlink" title="使用Opcode cache"></a>使用Opcode cache</h2><p>Opcode是整个PHP中最接近机器码的地方，假如我们对Opcode做一下缓存，就节约了PHP代码解析、编译的开销，在此，我们可以使用一些扩展来对Opcode进行缓存</p>
+<ul>
+<li><code>APC</code>。（已经不更新）</li>
+<li>鸟哥的<code>yac</code>。</li>
+</ul>
+<h1 id="PHP周边性能优化"><a href="#PHP周边性能优化" class="headerlink" title="PHP周边性能优化"></a>PHP周边性能优化</h1><img src='/img/php/php_around.png' />
+
+<p>以上就是PHP周边的环境。只有PHP周边的环境也得到了很好的性能优化，才能将PHP的系统架构发挥到极致。</p>
+<h2 id="不要使用过多的IO"><a href="#不要使用过多的IO" class="headerlink" title="不要使用过多的IO"></a>不要使用过多的IO</h2><p>PHP场景的性能开销次序为：<code>读取内存 &lt; 读取数据库 &lt; 读取文件 &lt; 读取网络数据</code></p>
+<p>PHP是不适合编写IO密集型的程序。</p>
+<h2 id="优化网络请求"><a href="#优化网络请求" class="headerlink" title="优化网络请求"></a>优化网络请求</h2><h3 id="设置超时时间"><a href="#设置超时时间" class="headerlink" title="设置超时时间"></a>设置超时时间</h3><ul>
+<li>连接超时 200ms</li>
+<li>读超时 800ms</li>
+<li>写超时 500ms</li>
+</ul>
+<h3 id="将串行请求并行化"><a href="#将串行请求并行化" class="headerlink" title="将串行请求并行化"></a>将串行请求并行化</h3><ul>
+<li>使用<code>curl_multi_*()</code>的函数代替<code>curl</code></li>
+<li>使用<code>swoole</code>扩展(比 <code>curl_multi</code>还要好)</li>
+</ul>
+<h2 id="合理的将PHP接口输出压缩"><a href="#合理的将PHP接口输出压缩" class="headerlink" title="合理的将PHP接口输出压缩"></a>合理的将PHP接口输出压缩</h2><p>使用<code>gzip</code>可以将PHP接口输出压缩，提高我们的IO，但是压缩的过程需要额外的计算消耗，需要消耗部分CPU性能，需要合理使用；当数据量小于几十kb的时候，用<code>gzip</code>还不如不用，当<code>gzip</code>数据大于100k的时候，压缩是合理的，而且压缩的程度还和数据重复的个数有关，如果重复的多，<code>gizp</code>就压缩的小，如果重复的少，<code>gzip</code>压缩的就稍微大点儿。</p>
+<h1 id="最后的解决方案"><a href="#最后的解决方案" class="headerlink" title="最后的解决方案"></a>最后的解决方案</h1><h2 id="使用性能优化分析工具"><a href="#使用性能优化分析工具" class="headerlink" title="使用性能优化分析工具"></a>使用性能优化分析工具</h2><ul>
+<li>Facebook的<code>XHPorf</code></li>
+<li>压力测试工具Apache的<code>ab</code></li>
+<li>opcode代码分析工具<code>vld</code></li>
+</ul>
+<h2 id="用PHP扩展代替部分逻辑"><a href="#用PHP扩展代替部分逻辑" class="headerlink" title="用PHP扩展代替部分逻辑"></a>用PHP扩展代替部分逻辑</h2><p>这个不用多说，很多大公司都是这么做的。<br>把很多PHP的library做成<code>.so</code>文件。</p>
+<h2 id="使用PHP7"><a href="#使用PHP7" class="headerlink" title="使用PHP7"></a>使用PHP7</h2><p><code>HHVM</code>是由Facebook推出的,用来提升PHP<code>runtime</code>效率的，效果十分明显。但是，就PHP7而言，官方觉得PHP7的engine更胜一筹，所以，如果想要整体提高性能，升级PHP7还是必要的。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/08/13/PHP%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" data-id="clzo46bt9000gvajhbahx7rrg" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/08/27/%E5%8D%81%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          十分钟学会正则表达式
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/07/28/GolangDetails/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go语言的那些坑</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

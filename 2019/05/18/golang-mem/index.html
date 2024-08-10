@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>图解Golang的内存分配 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="一般程序的内存分配在讲Golang的内存分配之前，让我们先来看看一般程序的内存分布情况：  以上是程序内存的逻辑分类情况。 我们再来看看一般程序的内存的真实(真实逻辑)图:  Go的内存分配核心思想Go是内置运行时的编程语言(runtime)，像这种内置运行时的编程语言通常会抛弃传统的内存分配方式，改为自己管理。这样可以完成类似预分配、内存池等操作，以避开系统调用带来的性能问题，防止每次分配内存都">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图解Golang的内存分配">
+<meta property="og:url" content="http://yoursite.com/2019/05/18/golang-mem/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="一般程序的内存分配在讲Golang的内存分配之前，让我们先来看看一般程序的内存分布情况：  以上是程序内存的逻辑分类情况。 我们再来看看一般程序的内存的真实(真实逻辑)图:  Go的内存分配核心思想Go是内置运行时的编程语言(runtime)，像这种内置运行时的编程语言通常会抛弃传统的内存分配方式，改为自己管理。这样可以完成类似预分配、内存池等操作，以避开系统调用带来的性能问题，防止每次分配内存都">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem1.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem2.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem3.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem4.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem5.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem6.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem7.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem8.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem9.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem10.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem11.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem12.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem13.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem14.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem15.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem16.png">
+<meta property="og:image" content="http://yoursite.com/img/go_mem/mem17.png">
+<meta property="og:image" content="http://yoursite.com/img/weichat/qrcode.jpg">
+<meta property="article:published_time" content="2019-05-18T10:15:56.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.816Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/go_mem/mem.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-golang-mem" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/05/18/golang-mem/" class="article-date">
+  <time datetime="2019-05-18T10:15:56.000Z" itemprop="datePublished">2019-05-18</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      图解Golang的内存分配
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="一般程序的内存分配"><a href="#一般程序的内存分配" class="headerlink" title="一般程序的内存分配"></a>一般程序的内存分配</h2><p>在讲Golang的内存分配之前，让我们先来看看一般程序的内存分布情况：</p>
+<p><img src="/img/go_mem/mem.png"></p>
+<p>以上是程序内存的逻辑分类情况。</p>
+<p>我们再来看看一般程序的内存的真实(真实逻辑)图:</p>
+<p><img src="/img/go_mem/mem1.png"></p>
+<h2 id="Go的内存分配核心思想"><a href="#Go的内存分配核心思想" class="headerlink" title="Go的内存分配核心思想"></a>Go的内存分配核心思想</h2><p>Go是内置运行时的编程语言(runtime)，像这种内置运行时的编程语言通常会抛弃传统的内存分配方式，改为自己管理。这样可以完成类似预分配、内存池等操作，以避开系统调用带来的性能问题，防止每次分配内存都需要系统调用。</p>
+<p>Go的内存分配的核心思想可以分为以下几点：</p>
+<ul>
+<li>每次从操作系统申请一大块儿的内存，由Go来对这块儿内存做分配，减少系统调用</li>
+<li>内存分配算法采用Google的<code>TCMalloc算法</code>。算法比较复杂，究其原理可自行查阅。其核心思想就是把内存切分的非常的细小，分为多级管理，以降低锁的粒度。</li>
+<li>回收对象内存时，并没有将其真正释放掉，只是放回预先分配的大块内存中，以便复用。只有内存闲置过多的时候，才会尝试归还部分内存给操作系统，降低整体开销</li>
+</ul>
+<h2 id="Go的内存结构"><a href="#Go的内存结构" class="headerlink" title="Go的内存结构"></a>Go的内存结构</h2><p>Go在程序启动的时候，会分配一块连续的内存(虚拟内存)。整体如下：</p>
+<p><img src="/img/go_mem/mem2.png"></p>
+<p>图中span和bitmap的大小会随着heap的改变而改变</p>
+<h3 id="arena"><a href="#arena" class="headerlink" title="arena"></a>arena</h3><p>arena区域就是我们通常所说的heap。<br>heap中按照管理和使用两个维度可认为存在两类“东西”：</p>
+<p>一类是从管理分配角度，由多个连续的页(page)组成的大块内存：<br><img src="/img/go_mem/mem3.png"><br>另一类是从使用角度出发，就是平时咱们所了解的:heap中存在很多”对象”：<br><img src="/img/go_mem/mem4.png"></p>
+<h3 id="spans"><a href="#spans" class="headerlink" title="spans"></a>spans</h3><p>spans区域，可以认为是用于上面所说的管理分配arena(即heap)的区域。<br>此区域存放了<code>mspan</code>的指针，<code>mspan</code>是啥后面会讲。<br>spans区域用于表示arena区中的某一页(page)属于哪个<code>mspan</code>。<br><img src="/img/go_mem/mem5.png"></p>
+<p><code>mspan</code>可以说是go内存管理的最基本单元，但是内存的使用最终还是要落脚到“对象”上。<code>mspan</code>和对象是什么关系呢？<br>其实“对象”肯定也放到<code>page</code>中，毕竟<code>page</code>是内存存储的基本单元。</p>
+<p>我们抛开问题不看，先看看一般情况下的对象和内存的分配是如何的：如下图<br><img src="/img/go_mem/mem6.png"></p>
+<p>假如再分配“p4”的时候，是不是内存不足没法分配了？是不是有很多碎片？</p>
+<p>这种一般的分配情况会出现内存碎片的情况，go是如何解决的呢？</p>
+<p>可以归结为四个字：按需分配。go将内存块分为大小不同的67种，然后再把这67种大内存块，逐个分为小块(可以近似理解为大小不同的相当于<code>page</code>)称之为<code>span</code>(连续的<code>page</code>)，在go语言中就是上文提及的<code>mspan</code>。<br><img src="/img/go_mem/mem7.png"><br>对象分配的时候，根据对象的大小选择大小相近的<code>span</code>，这样，碎片问题就解决了。</p>
+<p>67中不同大小的span代码注释如下(目前版本1.11)：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class  bytes/obj  bytes/span  objects  tail waste  max waste</span></span><br><span class="line"><span class="comment">//     1          8        8192     1024           0     87.50%</span></span><br><span class="line"><span class="comment">//     2         16        8192      512           0     43.75%</span></span><br><span class="line"><span class="comment">//     3         32        8192      256           0     46.88%</span></span><br><span class="line"><span class="comment">//     4         48        8192      170          32     31.52%</span></span><br><span class="line"><span class="comment">//     5         64        8192      128           0     23.44%</span></span><br><span class="line"><span class="comment">//     6         80        8192      102          32     19.07%</span></span><br><span class="line"><span class="comment">//     7         96        8192       85          32     15.95%</span></span><br><span class="line"><span class="comment">//     8        112        8192       73          16     13.56%</span></span><br><span class="line"><span class="comment">//     9        128        8192       64           0     11.72%</span></span><br><span class="line"><span class="comment">//    10        144        8192       56         128     11.82%</span></span><br><span class="line"><span class="comment">//    11        160        8192       51          32      9.73%</span></span><br><span class="line"><span class="comment">//    12        176        8192       46          96      9.59%</span></span><br><span class="line"><span class="comment">//    13        192        8192       42         128      9.25%</span></span><br><span class="line"><span class="comment">//    14        208        8192       39          80      8.12%</span></span><br><span class="line"><span class="comment">//    15        224        8192       36         128      8.15%</span></span><br><span class="line"><span class="comment">//    16        240        8192       34          32      6.62%</span></span><br><span class="line"><span class="comment">//    17        256        8192       32           0      5.86%</span></span><br><span class="line"><span class="comment">//    18        288        8192       28         128     12.16%</span></span><br><span class="line"><span class="comment">//    19        320        8192       25         192     11.80%</span></span><br><span class="line"><span class="comment">//    20        352        8192       23          96      9.88%</span></span><br><span class="line"><span class="comment">//    21        384        8192       21         128      9.51%</span></span><br><span class="line"><span class="comment">//    22        416        8192       19         288     10.71%</span></span><br><span class="line"><span class="comment">//    23        448        8192       18         128      8.37%</span></span><br><span class="line"><span class="comment">//    24        480        8192       17          32      6.82%</span></span><br><span class="line"><span class="comment">//    25        512        8192       16           0      6.05%</span></span><br><span class="line"><span class="comment">//    26        576        8192       14         128     12.33%</span></span><br><span class="line"><span class="comment">//    27        640        8192       12         512     15.48%</span></span><br><span class="line"><span class="comment">//    28        704        8192       11         448     13.93%</span></span><br><span class="line"><span class="comment">//    29        768        8192       10         512     13.94%</span></span><br><span class="line"><span class="comment">//    30        896        8192        9         128     15.52%</span></span><br><span class="line"><span class="comment">//    31       1024        8192        8           0     12.40%</span></span><br><span class="line"><span class="comment">//    32       1152        8192        7         128     12.41%</span></span><br><span class="line"><span class="comment">//    33       1280        8192        6         512     15.55%</span></span><br><span class="line"><span class="comment">//    34       1408       16384       11         896     14.00%</span></span><br><span class="line"><span class="comment">//    35       1536        8192        5         512     14.00%</span></span><br><span class="line"><span class="comment">//    36       1792       16384        9         256     15.57%</span></span><br><span class="line"><span class="comment">//    37       2048        8192        4           0     12.45%</span></span><br><span class="line"><span class="comment">//    38       2304       16384        7         256     12.46%</span></span><br><span class="line"><span class="comment">//    39       2688        8192        3         128     15.59%</span></span><br><span class="line"><span class="comment">//    40       3072       24576        8           0     12.47%</span></span><br><span class="line"><span class="comment">//    41       3200       16384        5         384      6.22%</span></span><br><span class="line"><span class="comment">//    42       3456       24576        7         384      8.83%</span></span><br><span class="line"><span class="comment">//    43       4096        8192        2           0     15.60%</span></span><br><span class="line"><span class="comment">//    44       4864       24576        5         256     16.65%</span></span><br><span class="line"><span class="comment">//    45       5376       16384        3         256     10.92%</span></span><br><span class="line"><span class="comment">//    46       6144       24576        4           0     12.48%</span></span><br><span class="line"><span class="comment">//    47       6528       32768        5         128      6.23%</span></span><br><span class="line"><span class="comment">//    48       6784       40960        6         256      4.36%</span></span><br><span class="line"><span class="comment">//    49       6912       49152        7         768      3.37%</span></span><br><span class="line"><span class="comment">//    50       8192        8192        1           0     15.61%</span></span><br><span class="line"><span class="comment">//    51       9472       57344        6         512     14.28%</span></span><br><span class="line"><span class="comment">//    52       9728       49152        5         512      3.64%</span></span><br><span class="line"><span class="comment">//    53      10240       40960        4           0      4.99%</span></span><br><span class="line"><span class="comment">//    54      10880       32768        3         128      6.24%</span></span><br><span class="line"><span class="comment">//    55      12288       24576        2           0     11.45%</span></span><br><span class="line"><span class="comment">//    56      13568       40960        3         256      9.99%</span></span><br><span class="line"><span class="comment">//    57      14336       57344        4           0      5.35%</span></span><br><span class="line"><span class="comment">//    58      16384       16384        1           0     12.49%</span></span><br><span class="line"><span class="comment">//    59      18432       73728        4           0     11.11%</span></span><br><span class="line"><span class="comment">//    60      19072       57344        3         128      3.57%</span></span><br><span class="line"><span class="comment">//    61      20480       40960        2           0      6.87%</span></span><br><span class="line"><span class="comment">//    62      21760       65536        3         256      6.25%</span></span><br><span class="line"><span class="comment">//    63      24576       24576        1           0     11.45%</span></span><br><span class="line"><span class="comment">//    64      27264       81920        3         128     10.00%</span></span><br><span class="line"><span class="comment">//    65      28672       57344        2           0      4.91%</span></span><br><span class="line"><span class="comment">//    66      32768       32768        1           0     12.50%</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>说说每列代表的含义：</p>
+<ul>
+<li>class： class ID，每个span结构中都有一个class ID, 表示该span可处理的对象类型</li>
+<li>bytes&#x2F;obj：该class代表对象的字节数</li>
+<li>bytes&#x2F;span：每个span占用堆的字节数，也即页数*页大小</li>
+<li>objects: 每个span可分配的对象个数，也即（bytes&#x2F;spans）&#x2F;（bytes&#x2F;obj）</li>
+<li>waste bytes: 每个span产生的内存碎片，也即（bytes&#x2F;spans）%（bytes&#x2F;obj）</li>
+</ul>
+<p>阅读方式如下：<br>以类型(class)为1的span为例,span中的元素大小是8 byte, span本身占1页也就是8K, 一共可以保存1024个对象。</p>
+<p>细心的同学可能会发现代码中一共有66种，还有一种特殊的span：<br>即对于大于32k的对象出现时，会直接从heap分配一个特殊的span，这个特殊的span的类型(class)是0, 只包含了一个大对象, span的大小由对象的大小决定。</p>
+<h3 id="bitmap"><a href="#bitmap" class="headerlink" title="bitmap"></a>bitmap</h3><p>bitmap 有好几种:Stack, data, and bss bitmaps，再就是这次要说的<code>heap bitmaps</code>。<br>在此bitmap的做作用是标记标记<code>arena</code>(即heap)中的对象。一是的标记对应地址中是否存在对象，另外是标记此对象是否被gc标记过。一个功能一个bit位，所以，<code>heap bitmaps</code>用两个bit位。<br>bitmap区域中的一个byte对应arena区域的四个指针大小的内存的结构如下：</p>
+<p><img src="/img/go_mem/mem8.png"></p>
+<p>bitmap的地址是由高地址向低地址增长的。</p>
+<p>宏观的图为：</p>
+<p><img src="/img/go_mem/mem9.png"><br>bitmap 主要的作用还是服务于GC。</p>
+<p><code>arena</code>中包含基本的管理单元和程序运行时候生成的对象或实体，这两部分分别被<code>spans</code>和<code>bitmap</code>这两块非heap区域的内存所对应着。<br>逻辑图如下：<br><img src="/img/go_mem/mem10.png"><br>spans和bitmap都会根据arena的动态变化而动态调整大小。</p>
+<h2 id="内存管理组件"><a href="#内存管理组件" class="headerlink" title="内存管理组件"></a>内存管理组件</h2><p>go的内存管理组件主要有：<code>mspan</code>、<code>mcache</code>、<code>mcentral</code>和<code>mheap</code></p>
+<ul>
+<li><code>mspan</code>为内存管理的基础单元，直接存储数据的地方。</li>
+<li><code>mcache</code>：每个运行期的goroutine都会绑定的一个<code>mcache</code>(具体来讲是绑定的GMP并发模型中的P，所以可以无锁分配<code>mspan</code>，后续还会说到)，<code>mcache</code>会分配goroutine运行中所需要的内存空间(即<code>mspan</code>)。</li>
+<li><code>mcentral</code>为所有<code>mcache</code>切分好后备的<code>mspan</code></li>
+<li><code>mheap</code>代表Go程序持有的所有堆空间。还会管理闲置的span，需要时向操作系统申请新内存。</li>
+</ul>
+<h3 id="mspan"><a href="#mspan" class="headerlink" title="mspan"></a>mspan</h3><p><img src="/img/go_mem/mem11.png"><br>有人会问：mspan结构体存放在哪儿？其实，mspan结构本身的内存是从系统分配的，在此不做过多讨论。<br><code>mspan</code>在上文讲<code>spans</code>的时候具体讲过，就是方便根据对象大小来分配使用的内存块，一共有67种类型；最主要解决的是内存碎片问题，减少了内存碎片，提高了内存使用率。<br><code>mspan</code>是双向链表，其中主要的属性如下图所示：<br><img src="/img/go_mem/mem12.png"></p>
+<p><code>mspan</code>是go中内存管理的基本单元，在上文<code>spans</code>中其实已经做了详细的解说，在此就不在赘述了。</p>
+<h3 id="mcache"><a href="#mcache" class="headerlink" title="mcache"></a>mcache</h3><p>为了避免多线程申请内存时不断的加锁，goroutine为每个线程分配了<code>span</code>内存块的缓存，这个缓存即是<code>mcache</code>，每个goroutine都会绑定的一个<code>mcache</code>，各个goroutine申请内存时不存在锁竞争的情况。</p>
+<p>如何做到的？</p>
+<p>在讲之前，请先回顾一下Go的并发调度模型，如果你还不了解，请看我这篇文章 <a href="https://mp.weixin.qq.com/s/74hbRTQ2TjdH5G9F2of4_g">https://mp.weixin.qq.com/s/74hbRTQ2TjdH5G9F2of4_g</a></p>
+<p>然后请看下图：</p>
+<p><img src="/img/go_mem/mem13.png"></p>
+<p>大体上就是上图这个样子了。注意看我们的<code>mcache</code>在哪儿呢？就在P上！<br>知道为什么没有锁竞争了吧，因为运行期间一个goroutine只能和一个P关联，而<code>mcache</code>就在P上，所以，不可能有锁的竞争。</p>
+<p>我们再来看看<code>mcache</code>具体的结构：</p>
+<p><img src="/img/go_mem/mem14.png"></p>
+<p>mcache中的span链表分为两组，一组是包含指针类型的对象，另一组是不包含指针类型的对象。为什么分开呢？</p>
+<p>主要是方便GC，在进行垃圾回收的时候，对于不包含指针的对象列表无需进一步扫描是否引用其他活跃的对象(如果对go的gc不是很了解，请看我这篇文章 <a href="https://mp.weixin.qq.com/s/_h0-8hma5y_FHKBeFuOOyw)%E3%80%82">https://mp.weixin.qq.com/s/_h0-8hma5y_FHKBeFuOOyw)。</a></p>
+<p>对于 <code>&lt;=32k</code>的对象，将直接通过<code>mcache</code>分配。</p>
+<p>在此，我觉的有必要说一下go中对象按照的大小维度的分类。<br>分为三类：</p>
+<ul>
+<li>tinny allocations (size &lt; 16 bytes，no pointers)</li>
+<li>small allocations (16 bytes &lt; size &lt;&#x3D; 32k)</li>
+<li>large allocations (size &gt; 32k)</li>
+</ul>
+<p>前两类：<code>tiny allocations</code>和<code>small allocations</code>是直接通过<code>mcache</code>来分配的。</p>
+<p>对于<code>tiny allocations</code>的分配，有一个微型分配器<code>tiny allocator</code>来分配，分配的对象都是不包含指针的，例如一些小的字符串和不包含指针的独立的逃逸变量等。</p>
+<p><code>small allocations</code>的分配，就是<code>mcache</code>根据对象的大小来找自身存在的大小相匹配<code>mspan</code>来分配。<br>当<code>mcach</code>没有可用空间时，会从<code>mcentral</code>的 <code>mspans</code> 列表获取一个新的所需大小规格的<code>mspan</code>。</p>
+<h3 id="mcentral"><a href="#mcentral" class="headerlink" title="mcentral"></a>mcentral</h3><p>为所有<code>mcache</code>提供切分好的<code>mspan</code>。<br>每个<code>mcentral</code>保存一种特定类型的全局<code>mspan</code>列表，包括已分配出去的和未分配出去的。 </p>
+<p><img src="/img/go_mem/mem15.png"></p>
+<p>还记得<code>mspan</code>的67种类型吗？有多少种类型的<code>mspan</code>就有多少个<code>mcentral</code>。</p>
+<p>每个<code>mcentral</code>都会包含两个<code>mspan</code>的列表：</p>
+<ul>
+<li>没有空闲对象或<code>mspan</code>已经被<code>mcache</code>缓存的<code>mspan</code>列表(empty mspanList)</li>
+<li>有空闲对象的<code>mspan</code>列表(empty mspanList)</li>
+</ul>
+<p>由于<code>mspan</code>是全局的，会被所有的<code>mcache</code>访问，所以会出现并发性问题，因而<code>mcentral</code>会存在一个锁。</p>
+<p>单个的<code>mcentral</code>结构如下：<br><img src="/img/go_mem/mem16.png"></p>
+<p>假如需要分配内存时，<code>mcentral</code>没有空闲的<code>mspan</code>列表了，此时需要向<code>mheap</code>去获取。</p>
+<h3 id="mheap"><a href="#mheap" class="headerlink" title="mheap"></a>mheap</h3><p><code>mheap</code>可以认为是Go程序持有的整个堆空间，<code>mheap</code>全局唯一，可以认为是个全局变量。<br>其结构如下：</p>
+<p><img src="/img/go_mem/mem17.png"></p>
+<p><code>mheap</code>包含了除了上文中讲的<code>mcache</code>之外的一切，<code>mcache</code>是存在于Go的GMP调度模型的P中的，上文中已经讲过了，关于GMP并发模型，可以参考我的文章 <a href="https://mp.weixin.qq.com/s/74hbRTQ2TjdH5G9F2of4_g%E3%80%82">https://mp.weixin.qq.com/s/74hbRTQ2TjdH5G9F2of4_g。</a><br>仔细观察，可以发现<code>mheap</code>中也存在一个锁lock。这个lock是作用是什么呢？</p>
+<p>我们知道，大于32K的对象被定义为大对象，直接通过<code>mheap</code> 分配。这些大对象的申请是由<code>mcache</code>发出的，而<code>mcache</code>在P上，程序运行的时候往往会存在多个P，因此，这个内存申请是并发的；所以为了保证线程安全，必须有一个全局锁。</p>
+<p>假如需要分配的内存时，<code>mheap</code>中也没有了，则向操作系统申请一系列新的页（最小 1MB）。</p>
+<h2 id="Go内存分配流程总结"><a href="#Go内存分配流程总结" class="headerlink" title="Go内存分配流程总结"></a>Go内存分配流程总结</h2><p>对象分三种：</p>
+<ul>
+<li>微小对象，size &lt; 16B</li>
+<li>一般小对象， 16 bytes &lt; size &lt;&#x3D; 32k</li>
+<li>大对象 size &gt; 32k</li>
+</ul>
+<p>分配方式分三种：</p>
+<ul>
+<li>tinny allocations (size &lt; 16 bytes，no pointers) 微型分配器分配。</li>
+<li>small allocations ( size &lt;&#x3D; 32k) 正常分配；首先通过计算使用的大小规格，然后使用 mcache 中对应大小规格的块分配</li>
+<li>large allocations (size &gt; 32k) 大对象分配；直接通过<code>mheap</code>分配。这些大对象的申请是以一个全局锁为代价的，因此任何给定的时间点只能同时供一个 P 申请。</li>
+</ul>
+<p>对象分配：</p>
+<ul>
+<li>size范围在在( size &lt; 16B)，不包含指针的对象。 <code>mcache</code>上的微型分配器分配</li>
+<li>size范围在(0 &lt; size &lt; 16B)， 包含指针的对象：正常分配</li>
+<li>size范围在(16B &lt; size &lt;&#x3D; 32KB)， : 正常分配</li>
+<li>size范围在( size &gt; 32KB) : 大对象分配</li>
+</ul>
+<p>分配顺序：</p>
+<ul>
+<li>首先通过计算使用的大小规格。</li>
+<li>然后使用<code>mcache</code>中对应大小规格的块分配。</li>
+<li>如果<code>mcentral</code>中没有可用的块，则向<code>mheap</code>申请，并根据算法找到最合适的<code>mspan</code>。</li>
+<li>如果申请到的<code>mspan</code> 超出申请大小，将会根据需求进行切分，以返回用户所需的页数。剩余的页构成一个新的 mspan 放回 mheap 的空闲列表。</li>
+<li>如果 mheap 中没有可用 span，则向操作系统申请一系列新的页（最小 1MB）。</li>
+</ul>
+<p>Go的内存管理是非常复杂的，且每个版本都有细微的变化，在此，只讲了些最容易宏观掌握的东西，希望大家多多提意见，如有什么问题，请及时与我沟通，以下是联系方式：</p>
+<h2 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h2><p>更多精彩内容，请搜索我的微信公众号 <code>码农RyuGou</code></p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+<p>参考文献:</p>
+<ul>
+<li>程序在内存中的分布 <a href="https://www.cnblogs.com/Lynn-Zhang/p/5449199.html">https://www.cnblogs.com/Lynn-Zhang/p/5449199.html</a></li>
+<li>从内存分配开始 <a href="https://mp.weixin.qq.com/s/EyWKFRu1xryoHY386QUcuA">https://mp.weixin.qq.com/s/EyWKFRu1xryoHY386QUcuA</a></li>
+<li>译文：Go 内存分配器可视化指南 <a href="https://www.linuxzen.com/go-memory-allocator-visual-guide.html">https://www.linuxzen.com/go-memory-allocator-visual-guide.html</a></li>
+<li>图解Go语言内存分配 <a href="https://juejin.im/post/5c888a79e51d456ed11955a8">https://juejin.im/post/5c888a79e51d456ed11955a8</a></li>
+<li>Golang源码探索(三) GC的实现原理 <a href="https://www.cnblogs.com/zkweb/p/7880099.html">https://www.cnblogs.com/zkweb/p/7880099.html</a></li>
+<li>简单易懂的 Go 内存分配原理解读 <a href="https://yq.aliyun.com/articles/652551">https://yq.aliyun.com/articles/652551</a></li>
+<li>雨痕&lt;&lt;Go源码解析&gt;&gt;</li>
+<li>go内存分配(英文) <a href="https://andrestc.com/post/go-memory-allocation-pt1/">https://andrestc.com/post/go-memory-allocation-pt1/</a></li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/05/18/golang-mem/" data-id="clzo46bth0018vajh5j8x05jp" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/09/28/snowflake/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          图解各路分布式ID生成算法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/04/24/character/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">图解字符编码</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

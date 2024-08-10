@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>秒懂InnoDB的锁 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="今天我们来聊聊MySQL中InnoDB存储引擎的锁。 锁是数据库系统系统区别于文件系统的一个关键特性。 lock和 latchlatchlatch在MySQL中是用来保证并发多线程操作操作临界资源的锁，锁定的对象线程，是和咱们使用的Java等传统语言中的锁意义相近，而且没有死锁检测的机制。 locklock是MySQL中在事务中使用的锁，锁定的对象是事务，来锁定数据库中表、页、行；通常只有在事务c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="秒懂InnoDB的锁">
+<meta property="og:url" content="http://yoursite.com/2019/02/23/mysql-lock/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="今天我们来聊聊MySQL中InnoDB存储引擎的锁。 锁是数据库系统系统区别于文件系统的一个关键特性。 lock和 latchlatchlatch在MySQL中是用来保证并发多线程操作操作临界资源的锁，锁定的对象线程，是和咱们使用的Java等传统语言中的锁意义相近，而且没有死锁检测的机制。 locklock是MySQL中在事务中使用的锁，锁定的对象是事务，来锁定数据库中表、页、行；通常只有在事务c">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/mysql_lock/lock_latch.png">
+<meta property="og:image" content="http://yoursite.com/img/mysql_lock/Locks.png">
+<meta property="og:image" content="http://yoursite.com/img/mysql_lock/arithmetic.png">
+<meta property="og:image" content="http://yoursite.com/img/mysql_lock/gap_lock.png">
+<meta property="og:image" content="http://yoursite.com/img/mysql_lock/gap_lock_1.png">
+<meta property="og:image" content="http://yoursite.com/img/mysql_lock/gap_lock.png">
+<meta property="og:image" content="http://yoursite.com/img/mysql_lock/gap_lock_2.png">
+<meta property="og:image" content="http://yoursite.com/img/mysql_lock/mvcc.png">
+<meta property="article:published_time" content="2019-02-23T07:19:39.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.819Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="MySQL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/mysql_lock/lock_latch.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-mysql-lock" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/02/23/mysql-lock/" class="article-date">
+  <time datetime="2019-02-23T07:19:39.000Z" itemprop="datePublished">2019-02-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      秒懂InnoDB的锁
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>今天我们来聊聊MySQL中InnoDB存储引擎的锁。</p>
+<p>锁是数据库系统系统区别于文件系统的一个关键特性。</p>
+<h1 id="lock和-latch"><a href="#lock和-latch" class="headerlink" title="lock和 latch"></a>lock和 latch</h1><h2 id="latch"><a href="#latch" class="headerlink" title="latch"></a>latch</h2><p><code>latch</code>在MySQL中是用来保证并发多线程操作操作临界资源的<code>锁</code>，锁定的对象线程，是和咱们使用的Java等传统语言中的锁意义相近，而且没有死锁检测的机制。</p>
+<h2 id="lock"><a href="#lock" class="headerlink" title="lock"></a>lock</h2><p><code>lock</code>是MySQL中在事务中使用的<code>锁</code>，锁定的对象是事务，来锁定数据库中表、页、行；通常只有在事务commit或者rollback后进行释放。lock是有死锁机制的，当出现死锁时，lock有死锁机制来解决死锁问题：超时时间(参数<code>innodb_lock_wait_timeout</code>)、<code>wait-for graph</code>。</p>
+<p>我们通常讲的MySQL的“锁”，一般就是说的lock。</p>
+<p>以下就是InnoDB中“锁”的大分类：</p>
+<p><img src="/img/mysql_lock/lock_latch.png"></p>
+<h1 id="lock的种类"><a href="#lock的种类" class="headerlink" title="lock的种类"></a>lock的种类</h1><p>MySQL Lock大体上可以分为：表锁、行锁、意向锁三种。</p>
+<p><img src="/img/mysql_lock/Locks.png"></p>
+<h2 id="共享-排他锁"><a href="#共享-排他锁" class="headerlink" title="共享&#x2F;排他锁"></a>共享&#x2F;排他锁</h2><p>行锁分为：<code>S Lock</code>和<code>X Lock</code>。<code>S Lock</code> ：读锁；<code>X Lock</code>：写锁。<br>两锁之间的兼容性如下。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">       X         S</span><br><span class="line">X     不兼容     不兼容</span><br><span class="line">S     不兼容     兼容</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>简单总结为：<code>读锁可以读，读锁不可写；写锁不可读也tm不可写。</code></p>
+<h2 id="意向锁"><a href="#意向锁" class="headerlink" title="意向锁"></a>意向锁</h2><p>InnoDB支持多粒度的锁，即：允许表锁和行锁同时存在。<br>但是，假如表锁覆盖了行锁的数据，所以表锁和行锁也会产生冲突。如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">trx1 BEGI</span><br><span class="line"></span><br><span class="line">trx1 给 T1 加X锁修改数据。</span><br><span class="line"></span><br><span class="line">trx2 BEGIN</span><br><span class="line"></span><br><span class="line">trx2 给 T1 加表锁修改表结构</span><br></pre></td></tr></table></figure>
+<p>这样，表锁和行锁之间就产生了冲突，为了解决这种表锁和行锁共存的问题，就产生了<code>意向锁</code>这个东西。<br>意向锁：从字面意思也很好理解，就是提前表明一个“意向”。</p>
+<p>意向锁分为：</p>
+<ul>
+<li><code>意向共享锁</code>。它预示着，事务正在或者有意向对表中的”某些行”加S锁。<code>select xxxx lock in share mode</code>，要设置<code>IS</code>锁。</li>
+<li><code>意向排他锁</code>。它预示着，事务正在或者有意向表中的“某些行”加X锁。<code>select xxx for update</code>，要设置<code>IX</code>锁。</li>
+</ul>
+<p>但意向锁仅仅是表明意向，它其实非常弱，意向锁之间可以相互并行，并不是排斥的：<br>意向锁之间的兼容性问题：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">      IS     IX</span><br><span class="line"></span><br><span class="line">IS   兼容    兼容</span><br><span class="line"></span><br><span class="line">IX   兼容    兼容 </span><br></pre></td></tr></table></figure>
+
+<p>但是，意向锁可以和表锁互斥。(注意：文中 S 和 X均为表锁)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">        S                X</span><br><span class="line"></span><br><span class="line">IS     兼容           互斥不兼容</span><br><span class="line"></span><br><span class="line">IX    互斥不兼容        互斥不兼容</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<p>于是，上述现象就变为了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">trx1 BEGIN</span><br><span class="line"></span><br><span class="line">trx1 给 T1 先加IX ，然后在某一行记录加X锁。</span><br><span class="line"></span><br><span class="line">trx2 BEGIN</span><br><span class="line"></span><br><span class="line">trx2 给 T1 加表锁X（事务被阻塞，等待加锁成功)</span><br><span class="line"></span><br><span class="line">trx2 修改表结构</span><br></pre></td></tr></table></figure>
+
+<p>也许有人会问：“意向锁存在的意义是什么呢？没有意向锁，行锁和表锁照样可以共存啊？”<br>试问如何共存？<br>“查看表中某一行存在X锁”<br>“如何查看呢？”<br>唯有全表扫描…<br>意向锁的存在就是解决了“全表扫描”的性能问题，所以，意向锁一定是“表级”锁，告诉整张表XXX行存在X锁。此时假如进行表操作就会被阻塞。</p>
+<h2 id="主键自增锁"><a href="#主键自增锁" class="headerlink" title="主键自增锁"></a>主键自增锁</h2><p>自增锁(<code>auto-inc Locks</code>)是一种特殊的表级锁，专门针对事务插入<code>AUTO_INCREMENT</code>类型的列，往往就是主键列。可以保证主键的值自增是“原子操作”，不会出现一致性、唯一性问题。</p>
+<h1 id="行锁的具体分类"><a href="#行锁的具体分类" class="headerlink" title="行锁的具体分类"></a>行锁的具体分类</h1><p><img src="/img/mysql_lock/arithmetic.png"></p>
+<p>InnoDB存储引擎有以上3种行锁算法。以上3种，都是实现在索引上的。</p>
+<h2 id="记录锁-Record-Lock"><a href="#记录锁-Record-Lock" class="headerlink" title="记录锁(Record Lock)"></a>记录锁(Record Lock)</h2><p>记录锁(Record Lock)总是会去锁住索引记录。<br>假如没有任何一个索引，那么InnoDB会锁住隐形创建的那个主键。</p>
+<p>注意：这里锁的是索引，不一定只是主键索引哦，还可能是二级普通索引。</p>
+<h2 id="间隙锁-Gap-Lock"><a href="#间隙锁-Gap-Lock" class="headerlink" title="间隙锁(Gap Lock)"></a>间隙锁(Gap Lock)</h2><p>顾名思义，它会封锁索引记录中的“缝隙”，让制其他事务在“缝隙”中插入数据。<br>它锁定的是一个不包含索引本身的范围。</p>
+<p>例如以下索引数据：<br><img src="/img/mysql_lock/gap_lock.png"></p>
+<p><code>间隙锁(Gap Lock)</code>可以锁的将是以下范围</p>
+<p><img src="/img/mysql_lock/gap_lock_1.png"></p>
+<p>具体的范围还要根据查询条件不同而定。<br>间隙锁开启的事务隔离级别是 <code>Repeatable Read</code>，如果把数据库事务级别降为<code>Read Committed</code>(默认是 <code>Repeatable Read</code>)，间隙锁则会自动失效。</p>
+<h2 id="临键锁-Next-Key-Lock"><a href="#临键锁-Next-Key-Lock" class="headerlink" title="临键锁(Next-Key Lock)"></a>临键锁(Next-Key Lock)</h2><p><code>Next-Key Lock</code>可以说是记录锁(<code>Record Lock</code>)和间隙锁（<code>Gap Lock</code>）的组合，既封锁了”缝隙”，又封锁了索引本身。</p>
+<p>还是上面的索引数据：<br><img src="/img/mysql_lock/gap_lock.png"></p>
+<p><code>临键锁(Next-Key Lock)</code>锁住的范围将是:</p>
+<p><img src="/img/mysql_lock/gap_lock_2.png"></p>
+<p><code>Next-key Lock</code>在索引具有唯一性的时候，例如主键索引的数据，将会降级为<code>记录锁(Read Lock)</code>，以增加并发性。<br>例如:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">        T1                                     T2</span><br><span class="line">        BEGIN;                   |            </span><br><span class="line">   select * From T               |           </span><br><span class="line">   where id = 5 for update       |</span><br><span class="line">---------------------------------------------------------------</span><br><span class="line">                                 |            BEGIN; </span><br><span class="line">                                 |          Insert into t (4, xx);</span><br><span class="line">---------------------------------------------------------------              </span><br><span class="line">                                 |          COMMIT</span><br><span class="line">                                 |             </span><br><span class="line">----------------------------------------------------------------</span><br><span class="line">     COMMIT                      |                            </span><br><span class="line">                                 |</span><br><span class="line">                                 |</span><br><span class="line">-----------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+
+<p>以上情况，就会把<code>Next-key Lock</code>降级为<code>记录锁(Read Lock)</code></p>
+<h1 id="再谈不可重复读-No-Reaptable-Read-和幻读-Phantom-Problem"><a href="#再谈不可重复读-No-Reaptable-Read-和幻读-Phantom-Problem" class="headerlink" title="再谈不可重复读(No Reaptable Read)和幻读(Phantom Problem)"></a>再谈不可重复读(<code>No Reaptable Read</code>)和幻读(<code>Phantom Problem</code>)</h1><p>有些很权威的书中认为这俩是同一个概念，例如:&lt;&lt;MySQL技术内幕 InnoDB存储引擎&gt;&gt;。<br>但是就目前网络上的众多总结和个人看法，认为区别如下：</p>
+<p><code>不可重复读</code>：修改。在同一个事务中，主要是说多次读取一条记录, 发现该记录中某些列值被修改过。<br><code>幻读</code>:增加或者删除。在同一个事务中，同一条完全相同的查询语句返回的结果集行数不同。</p>
+<p>参考：<a href="https://stackoverflow.com/questions/11043712/what-is-the-difference-between-non-repeatable-read-and-phantom-read">https://stackoverflow.com/questions/11043712/what-is-the-difference-between-non-repeatable-read-and-phantom-read</a></p>
+<p>认真的说，<code>多版本并发控制 MVCC</code>（读）和 <code>临键锁 Next-Key Lock</code>（写）共同解决了<code>幻读</code>问题。</p>
+<p>关于MVCC的原理，就是每份数据会有快照，事务中读取数据(简单的<code>select xxx from</code>，<code>select xx from xx for update</code>或者<code>select xx from xxx in share mode</code>不行)的时候，如果数据被锁住了，就读以前留下的快照数据。在此不过多赘述了。</p>
+<p>以下为多版本并发控制原理图<br><img src="/img/mysql_lock/mvcc.png"></p>
+<p><code>MVCC</code>只在<code>Read Committed</code>和<code>Repeatable Read</code>下会开启。但是在这两种隔离级别下对于快照指定的数据定义不同。</p>
+<p>在<code>Read Committed</code>下，<code>MVCC</code>读取的是被锁定数据的最新的一份数据。<br>在<code>Repeatable Read</code>下，<code>MVCC</code>读取的是事务刚开始时候的数据。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/02/23/mysql-lock/" data-id="clzo46bto001wvajh6cc99mf6" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/03/04/golang-garbage-collector/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          图解Golang的GC算法
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/02/16/mysql-performance-optimize/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">MySQL的SQL性能优化总结</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

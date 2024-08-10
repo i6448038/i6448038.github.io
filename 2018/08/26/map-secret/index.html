@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>解剖Go语言map底层实现 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="map是Go语言中基础的数据结构，在日常的使用中经常被用到。但是它底层是如何实现的呢？ Golang中map的底层实现是一个散列表，因此实现map的过程实际上就是实现散表的过程。在这个散列表中，主要出现的结构体有两个，一个叫hmap(a header for a go map)，一个叫bmap(a bucket for a Go map，通常叫其bucket)。这两种结构的样子分别如下所示：hma">
+<meta property="og:type" content="article">
+<meta property="og:title" content="解剖Go语言map底层实现">
+<meta property="og:url" content="http://yoursite.com/2018/08/26/map-secret/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="map是Go语言中基础的数据结构，在日常的使用中经常被用到。但是它底层是如何实现的呢？ Golang中map的底层实现是一个散列表，因此实现map的过程实际上就是实现散表的过程。在这个散列表中，主要出现的结构体有两个，一个叫hmap(a header for a go map)，一个叫bmap(a bucket for a Go map，通常叫其bucket)。这两种结构的样子分别如下所示：hma">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/go_map/hmap.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/bmap.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/bmap_chain.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/hmap_bmap.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/whole.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/num.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/key_value.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/all_elem.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/extends.png">
+<meta property="og:image" content="http://yoursite.com/img/go_map/move_bucket.png">
+<meta property="article:published_time" content="2018-08-25T18:43:04.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.823Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="Golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/go_map/hmap.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-map-secret" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/08/26/map-secret/" class="article-date">
+  <time datetime="2018-08-25T18:43:04.000Z" itemprop="datePublished">2018-08-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      解剖Go语言map底层实现
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><code>map</code>是Go语言中基础的数据结构，在日常的使用中经常被用到。但是它底层是如何实现的呢？</p>
+<p>Golang中<code>map</code>的底层实现是一个散列表，因此实现<code>map</code>的过程实际上就是实现散表的过程。在这个散列表中，主要出现的结构体有两个，一个叫<code>hmap</code>(<code>a header for a go map</code>)，一个叫<code>bmap</code>(<code>a bucket for a Go map</code>，通常叫其<code>bucket</code>)。这两种结构的样子分别如下所示：<br>hmap:</p>
+<img src="/img/go_map/hmap.png" />
+
+<p>图中有很多字段，但是便于理解<code>map</code>的架构，你只需要关心的只有一个，就是标红的字段：buckets数组。Golang的map中用于存储的结构是bucket数组。而bucket(即<code>bmap</code>)的结构是怎样的呢？</p>
+<p>bucket：</p>
+<img src="/img/go_map/bmap.png" />
+
+<p>相比于<code>hmap</code>，bucket的结构显得简单一些，标红的字段依然是“核心”，我们使用的<code>map</code>中的key和value就存储在这里。“高位哈希值”数组记录的是当前bucket中key相关的“索引”，稍后会详细叙述。还有一个字段是一个指向扩容后的bucket的指针，使得bucket会形成一个链表结构。例如下图：</p>
+<img src="/img/go_map/bmap_chain.png" />
+
+<p>由此看出<code>hmap</code>和<code>bucket</code>的关系是这样的：</p>
+<p><img src="/img/go_map/hmap_bmap.png" alt="这里写图片描述"></p>
+<p>而bucket又是一个链表，所以，整体的结构应该是这样的：</p>
+<p><img src="/img/go_map/whole.png" alt="这里写图片描述"></p>
+<p>哈希表的特点是会有一个哈希函数，对你传来的key进行哈希运算，得到唯一的值，一般情况下都是一个数值。Golang的<code>map</code>中也有这么一个哈希函数，也会算出唯一的值，对于这个值的使用，Golang也是很有意思。</p>
+<p>Golang把求得的值按照用途一分为二：高位和低位。</p>
+<p><img src="/img/go_map/num.png" alt="这里写图片描述"></p>
+<p>如图所示，蓝色为高位，红色为低位。<br>然后低位用于寻找当前key属于<code>hmap</code>中的哪个bucket，而高位用于寻找bucket中的哪个key。上文中提到：bucket中有个属性字段是“高位哈希值”数组，这里存的就是蓝色的高位值，用来声明当前bucket中有哪些“key”，便于搜索查找。<br>需要特别指出的一点是：我们<code>map</code>中的key&#x2F;value值都是存到同一个数组中的。数组中的顺序是这样的:</p>
+<p><img src="/img/go_map/key_value.png" alt="这里写图片描述"></p>
+<p>并不是key0&#x2F;value0&#x2F;key1&#x2F;value1的形式，这样做的好处是：在key和value的长度不同的时候，可以消除padding带来的空间浪费。</p>
+<p>现在，我们可以得到Go语言<code>map</code>的整个的结构图了：</p>
+<p><img src="/img/go_map/all_elem.png" alt="这里写图片描述"></p>
+<h1 id="map的扩容"><a href="#map的扩容" class="headerlink" title="map的扩容"></a><code>map</code>的扩容</h1><p>当以上的哈希表增长的时候，Go语言会将bucket数组的数量扩充一倍，产生一个新的bucket数组，并将旧数组的数据迁移至新数组。</p>
+<h2 id="加载因子"><a href="#加载因子" class="headerlink" title="加载因子"></a>加载因子</h2><p>判断扩充的条件，就是哈希表中的<code>加载因子</code>(即loadFactor)。</p>
+<p><code>加载因子</code>是一个阈值，一般表示为：散列包含的元素数 除以 位置总数。是一种“产生冲突机会”和“空间使用”的平衡与折中：<code>加载因子</code>越小，说明空间空置率高，空间使用率小，但是<code>加载因子</code>越大，说明空间利用率上去了，但是“产生冲突机会”高了。</p>
+<p>每种哈希表的都会有一个<code>加载因子</code>，数值超过<code>加载因子</code>就会为哈希表扩容。<br>Golang的<code>map</code>的<code>加载因子</code>的公式是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">map长度 / 2^B</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>阈值是<code>6.5</code>。其中<code>B</code>可以理解为已扩容的次数。<br>当Go的<code>map</code>长度增长到大于<code>加载因子</code>所需的<code>map</code>长度时，Go语言就会将产生一个新的bucket数组，然后把旧的bucket数组移到一个属性字段<code>oldbucket</code>中。注意：并不是立刻把旧的数组中的元素转义到新的bucket当中，而是，只有当访问到具体的某个bucket的时候，会把bucket中的数据转移到新的bucket中。</p>
+<p>如下图所示：当扩容的时候，Go的<code>map</code>结构体中，会保存旧的数据，和新生成的数组</p>
+<p><img src="/img/go_map/extends.png" alt="这里写图片描述"></p>
+<p>上面部分代表旧的有数据的bucket，下面部分代表新生成的新的bucket。蓝色代表存有数据的bucket，橘黄色代表空的bucket。<br>扩容时<code>map</code>并不会立即把新数据做迁移，而是当访问原来旧bucket的数据的时候，才把旧数据做迁移，如下图：</p>
+<p><img src="/img/go_map/move_bucket.png" alt="这里写图片描述"></p>
+<p>注意：这里并不会直接删除旧的bucket，而是把原来的引用去掉，利用GC清除内存。</p>
+<h1 id="map中数据的删除"><a href="#map中数据的删除" class="headerlink" title="map中数据的删除"></a><code>map</code>中数据的删除</h1><p>如果理解了<code>map</code>的整体结构，那么查找、更新、删除的基本步骤应该都很清楚了。这里不再赘述。<br>值得注意的是，找到了<code>map</code>中的数据之后，针对key和value分别做如下操作：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、如果``key``是一个指针类型的，则直接将其置为空，等待GC清除；</span><br><span class="line">2、如果是值类型的，则清除相关内存。</span><br><span class="line">3、同理，对``value``做相同的操作。</span><br><span class="line">4、最后把key对应的高位值对应的数组index置为空。</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/08/26/map-secret/" data-id="clzo46btm001pvajh689kg8e3" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/10/01/Golang-interface/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Go语言interface底层实现
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/08/11/array-and-slice-principle/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">快速理解Go数组和切片的内部实现原理</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

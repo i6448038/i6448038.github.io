@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>让vim炫酷起来 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="vim很强大，vim是门学问。  但是可能打开vim一看，满屏幕灰蒙蒙的一片，不像强大的样子，又挺失落，于是便有了此文。  首先，打开目录或者是&#x2F;etc目录下的.vimrc文件，这个文件的作用就是vim的配置文件，其实在vim命令行下也可以敲指令设置vim，但是关闭vim后就“失效了”，要想长久设置，就再这俩配置文件中设置。目录下的配置文件是配置当前系统用户下的。而&#x2F;etc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="让vim炫酷起来">
+<meta property="og:url" content="http://yoursite.com/2017/03/05/%E8%AE%A9vim%E7%82%AB%E9%85%B7%E8%B5%B7%E6%9D%A5/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="vim很强大，vim是门学问。  但是可能打开vim一看，满屏幕灰蒙蒙的一片，不像强大的样子，又挺失落，于是便有了此文。  首先，打开目录或者是&#x2F;etc目录下的.vimrc文件，这个文件的作用就是vim的配置文件，其实在vim命令行下也可以敲指令设置vim，但是关闭vim后就“失效了”，要想长久设置，就再这俩配置文件中设置。目录下的配置文件是配置当前系统用户下的。而&#x2F;etc">
+<meta property="og:locale">
+<meta property="article:published_time" content="2017-03-05T01:27:17.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.820Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="其他">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-让vim炫酷起来" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/03/05/%E8%AE%A9vim%E7%82%AB%E9%85%B7%E8%B5%B7%E6%9D%A5/" class="article-date">
+  <time datetime="2017-03-05T01:27:17.000Z" itemprop="datePublished">2017-03-05</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      让vim炫酷起来
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>  vim很强大，vim是门学问。<br>  但是可能打开vim一看，满屏幕灰蒙蒙的一片，不像强大的样子，又挺失落，于是便有了此文。<br>  首先，打开<del>目录或者是&#x2F;etc目录下的.vimrc文件，这个文件的作用就是vim的配置文件，其实在vim命令行下也可以敲指令设置vim，但是关闭vim后就“失效了”，要想长久设置，就再这俩配置文件中设置。</del>目录下的配置文件是配置当前系统用户下的。而&#x2F;etc目录下的是配置全局的。</p>
+<h1 id="改变vim的外观"><a href="#改变vim的外观" class="headerlink" title="改变vim的外观"></a>改变vim的外观</h1><p>  首先改变灰蒙蒙的外观</p>
+<h2 id="高亮"><a href="#高亮" class="headerlink" title="高亮"></a>高亮</h2><p> 先让颜色亮丽起来</p>
+<pre><code>syntax enable
+syntax on
+</code></pre>
+<h2 id="增加默认色素"><a href="#增加默认色素" class="headerlink" title="增加默认色素"></a>增加默认色素</h2><p>  设置颜色，默认8</p>
+<pre><code>set t_Co=256
+</code></pre>
+<h2 id="显示行号"><a href="#显示行号" class="headerlink" title="显示行号"></a>显示行号</h2><pre><code>set nu
+</code></pre>
+<h2 id="号和line-number-同一列"><a href="#号和line-number-同一列" class="headerlink" title="~号和line number 同一列"></a>~号和line number 同一列</h2><pre><code>set go=
+</code></pre>
+<h1 id="方便使用"><a href="#方便使用" class="headerlink" title="方便使用"></a>方便使用</h1><p>  目前而言，应该是不难看了，但是使用起来可能还有点蹩脚，不过没关系。</p>
+<h2 id="支持中文"><a href="#支持中文" class="headerlink" title="支持中文"></a>支持中文</h2><pre><code>set fileencodings=utf-8,ucs-bom,gb18030,gbk,gb2312,cp936
+set termencoding=utf-8
+set encoding=utf-8
+</code></pre>
+<h2 id="自动缩进"><a href="#自动缩进" class="headerlink" title="自动缩进"></a>自动缩进</h2><pre><code>set smartindent
+set tabstop=4
+set shiftwidth=4
+set expandtab
+</code></pre>
+<h2 id="搜索到的所有匹配关键字高亮"><a href="#搜索到的所有匹配关键字高亮" class="headerlink" title="搜索到的所有匹配关键字高亮"></a>搜索到的所有匹配关键字高亮</h2><p>  在使用”:&#x2F;search_name” 的时候，某些数据不高亮，看起来很不清楚，输入一下指令，让搜索到的所有匹配的关键字高亮：</p>
+<pre><code>set hlsearch
+</code></pre>
+<h2 id="可以用backspace删除"><a href="#可以用backspace删除" class="headerlink" title="可以用backspace删除"></a>可以用backspace删除</h2><p>  可能你会发现默认的退格键不能使用，很不爽，没事，键入以下指令</p>
+<pre><code>set backspace=indent,eol,start
+</code></pre>
+<h1 id="用vim来编程"><a href="#用vim来编程" class="headerlink" title="用vim来编程"></a>用vim来编程</h1><p> 大神们好像都是用vim来写程序的，显得逼格高的一笔。其实也就是配置一下或者下个插件就好了，很多很好的插件github上一搜也是一堆，没事儿可以研究一下。</p>
+<h2 id="vim默认设置"><a href="#vim默认设置" class="headerlink" title="vim默认设置"></a>vim默认设置</h2><p>  让vim认识html、css、c、php等语言，编写的的时候给予提示。</p>
+<pre><code>autocmd FileType Python set omnifunc=pythoncomplete#Complete
+autocmd FileType JavaScript set omnifunc=javascriptcomplete#CompleteJS
+autocmd FileType html set omnifunc=htmlcomplete#CompleteTags
+autocmd FileType css set omnifunc=csscomplete#CompleteCSS
+autocmd FileType xml set omnifunc=xmlcomplete#CompleteTags
+autocmd FileType PHP set omnifunc=phpcomplete#CompletePHP
+autocmd FileType c set omnifunc=ccomplete#Complete
+</code></pre>
+<h2 id="添加插件管理工具Vundle"><a href="#添加插件管理工具Vundle" class="headerlink" title="添加插件管理工具Vundle"></a>添加插件管理工具Vundle</h2><p> “Vundle”是个牛逼的东西呀，可以下载和管理你想要的vim插件。装上“Vundle”后，以后在github等开源网站上，看见牛逼的vim插件，就可以直接下下来安装到自己的vim上使用了。<br>  下面简单介绍一下Vundle的安装：<em><strong>（详情请看：<a href="https://github.com/VundleVim/Vundle.vim">Vundle</a>）</strong></em></p>
+<h3 id="Set-up-Vundle"><a href="#Set-up-Vundle" class="headerlink" title="Set up Vundle:"></a>Set up Vundle:</h3><pre><code>$ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+</code></pre>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>  把以下内容贴到.vimrc 文件中去，贴完之后仔细阅读以下贴的内容，很容易明白。</p>
+<pre><code>set nocompatible              &quot; be iMproved, required
+filetype off                  &quot; required
+
+&quot; set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+&quot; alternatively, pass a path where Vundle should install plugins
+&quot;call vundle#begin(&#39;~/some/path/here&#39;)
+
+&quot; let Vundle manage Vundle, required
+Plugin &#39;VundleVim/Vundle.vim&#39;
+
+&quot; The following are examples of different formats supported.
+&quot; Keep Plugin commands between vundle#begin/end.
+&quot; plugin on GitHub repo
+Plugin &#39;tpope/vim-fugitive&#39;
+&quot; plugin from http://vim-scripts.org/vim/scripts.html
+Plugin &#39;L9&#39;
+&quot; Git plugin not hosted on GitHub
+Plugin &#39;git://git.wincent.com/command-t.git&#39;
+&quot; git repos on your local machine (i.e. when working on your own plugin)
+Plugin &#39;file:///home/gmarik/path/to/plugin&#39;
+&quot; The sparkup vim script is in a subdirectory of this repo called vim.
+&quot; Pass the path to set the runtimepath properly.
+Plugin &#39;rstacruz/sparkup&#39;, &#123;&#39;rtp&#39;: &#39;vim/&#39;&#125;
+&quot; Install L9 and avoid a Naming conflict if you&#39;ve already installed a
+&quot; different version somewhere else.
+Plugin &#39;ascenator/L9&#39;, &#123;&#39;name&#39;: &#39;newL9&#39;&#125;
+
+&quot; All of your Plugins must be added before the following line
+call vundle#end()            &quot; required
+filetype plugin indent on    &quot; required
+&quot; To ignore plugin indent changes, instead use:
+&quot;filetype plugin on
+&quot;
+&quot; Brief help
+&quot; :PluginList       - lists configured plugins
+&quot; :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+&quot; :PluginSearch foo - searches for foo; append `!` to refresh local cache
+&quot; :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+&quot;
+&quot; see :h vundle for more details or wiki for FAQ
+&quot; Put your non-Plugin stuff after this line      
+</code></pre>
+<h3 id="安装插件"><a href="#安装插件" class="headerlink" title="安装插件"></a>安装插件</h3><p>  重启vim，输入指令：<code>PluginInstall</code></p>
+<h2 id="安装插件“Valloric-YouCompleteMe”"><a href="#安装插件“Valloric-YouCompleteMe”" class="headerlink" title="安装插件“Valloric&#x2F;YouCompleteMe”"></a>安装插件“Valloric&#x2F;YouCompleteMe”</h2><p>  这是一款非常牛逼的插件，保证让你爽爽的写代码。<br>  下面简单介绍一下安装过程：<em><strong>（详情请看<a href="https://github.com/Valloric/YouCompleteMe">YouCompleteMe</a>）</strong></em></p>
+<h3 id="Vundle-上加上插件包"><a href="#Vundle-上加上插件包" class="headerlink" title="Vundle 上加上插件包"></a>Vundle 上加上插件包</h3><p>  在.vimrc Vundle“代码块”内，你找一个合适的地儿，加上 </p>
+<pre><code>Plugin &#39;Valloric/YouCompleteMe&#39;
+</code></pre>
+<p>  然后启动vim安装。</p>
+<h3 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h3><p>  跑到下号的插件包的目录下。</p>
+<pre><code>cd ~/.vim/bundle/YouCompleteMe
+</code></pre>
+<p>  目前YouCompleteMe 支持的语言有很多，下面简单介绍这几种 <em><strong>（假如你想支持全部语言：运行<code>./install.py --all</code>）</strong></em></p>
+<ul>
+<li>C# ：运行 <code>./install.py --omnisharp-completer</code></li>
+<li>C-family语言系：运行<code>./install.py --clang-completer</code></li>
+<li>Go：运行<code>./install.py --gocode-completer</code></li>
+<li>JS：运行<code>./install.py --tern-completer</code></li>
+</ul>
+<p>最后，试试你的vim吧，是不是比以前炫酷多了</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/03/05/%E8%AE%A9vim%E7%82%AB%E9%85%B7%E8%B5%B7%E6%9D%A5/" data-id="clzo46bu10034vajhh27yaxwb" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/03/25/PHP%E9%82%A3%E4%BA%9B%E5%A5%87%E6%80%AA%E7%9A%84%E8%AF%AD%E6%B3%95/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          PHP那些琐碎的知识点
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/02/09/%E6%95%99%E4%BD%A010%E5%88%86%E9%92%9F%E6%90%AD%E5%BB%BA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84Blog/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">教你10分钟搭建属于自己的Blog</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

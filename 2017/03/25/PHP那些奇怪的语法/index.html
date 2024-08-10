@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>PHP那些琐碎的知识点 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="PHP有很多很奇特、很难记的知识点，我做了一下记录： 单引号’’和””的区别:  PHP不会检查单引号&#39;&#39;字符串中变量内插或（几乎）任何转义序列，所以采用单引号这种方式来定义字符串相当简单快捷。但是，双引号&quot;&quot;则不然，php会检查字符串中的变量或者转义序列，并输出变量和转义序列的值。 $a &#x3D; &quot;123&quot;; print &#39;$a\t&amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PHP那些琐碎的知识点">
+<meta property="og:url" content="http://yoursite.com/2017/03/25/PHP%E9%82%A3%E4%BA%9B%E5%A5%87%E6%80%AA%E7%9A%84%E8%AF%AD%E6%B3%95/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="PHP有很多很奇特、很难记的知识点，我做了一下记录： 单引号’’和””的区别:  PHP不会检查单引号&#39;&#39;字符串中变量内插或（几乎）任何转义序列，所以采用单引号这种方式来定义字符串相当简单快捷。但是，双引号&quot;&quot;则不然，php会检查字符串中的变量或者转义序列，并输出变量和转义序列的值。 $a &#x3D; &quot;123&quot;; print &#39;$a\t&amp;">
+<meta property="og:locale">
+<meta property="article:published_time" content="2017-03-25T14:35:46.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.831Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="php">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-PHP那些奇怪的语法" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/03/25/PHP%E9%82%A3%E4%BA%9B%E5%A5%87%E6%80%AA%E7%9A%84%E8%AF%AD%E6%B3%95/" class="article-date">
+  <time datetime="2017-03-25T14:35:46.000Z" itemprop="datePublished">2017-03-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      PHP那些琐碎的知识点
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p> PHP有很多很奇特、很难记的知识点，我做了一下记录：</p>
+<h1 id="单引号’’和””的区别"><a href="#单引号’’和””的区别" class="headerlink" title="单引号’’和””的区别:"></a>单引号’’和””的区别:</h1><p>  PHP不会检查单引号<code>&#39;&#39;</code>字符串中变量内插或（几乎）任何转义序列，所以采用单引号这种方式来定义字符串相当简单快捷。但是，双引号<code>&quot;&quot;</code>则不然，php会检查字符串中的变量或者转义序列，并输出变量和转义序列的值。</p>
+<pre><code>$a = &quot;123&quot;;
+print &#39;$a\t&#39;;
+print &#39;$a&#39;;
+</code></pre>
+<p>  输出：</p>
+<pre><code>$a\t$a
+</code></pre>
+<p>  如果是双引号<code>&quot;&quot;</code>:</p>
+<pre><code>$a = &quot;123&quot;;
+print &quot;$a\t&quot;;
+print &quot;$a&quot;;    
+</code></pre>
+<p>  输出：</p>
+<pre><code>123 123
+</code></pre>
+<h2 id="注意："><a href="#注意：" class="headerlink" title="注意："></a>注意：</h2><p>  单引号<code>&#39;&#39;</code>可以解释<code>&#39;\</code>和<code>\\</code>这俩转义字符，就这俩！<br>  能使单引号字符尽量使用单引号，单引号的效率比双引号要高（因为双引号要先遍历一遍，判断里面有没有变量，然后再进行操作，而单引号则不需要判断）。<br>  单引号<code>&#39;&#39;</code>和双引号<code>&quot;&quot;</code>都可以用来</p>
+<h1 id="echo-和-print的区别："><a href="#echo-和-print的区别：" class="headerlink" title="echo 和 print的区别："></a>echo 和 print的区别：</h1><p>  这两都是语句，不是函数；这俩语句的作用都是输出字符串。但是：</p>
+<p>  <code>echo</code>可以传入多个参数。而<code>print</code>只有一个：</p>
+<pre><code>echo &quot;123&quot;, &quot;123&quot;;//输出123123
+print &quot;123&quot;, &quot;123&quot;;//报错，只可以写一个参数 print &quot;123&quot;;
+</code></pre>
+<p>  <code>echo</code>无返回值，而<code>print</code>返回值恒为1；</p>
+<h2 id="注意：-1"><a href="#注意：-1" class="headerlink" title="注意："></a>注意：</h2><p>  PHP的八中数据类型，除了数组<code>array</code>和没有实现<code>__toString</code>魔法函数的对象都可以用echo或者print来输出，并且<code>boolean</code>类型的用echo或者print来输出，只会显示1或者不显示。</p>
+<pre><code>echo true; //输出1
+echo false; //什么都不输出 
+</code></pre>
+<h1 id="数字和字符串相加："><a href="#数字和字符串相加：" class="headerlink" title="数字和字符串相加："></a>数字和字符串相加：</h1><p>  PHP会自动完成字符串和数字的转换，这样有时候会带来好处，有时候却很让人苦恼。</p>
+<pre><code>echo 1 + &quot;2&quot;;//输出3
+echo 1 + &quot;a&quot;;//输出1
+</code></pre>
+<p>  <code>$a = 1 + &quot;A&quot;;</code>试问变量<code>$a</code>的数据类型？</p>
+<pre><code>if(is_numeric($a))&#123;
+    echo &quot;是整型&quot;;
+&#125;
+else&#123;
+    echo &quot;是其他类型&quot;;
+&#125;
+
+//最后输出：是整型
+</code></pre>
+<h1 id="随机数生成函数rand-和mt-rand-的区别"><a href="#随机数生成函数rand-和mt-rand-的区别" class="headerlink" title="随机数生成函数rand()和mt_rand()的区别:"></a>随机数生成函数<code>rand()</code>和<code>mt_rand()</code>的区别:</h1><p>  <code>rand()</code>和<code>mt_rand()</code>用法完全一致，它俩分别有两种用法:</p>
+<pre><code>//第一种用法：
+rand();//产生的随机数为0到getrandmax()之间
+mt_rand();//产生的随机数为0到mt_getrandmax()之间
+
+//第二种用法：
+rand($min, $max);//产生从$min到$max之间的随机数
+mt_rand($min, $max);//产生从$min到$max之间的随机数
+</code></pre>
+<p>  区别：<code>mt_rand()</code>是更好地随机数生成器，因为它跟<code>rand()</code>相比播下了一个更好地随机数种子；而且性能上比<code>rand()</code>快4倍，<code>mt_getrandmax()</code>所表示的数值范围也更大    </p>
+<h1 id="BCMath库和GMP库的区别"><a href="#BCMath库和GMP库的区别" class="headerlink" title="BCMath库和GMP库的区别:"></a>BCMath库和GMP库的区别:</h1><p>  BCMath库很容易使用。将数字作为字符串传入函数，它会将数字的和（或差，积等）作为字符串返回。不过，使用BCMath时，对数字所能完成的操作仅限于基本算术运算。</p>
+<pre><code>$sum = bcadd(&quot;12345678&quot;, &quot;87654321&quot;);//$sum = &quot;99999999&quot;
+</code></pre>
+<p>  GMP函数可以接受整数或者字符串作为参数，不过它们更乐意将数字作为资源来传递，这实际上是指向数字内部表示的指针。所以与BCMath函数不同，BCMath函数返回字符串，而GMP只返回资源。可以将这个资源作为数字传递到任何GMP函数。</p>
+<pre><code>$four = gmp_add(2, 2);//可以传入整数
+$eight = gmp_add(&#39;4&#39;, &#39;4&#39;);//或字符串
+$twelve = gmp_add($four, $eight);//或GMP资源
+</code></pre>
+<p>  GMP唯一的缺点是，想要用非GMP函数查看或使用资源时，需要使用<code>gmp_strval()</code>或<code>gmp_intval()</code>显示地进行转换。</p>
+<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p>  BCMath与PHP捆绑发行，若GMP不与PHP捆绑，需要另外下载和安装。完成高精度数学运算的另一种选择是使用PECL的<code>big_int</code>库。</p>
+<h1 id="include和require的区别："><a href="#include和require的区别：" class="headerlink" title="include和require的区别："></a>include和require的区别：</h1><p>  <code>include()</code> 、<code>require()</code>语句包含并运行指定文件。这两结构在包含文件上完全一样，唯一的区别是对于错误的处理：</p>
+<ul>
+<li><code>require()</code>语句在遇到包含文件不存在，或是出错的时候，就停止即行，并报错。    </li>
+<li><code>include()</code>在遇到包含文件不存在的时候，只生成警告，并且脚本会继续。</li>
+</ul>
+<p>换句话说，如果你想在丢失文件时停止处理页面，那就别犹豫了，用<code>require()</code>吧。<code>include()</code>就不是这样，脚本会继续运行。</p>
+<h2 id="include-once和require-once"><a href="#include-once和require-once" class="headerlink" title="include_once和require_once"></a>include_once和require_once</h2><ul>
+<li><code>include_once()</code>和<code>require_once()</code>一样，应该用于在脚本执行期间同一个文件有可能被包含超过一次的情况下，想确保它只被包含一次以避免函数重定义，变量重新赋值等问题。这就是<code>include_once()</code>和<code>require_once()</code>与<code>include()</code>和<code>require()</code>的主要区别。</li>
+<li><code>require_once()</code>、<code>include_once()</code>运行效率要比<code>require()</code>和<code>include()</code>低，因为前两者需要判断寻找引入的文件是否已经存在。&#96;</li>
+</ul>
+<h1 id="PHP合并数组-和array-merge-的区别"><a href="#PHP合并数组-和array-merge-的区别" class="headerlink" title="PHP合并数组+和array_merge()的区别"></a>PHP合并数组<code>+</code>和<code>array_merge()</code>的区别</h1><p>  同为数组合并，但是还是有差别的:  </p>
+<ul>
+<li><p>键名为数字时，array_merge()不会覆盖掉原来的值，但＋合并数组则会把最先出现的值作为最终结果返回，而把后面的数组拥有相同键名的那些值“抛弃”掉（不是覆盖）</p>
+<pre><code>$a = array(&#39;a&#39;,&#39;b&#39;); 
+$b = array(&#39;c&#39;, &#39;d&#39;); 
+$c = $a + $b; 
+var_dump($c);
+//输出：
+// array (size=2)
+//  0 =&gt; string &#39;a&#39; (length=1)
+//  1 =&gt; string &#39;b&#39; (length=1) 
+var_dump(array_merge($a, $b));
+//输出：
+//array (size=4)
+// 0 =&gt; string &#39;a&#39; (length=1)
+// 1 =&gt; string &#39;b&#39; (length=1)
+// 2 =&gt; string &#39;c&#39; (length=1)
+// 3 =&gt; string &#39;d&#39; (length=1) 
+</code></pre>
+</li>
+<li><p>键名为字符时，＋仍然把最先出现的键名的值作为最终结果返回，而把后面的数组拥有相同键名的那些值“抛弃”掉，但array_merge()此时会覆盖掉前面相同键名的值 </p>
+<pre><code>$a = array(&#39;a&#39; =&gt; &#39;a&#39; ,&#39;b&#39; =&gt; &#39;b&#39;);
+$b = array(&#39;a&#39; =&gt; &#39;A&#39;, &#39;b&#39; =&gt; &#39;B&#39;);
+$c = $a + $b;
+var_dump($c);
+//输出：
+//array (size=2)
+//&#39;a&#39; =&gt; string &#39;a&#39; (length=1)
+//&#39;b&#39; =&gt; string &#39;b&#39; (length=1)
+var_dump(array_merge($a, $b));
+//输出：
+//array (size=2)
+//&#39;a&#39; =&gt; string &#39;A&#39; (length=1)
+//&#39;b&#39; =&gt; string &#39;B&#39; (length=1)
+</code></pre>
+</li>
+</ul>
+<h1 id="字符串常用函数"><a href="#字符串常用函数" class="headerlink" title="字符串常用函数"></a>字符串常用函数</h1><p>  PHP提供了很多方便的字符串函数，常用的有：</p>
+<ul>
+<li><code>strstr ( string $haystack , mixed $needle [, bool $before_needle = false ] )</code>。返回 haystack 字符串从 needle 第一次出现的位置开始到 haystack 结尾的字符串。若为before_needle为 TRUE，strstr() 将返回 needle 在 haystack 中的位置之前的部分。</li>
+<li><code>substr( string $string , int $start [, int $length ] )</code>。返回字符串 string 由 start 和 length 参数指定的子字符串。</li>
+<li><code>substr_replace ( mixed $string , mixed $replacement , mixed $start [, mixed $length ] )</code>。substr_replace() 在字符串 string 的副本中将由 start 和可选的 length 参数限定的子字符串使用 replacement 进行替换。</li>
+<li><code>strrev ( string $string )</code>。返回 string 反转后的字符串。</li>
+<li><code>str_replace ( mixed $search , mixed $replace , mixed $subject [, int &amp;$count ] )</code>。该函数返回一个字符串或者数组。该字符串或数组是将 subject 中全部的 search 都被 replace 替换之后的结果。subject为执行替换的数组或者字符串。也就是 haystack。如果 subject 是一个数组，替换操作将遍历整个 subject，返回值也将是一个数组。如果count被指定，它的值将被设置为替换发生的次数。</li>
+<li><code>strpos ( string $haystack , mixed $needle [, int $offset = 0 ] )</code>。返回 needle 在 haystack 中首次出现的数字位置；如果提供了offset参数，搜索会从字符串该字符数的起始位置开始统计。 如果是负数，搜索会从字符串结尾指定字符数开始。</li>
+<li><code>ltrim()</code>、<code>rtrim()</code>、<code>trim()</code>。这仨都是删除字符串中的空白符。<code>ltrim()</code>删除字符串开头的空白字符;<code>rtrim()</code>删除字符串末端的空白字符；<code>trim()</code>去除字符串首尾处的空白字符。</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/03/25/PHP%E9%82%A3%E4%BA%9B%E5%A5%87%E6%80%AA%E7%9A%84%E8%AF%AD%E6%B3%95/" data-id="clzo46bt7000cvajh70bcgkl6" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/04/10/Mac%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%88%A9%E7%94%A8%E6%9C%AC%E5%9C%B0php5-6%E5%AE%89%E8%A3%85%E6%89%A9%E5%B1%95%E5%87%BA%E7%8E%B0%E7%9A%84Operation-not-permitted%E8%A7%A3%E5%86%B3/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Mac环境下利用本地php5.6安装扩展出现的Operation not permitted解决
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/03/05/%E8%AE%A9vim%E7%82%AB%E9%85%B7%E8%B5%B7%E6%9D%A5/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">让vim炫酷起来</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

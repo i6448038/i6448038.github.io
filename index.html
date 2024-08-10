@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="菜刚RyuGou的博客">
+<meta property="og:url" content="http://yoursite.com/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:locale">
+<meta property="article:author" content="菜刚">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-singleton" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/12/16/singleton/" class="article-date">
+  <time datetime="2023-12-16T10:45:39.000Z" itemprop="datePublished">2023-12-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>  单例模式的概念非常好理解，但凡接触过设计模式的同学，都能讲出一二来。</p>
+<h1 id="1-模式介绍"><a href="#1-模式介绍" class="headerlink" title="1.模式介绍"></a>1.模式介绍</h1><p>单例设计模式（Singleton Design Pattern）：一个类只允许创建一个对象（或者实例），那这个类就是一个单例类，这种设计模式就叫作单例模式。<br>  单例模式最常见的使用就是在程序启动时候创建加载基础组件：配置文件、实例日志组件、数据库组件、缓存组件等等(很多时候这种加载方式会用IOC容器来实现)。<br>  这些全局唯一的组件实例在程序使用能够带来：提高系统效率(数据库连接池、线程池)、杜绝多线程资源访问冲突(日志处理)等好处。</p>
+<h1 id="2-模式demo"><a href="#2-模式demo" class="headerlink" title="2.模式demo"></a>2.模式demo</h1><p>根据单例模式实现的方式，可分为：<code>饿汉模式</code>和<code>懒汉模式</code>。</p>
+<p><code>饿汉模式</code>：单例模式最常见实现的方式，在类加载的时候静态实例就已经加载好了。<br><code>懒汉模式</code>：只在使用的时候进行加载，有延迟加载的效果。</p>
+<h2 id="2-1-饿汉模式实现"><a href="#2-1-饿汉模式实现" class="headerlink" title="2.1 饿汉模式实现"></a>2.1 饿汉模式实现</h2><p>由于<code>饿汉模式</code>是在程序加载的时候就创建并实例化了，所以无需考虑多并发的情况。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Singleton <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 在这里定义单例对象的属性</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> instance *Singleton = createInstance()</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">createInstance</span><span class="params">()</span></span> *Singleton &#123;</span><br><span class="line">	<span class="comment">// 在这里创建并初始化单例对象</span></span><br><span class="line">	<span class="keyword">return</span> &amp;Singleton&#123;</span><br><span class="line">		<span class="comment">// 初始化单例对象的属性</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetInstance</span><span class="params">()</span></span> *Singleton &#123;</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 使用单例模式获取实例</span></span><br><span class="line">	singletonInstance := GetInstance()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 使用单例实例</span></span><br><span class="line">	fmt.Println(singletonInstance)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="2-2-懒汉模式实现"><a href="#2-2-懒汉模式实现" class="headerlink" title="2.2 懒汉模式实现"></a>2.2 懒汉模式实现</h2><p>由于<code>懒汉模式</code>是在使用的时候再创建实例，属于懒加载；此时程序已经启动并正在运行，此时创建实例可能会出现多线程的情况，所以要考虑并发问题。</p>
+<h3 id="2-2-1-普通实现方式"><a href="#2-2-1-普通实现方式" class="headerlink" title="2.2.1 普通实现方式"></a>2.2.1 普通实现方式</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Singleton <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 在这里定义单例对象的属性</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> instance *Singleton</span><br><span class="line"><span class="keyword">var</span> mu sync.Mutex</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetInstance</span><span class="params">()</span></span> *Singleton &#123;</span><br><span class="line">	<span class="keyword">if</span> instance == <span class="literal">nil</span> &#123;</span><br><span class="line">		mu.Lock()</span><br><span class="line">		<span class="keyword">defer</span> mu.Unlock()</span><br><span class="line">		<span class="keyword">if</span> instance == <span class="literal">nil</span> &#123;</span><br><span class="line">			instance = &amp;Singleton&#123;</span><br><span class="line">				<span class="comment">// 初始化单例对象的属性</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 使用单例模式获取实例</span></span><br><span class="line">	singletonInstance := GetInstance()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 使用单例实例</span></span><br><span class="line">	fmt.Println(singletonInstance)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-2-Go语言特定实现方式"><a href="#2-2-2-Go语言特定实现方式" class="headerlink" title="2.2.2 Go语言特定实现方式"></a>2.2.2 Go语言特定实现方式</h3><p>以上都是一般语言通用的实现方式，还有一种Go语言独有实现的方式——使用<code>sync.Once</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;sync&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Singleton <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 在这里定义单例对象的属性</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> instance *Singleton</span><br><span class="line"><span class="keyword">var</span> once sync.Once</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetInstance</span><span class="params">()</span></span> *Singleton &#123;</span><br><span class="line">	once.Do(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		instance = &amp;Singleton&#123;</span><br><span class="line">			<span class="comment">// 初始化单例对象的属性</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;)</span><br><span class="line">	<span class="keyword">return</span> instance</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 使用单例模式获取实例</span></span><br><span class="line">	singletonInstance := GetInstance()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 使用单例实例</span></span><br><span class="line">	fmt.Println(singletonInstance)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>是不是很神奇？为什么不用判断<code>instance</code>是否存在？为什么不用加锁？</p>
+<p>这一切在源码面前都没有秘密：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> sync</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;sync/atomic&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Once <span class="keyword">struct</span> &#123;</span><br><span class="line">	done <span class="type">uint32</span> <span class="comment">// 记录实例数量</span></span><br><span class="line">	m    Mutex <span class="comment">// 锁</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Once)</span></span> Do(f <span class="function"><span class="keyword">func</span><span class="params">()</span></span>) &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 原子操作判断实例数量是否0，</span></span><br><span class="line">	<span class="comment">// 如果是0就创建新的实例</span></span><br><span class="line">	<span class="keyword">if</span> atomic.LoadUint32(&amp;o.done) == <span class="number">0</span> &#123;</span><br><span class="line">		o.doSlow(f)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o *Once)</span></span> doSlow(f <span class="function"><span class="keyword">func</span><span class="params">()</span></span>) &#123;</span><br><span class="line">	<span class="comment">// 加锁</span></span><br><span class="line">	o.m.Lock()</span><br><span class="line">	<span class="keyword">defer</span> o.m.Unlock()</span><br><span class="line">	<span class="keyword">if</span> o.done == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="comment">// 操作完传参的函数之后，</span></span><br><span class="line">		<span class="comment">// 原子操作将实例变成1</span></span><br><span class="line">		<span class="keyword">defer</span> atomic.StoreUint32(&amp;o.done, <span class="number">1</span>)</span><br><span class="line">		f()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>实际上就是Go语言在基础库层面帮我们封装了通用的单例模式实现方式。</p>
+<h1 id="3-源码解析"><a href="#3-源码解析" class="headerlink" title="3.源码解析"></a>3.源码解析</h1><h2 id="3-1-beego的orm链接实例"><a href="#3-1-beego的orm链接实例" class="headerlink" title="3.1 beego的orm链接实例"></a>3.1 beego的orm链接实例</h2><p>在beego框架中，orm组件就使用了单例模式。</p>
+<p>beego会将数据库的配置信息通过<code>orm.RegisterDataBase(&quot;default&quot;, &quot;mysql&quot;, &quot;root:123456@tcp(127.0.0.1:3306)/beego?charset=utf8&quot;)</code>函数存储至beego的orm结构体<code>orm.alias</code>中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> alias <span class="keyword">struct</span> &#123;</span><br><span class="line">	Name            <span class="type">string</span></span><br><span class="line">	Driver          DriverType</span><br><span class="line">	DriverName      <span class="type">string</span></span><br><span class="line">	DataSource      <span class="type">string</span></span><br><span class="line">	MaxIdleConns    <span class="type">int</span></span><br><span class="line">	MaxOpenConns    <span class="type">int</span></span><br><span class="line">	ConnMaxLifetime time.Duration</span><br><span class="line">	StmtCacheSize   <span class="type">int</span></span><br><span class="line">	DB              *DB</span><br><span class="line">	DbBaser         dbBaser</span><br><span class="line">	TZ              *time.Location</span><br><span class="line">	Engine          <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>期间还生成数据库连接所使用的Go基础库实例<code>sql.DB</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> DB <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// Atomic access only. At top of struct to prevent mis-alignment</span></span><br><span class="line">	<span class="comment">// on 32-bit platforms. Of type time.Duration.</span></span><br><span class="line">	waitDuration <span class="type">int64</span> <span class="comment">// Total time waited for new connections.</span></span><br><span class="line"></span><br><span class="line">	connector driver.Connector</span><br><span class="line">	<span class="comment">// numClosed is an atomic counter which represents a total number of</span></span><br><span class="line">	<span class="comment">// closed connections. Stmt.openStmt checks it before cleaning closed</span></span><br><span class="line">	<span class="comment">// connections in Stmt.css.</span></span><br><span class="line">	numClosed <span class="type">uint64</span></span><br><span class="line"></span><br><span class="line">	mu           sync.Mutex    <span class="comment">// protects following fields</span></span><br><span class="line">	freeConn     []*driverConn <span class="comment">// free connections ordered by returnedAt oldest to newest</span></span><br><span class="line">	connRequests <span class="keyword">map</span>[<span class="type">uint64</span>]<span class="keyword">chan</span> connRequest</span><br><span class="line">	nextRequest  <span class="type">uint64</span> <span class="comment">// Next key to use in connRequests.</span></span><br><span class="line">	numOpen      <span class="type">int</span>    <span class="comment">// number of opened and pending open connections</span></span><br><span class="line">	<span class="comment">// Used to signal the need for new connections</span></span><br><span class="line">	<span class="comment">// a goroutine running connectionOpener() reads on this chan and</span></span><br><span class="line">	<span class="comment">// maybeOpenNewConnections sends on the chan (one send per needed connection)</span></span><br><span class="line">	<span class="comment">// It is closed during db.Close(). The close tells the connectionOpener</span></span><br><span class="line">	<span class="comment">// goroutine to exit.</span></span><br><span class="line">	openerCh          <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line">	closed            <span class="type">bool</span></span><br><span class="line">	dep               <span class="keyword">map</span>[finalCloser]depSet</span><br><span class="line">	lastPut           <span class="keyword">map</span>[*driverConn]<span class="type">string</span> <span class="comment">// stacktrace of last conn&#x27;s put; debug only</span></span><br><span class="line">	maxIdleCount      <span class="type">int</span>                    <span class="comment">// zero means defaultMaxIdleConns; negative means 0</span></span><br><span class="line">	maxOpen           <span class="type">int</span>                    <span class="comment">// &lt;= 0 means unlimited</span></span><br><span class="line">	maxLifetime       time.Duration          <span class="comment">// maximum amount of time a connection may be reused</span></span><br><span class="line">	maxIdleTime       time.Duration          <span class="comment">// maximum amount of time a connection may be idle before being closed</span></span><br><span class="line">	cleanerCh         <span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line">	waitCount         <span class="type">int64</span> <span class="comment">// Total number of connections waited for.</span></span><br><span class="line">	maxIdleClosed     <span class="type">int64</span> <span class="comment">// Total number of connections closed due to idle count.</span></span><br><span class="line">	maxIdleTimeClosed <span class="type">int64</span> <span class="comment">// Total number of connections closed due to idle time.</span></span><br><span class="line">	maxLifetimeClosed <span class="type">int64</span> <span class="comment">// Total number of connections closed due to max connection lifetime limit.</span></span><br><span class="line"></span><br><span class="line">	stop <span class="function"><span class="keyword">func</span><span class="params">()</span></span> <span class="comment">// stop cancels the connection opener.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>并将<code>sql.DB</code>实例以属性的方式与<code>orm.alias</code>关联起来。<br>实例化如下的结构体：</p>
+<p><img src="/img/singleton/singleton.png" alt="image"></p>
+<p>以上结构体在每次添加(使用<code>addAliasWthDB</code>函数)的时候会根据“别名<code>alias</code>”创建唯一的实例。<br>具体的调用函数为：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">addAliasWthDB</span><span class="params">(aliasName, driverName <span class="type">string</span>, db *sql.DB, params ...DBOption)</span></span> (*alias, <span class="type">error</span>) &#123;</span><br><span class="line">	existErr := fmt.Errorf(<span class="string">&quot;DataBase alias name `%s` already registered, cannot reuse&quot;</span>, aliasName)</span><br><span class="line">	<span class="comment">// 根据hash表判断是否存在，如果存在，则直接返回</span></span><br><span class="line">	<span class="keyword">if</span> _, ok := dataBaseCache.get(aliasName); ok &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, existErr</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果hash表中不存在，则创建新的实例对象。</span></span><br><span class="line">	al, err := newAliasWithDb(aliasName, driverName, db, params...)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> !dataBaseCache.add(aliasName, al) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, existErr</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> al, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上函数中使用一张hash表判断别名<code>alias</code>为xxx的实例存不存在，这个hash表就在orm包中内部结构体<code>_dbCache</code>的<code>cache</code>属性中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// database alias cacher.</span></span><br><span class="line"><span class="keyword">type</span> _dbCache <span class="keyword">struct</span> &#123;</span><br><span class="line">	mux   sync.RWMutex</span><br><span class="line">	<span class="comment">// 判断alias是否存在所使用的hash表</span></span><br><span class="line">	cache <span class="keyword">map</span>[<span class="type">string</span>]*alias </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 查询hash表中是否存在实例</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ac *_dbCache)</span></span> get(name <span class="type">string</span>) (al *alias, ok <span class="type">bool</span>) &#123;</span><br><span class="line">	ac.mux.RLock()</span><br><span class="line">	<span class="keyword">defer</span> ac.mux.RUnlock()</span><br><span class="line">	al, ok = ac.cache[name]</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 向hash表中存入</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(ac *_dbCache)</span></span> add(name <span class="type">string</span>, al *alias) (added <span class="type">bool</span>) &#123;</span><br><span class="line">	ac.mux.Lock()</span><br><span class="line">	<span class="keyword">defer</span> ac.mux.Unlock()</span><br><span class="line">	<span class="keyword">if</span> _, ok := ac.cache[name]; !ok &#123;</span><br><span class="line">		ac.cache[name] = al</span><br><span class="line">		added = <span class="literal">true</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>beego的orm注册的流程图如下：<br><img src="/img/singleton/singleton2.png" alt="image"><br>可见，beego中相同<code>alias</code>的orm实例都是相同的，每次获取实例都是同一个实例，虽然代码书写上与传统的单例模式有些差别，但是本质上还是使用了单例这种设计模式。</p>
+<h1 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h1><p>微信公众号：搜索 <code>码农RyuGou</code> </p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2023/12/16/singleton/" data-id="clzo46btt002dvajh4zbueozr" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-decorator" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/10/21/decorator/" class="article-date">
+  <time datetime="2023-10-21T07:43:37.000Z" itemprop="datePublished">2023-10-21</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>装饰模式算是一种很好理解的设计模式了，相信接触过设计模式的同学都会对这种模式印象深刻，但是可能你不知道，装饰模式在业界的应用也非常的广泛，甚至远超你的想象，让我们来一起看看吧。</p>
+<h1 id="1-模式介绍"><a href="#1-模式介绍" class="headerlink" title="1.模式介绍"></a>1.模式介绍</h1><p>装饰模式（Decorator Pattern）它的定义是这样的：Attach additional responsibilities to an object dynamically keeping the same interface. Decorators provide a flexible alternative to subclassing for extending functionality。</p>
+<p>动态地给一个对象添加一些额外的职责。就增加功能来说，装饰模式相比生成子类更为灵活。</p>
+<p>相较与继承，对象必须实现或者复用父类的函数或方法，装饰模式使用组合的方式代替继承，在不影响其他对象的情况下，动态地给一个对象添加一些额外的职责，更轻量的实现给原始类和对象增强功能的效果，在解决继承关系过于复杂、需要动态添加或者撤销职责的场景有很好的效果。</p>
+<p>   装饰模式其实从字面上更好理解：一个对象，我想要给他什么功能，就装饰什么功能，就像一间空屋子，用厨具的装饰方法来装饰，就会有厨房的功能，用书房的装饰方法来装饰，就会有书房的功能，以此类推，还有卧室、浴室等等。</p>
+<p>主要解决继承关系过于复杂的场景。 组合优于继承，可以“使用组合来替代继承”</p>
+<h1 id="2-模式demo"><a href="#2-模式demo" class="headerlink" title="2.模式demo"></a>2.模式demo</h1><h2 id="2-1-UML"><a href="#2-1-UML" class="headerlink" title="2.1 UML"></a>2.1 UML</h2><p>装饰模式（Decorator Pattern）的整体结构如下：</p>
+<p><img src="/img/pattern/decorator/decorator.drawio.png" alt="image.png"></p>
+<p>从UML图中，我们可以看到，装饰模式主要包含两个角色： 普通对象（Component）和装饰器（Decorator），装饰器和普通对象是聚合的关系，也就是说：普通对象和装饰器是部分与整体的关系，普通对象是装饰器的组成部分。</p>
+<h2 id="2-2-标准demo"><a href="#2-2-标准demo" class="headerlink" title="2.2 标准demo"></a>2.2 标准demo</h2><p>我们依据标准的UML图，写出一个具体的例子（对应UML图）：</p>
+<p><img src="/img/pattern/decorator/decorator_demo.drawio.png" alt="image.png"><br>(请放大图片观看)</p>
+<p>首先定义<code>Componet</code>(对照上图)接口: <code>House</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">type House interface &#123;</span><br><span class="line">   Live()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义<code>Componet</code>接口的实现类<code>ConcreteComponet</code>（对照上图）:<code>DxmHouse</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">type DxmHouse struct&#123;&#125;</span><br><span class="line"></span><br><span class="line">func (d *DxmHouse) Live() &#123;</span><br><span class="line">   fmt.Println(&quot;dxmer are working&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义包装类接口<code>Decorator</code>(对照上图)：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">type Decorator struct &#123;</span><br><span class="line">   h House</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (d *Decorator) SetHose(house House) &#123;</span><br><span class="line">   d.h = house</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后分别定义包装类接口的两个实现类：<br><code>KitchenDecorator</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">type KitchenDecorator struct &#123;</span><br><span class="line">   Decorator</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (k *KitchenDecorator) Live() &#123;</span><br><span class="line">   fmt.Println(&quot;---------厨房包装开始--------&quot;)</span><br><span class="line">   k.h.Live()</span><br><span class="line">   fmt.Println(&quot;---------厨房包装结束--------&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以及<code>BedroomDecorator</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">type BedroomDecorator struct &#123;</span><br><span class="line">   Decorator</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (b *BedroomDecorator) Live() &#123;</span><br><span class="line">   fmt.Println(&quot;---------卧室包装开始---------&quot;)</span><br><span class="line">   b.h.Live()</span><br><span class="line">   fmt.Println(&quot;---------卧室包装结束---------&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+<p>运行调用函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">   dxm := &amp;DxmHouse&#123;&#125;</span><br><span class="line"></span><br><span class="line">   k := &amp;KitchenDecorator&#123;&#125;</span><br><span class="line">   k.SetHose(dxm)</span><br><span class="line">   b := &amp;BedroomDecorator&#123;&#125;</span><br><span class="line">   b.SetHose(k)</span><br><span class="line"></span><br><span class="line">   b.Live()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>运行结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---------卧室包装开始---------</span><br><span class="line">---------厨房包装开始--------</span><br><span class="line">dxmer are working</span><br><span class="line">---------厨房包装结束--------</span><br><span class="line">---------卧室包装结束---------</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h1 id="3-源码解析"><a href="#3-源码解析" class="headerlink" title="3. 源码解析"></a>3. 源码解析</h1><p>在Go的语言基础库中，经常能够看到很多场景使用了装饰模式。</p>
+<h2 id="3-1-GO语言IO库中的使用"><a href="#3-1-GO语言IO库中的使用" class="headerlink" title="3.1 GO语言IO库中的使用"></a>3.1 GO语言IO库中的使用</h2><p><img src="/img/pattern/decorator/go_demo.drawio.png" alt="go_demo.drawio.png"></p>
+<p>Go中io包中的很多地方用了装饰模式，这里以<code>bufio.Reader</code>为例子，首先定义一个被包装类的接口<code>io.Reader</code>（请对照2.1UML图中的<code>Component</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// that happen after reading some bytes and also both of the</span><br><span class="line">// allowed EOF behaviors.</span><br><span class="line">//</span><br><span class="line">// Implementations of Read are discouraged from returning a</span><br><span class="line">// zero byte count with a nil error, except when len(p) == 0.</span><br><span class="line">// Callers should treat a return of 0 and nil as indicating that</span><br><span class="line">// nothing happened; in particular it does not indicate EOF.</span><br><span class="line">//</span><br><span class="line">// Implementations must not retain p.</span><br><span class="line">type Reader interface &#123;</span><br><span class="line">   Read(p []byte) (n int, err error)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义<code>io.Reader</code>的实现类<code>os.File</code>（请对照2.1UML图中的<code>ConcreteComponet</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">// File represents an open file descriptor.</span><br><span class="line">type File struct &#123;</span><br><span class="line">   *file // os specific</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">// Read reads up to len(b) bytes from the File and stores them in b.</span><br><span class="line">// It returns the number of bytes read and any error encountered.</span><br><span class="line">// At end of file, Read returns 0, io.EOF.</span><br><span class="line">func (f *File) Read(b []byte) (n int, err error) &#123;</span><br><span class="line">   if err := f.checkValid(&quot;read&quot;); err != nil &#123;</span><br><span class="line">      return 0, err</span><br><span class="line">   &#125;</span><br><span class="line">   n, e := f.read(b)</span><br><span class="line">   return n, f.wrapErr(&quot;read&quot;, e)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后定义<code>io.Reader</code>的实现类<code>bufio.Reader</code>（请对照2.1UML图中的<code>Decorator</code>和<code>ConcreteDecorator1</code>和<code>ConcreteDecorator2</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">// Buffered input.</span><br><span class="line"></span><br><span class="line">// Reader implements buffering for an io.Reader object.</span><br><span class="line">type Reader struct &#123;</span><br><span class="line">   buf          []byte</span><br><span class="line">   rd           io.Reader // reader provided by the client</span><br><span class="line">   r, w         int       // buf read and write positions</span><br><span class="line">   err          error</span><br><span class="line">   lastByte     int // last byte read for UnreadByte; -1 means invalid</span><br><span class="line">   lastRuneSize int // size of last rune read for UnreadRune; -1 means invalid</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// NewReader returns a new Reader whose buffer has the default size.</span><br><span class="line">func NewReader(rd io.Reader) *Reader &#123;</span><br><span class="line">   return NewReaderSize(rd, defaultBufSize)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line">// Read reads data into p.</span><br><span class="line">// It returns the number of bytes read into p.</span><br><span class="line">// The bytes are taken from at most one Read on the underlying Reader,</span><br><span class="line">// hence n may be less than len(p).</span><br><span class="line">// To read exactly len(p) bytes, use io.ReadFull(b, p).</span><br><span class="line">// At EOF, the count will be zero and err will be io.EOF.</span><br><span class="line">func (b *Reader) Read(p []byte) (n int, err error) &#123;</span><br><span class="line">   n = len(p)</span><br><span class="line">   if n == 0 &#123;</span><br><span class="line">      if b.Buffered() &gt; 0 &#123;</span><br><span class="line">         return 0, nil</span><br><span class="line">      &#125;</span><br><span class="line">      return 0, b.readErr()</span><br><span class="line">   &#125;</span><br><span class="line">   if b.r == b.w &#123;</span><br><span class="line">      if b.err != nil &#123;</span><br><span class="line">         return 0, b.readErr()</span><br><span class="line">      &#125;</span><br><span class="line">      if len(p) &gt;= len(b.buf) &#123;</span><br><span class="line">         // Large read, empty buffer.</span><br><span class="line">         // Read directly into p to avoid copy.</span><br><span class="line">         n, b.err = b.rd.Read(p)</span><br><span class="line">         if n &lt; 0 &#123;</span><br><span class="line">            panic(errNegativeRead)</span><br><span class="line">         &#125;</span><br><span class="line">         if n &gt; 0 &#123;</span><br><span class="line">            b.lastByte = int(p[n-1])</span><br><span class="line">            b.lastRuneSize = -1</span><br><span class="line">         &#125;</span><br><span class="line">         return n, b.readErr()</span><br><span class="line">      &#125;</span><br><span class="line">      // One read.</span><br><span class="line">      // Do not use b.fill, which will loop.</span><br><span class="line">      b.r = 0</span><br><span class="line">      b.w = 0</span><br><span class="line">      n, b.err = b.rd.Read(b.buf)</span><br><span class="line">      if n &lt; 0 &#123;</span><br><span class="line">         panic(errNegativeRead)</span><br><span class="line">      &#125;</span><br><span class="line">      if n == 0 &#123;</span><br><span class="line">         return 0, b.readErr()</span><br><span class="line">      &#125;</span><br><span class="line">      b.w += n</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   // copy as much as we can</span><br><span class="line">   // Note: if the slice panics here, it is probably because</span><br><span class="line">   // the underlying reader returned a bad count. See issue 49795.</span><br><span class="line">   n = copy(p, b.buf[b.r:b.w])</span><br><span class="line">   b.r += n</span><br><span class="line">   b.lastByte = int(b.buf[b.r-1])</span><br><span class="line">   b.lastRuneSize = -1</span><br><span class="line">   return n, nil</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>函数有点长，可以无视，只关注结构体<code>bufio.Reader</code>实现了<code>Read</code>和<code>NewReader</code>即可。</p>
+<p>最后进行调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">   f, err := os.Open(&quot;tmp&quot;)</span><br><span class="line">   if err != nil &#123;</span><br><span class="line">      fmt.Println(err.Error())</span><br><span class="line">      return</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   reader := bufio.NewReader(f)</span><br><span class="line">   for &#123;</span><br><span class="line">      msg, r := reader.ReadString(&#x27;\n&#x27;)</span><br><span class="line">      if r != io.EOF &amp;&amp; r != nil &#123;</span><br><span class="line">         fmt.Println(err.Error())</span><br><span class="line">         return</span><br><span class="line">      &#125;</span><br><span class="line">      fmt.Println(msg)</span><br><span class="line">      if r == io.EOF &#123;</span><br><span class="line">         break</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可见<code>bufio.Reader</code>实现了标准的装饰模式，以此类推，<code>bufio.Writer</code>也是同样的。</p>
+<p>其实不仅仅是Go语言，其他语言的IO标准库也大量的使用了装饰模式。</p>
+<h2 id="3-2-Go基础库Context"><a href="#3-2-Go基础库Context" class="headerlink" title="3.2 Go基础库Context"></a>3.2 Go基础库Context</h2><p><img src="/img/pattern/decorator/context.drawio.png" alt="context.drawio.png"><br>(请放大图观看)</p>
+<p>首先回顾一下Context的用途：Context是一种用于跨多个Goroutine传递请求，协同工作的机制。正如它的名字一样，就是协程之间的上下文。<br>接下来看看它的实现机制，首先定义一个<code>Context</code>接口：（请对照2.1UML图中的<code>Component</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// A Context carries a deadline, a cancellation signal, and other values across</span><br><span class="line">// API boundaries.</span><br><span class="line">//</span><br><span class="line">// Context&#x27;s methods may be called by multiple goroutines simultaneously.</span><br><span class="line">type Context interface &#123;</span><br><span class="line">   </span><br><span class="line">   Deadline() (deadline time.Time, ok bool)</span><br><span class="line"></span><br><span class="line">   //</span><br><span class="line">   Done() &lt;-chan struct&#123;&#125;</span><br><span class="line"></span><br><span class="line">   //</span><br><span class="line">   Err() error</span><br><span class="line"></span><br><span class="line">   //</span><br><span class="line">   Value(key any) any</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后又定义了<code>emptyCtx</code>结构体并实现了<code>Context</code>（请对照2.1UML图中的<code>ConcreteComponet</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">// An emptyCtx is never canceled, has no values, and has no deadline. It is not</span><br><span class="line">// struct&#123;&#125;, since vars of this type must have distinct addresses.</span><br><span class="line">type emptyCtx int</span><br><span class="line"></span><br><span class="line">func (*emptyCtx) Deadline() (deadline time.Time, ok bool) &#123;</span><br><span class="line">   return</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (*emptyCtx) Done() &lt;-chan struct&#123;&#125; &#123;</span><br><span class="line">   return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (*emptyCtx) Err() error &#123;</span><br><span class="line">   return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (*emptyCtx) Value(key any) any &#123;</span><br><span class="line">   return nil</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是一个私有的结构体，实体主要用于<code>background</code>和<code>todo</code>两个变量，这也是<code>context.Background()</code> 和 <code>context.TODO()</code>函数的返回值。如下代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">var (</span><br><span class="line">   background = new(emptyCtx)</span><br><span class="line">   todo       = new(emptyCtx)</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">// Background returns a non-nil, empty Context. It is never canceled, has no</span><br><span class="line">// values, and has no deadline. It is typically used by the main function,</span><br><span class="line">// initialization, and tests, and as the top-level Context for incoming</span><br><span class="line">// requests.</span><br><span class="line">func Background() Context &#123;</span><br><span class="line">   return background</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// TODO returns a non-nil, empty Context. Code should use context.TODO when</span><br><span class="line">// it&#x27;s unclear which Context to use or it is not yet available (because the</span><br><span class="line">// surrounding function has not yet been extended to accept a Context</span><br><span class="line">// parameter).</span><br><span class="line">func TODO() Context &#123;</span><br><span class="line">   return todo</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>不同于标准的装饰类UML图，没有像Go语言的IO库一样那么标准，<code>Context</code>没有实现2.1UML图中的<code>Decorator</code>和实现类<code>ConcreteDecorator1</code>、<code>ConcreteDecorator2</code>，而是用各种函数替代：<code>WithValue(...)</code>、<code>WithTimeout(...)</code>、<code>WithCancel(...)</code>、<code>WithDeadline(...)</code>。</p>
+<p>以上这几个函数会返回三个私有的结构体：<code>cancelCtx</code>、<code>valueCtx</code>、<code>timerCtx</code>,三个结构体都实现了<code>Context</code>接口，并且<code>timerCtx</code>继承与<code>cancelCtx</code>。</p>
+<p>具体的结构请参照3.2开头的结构图。</p>
+<p><code>valueCtx</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// A valueCtx carries a key-value pair. It implements Value for that key and</span><br><span class="line">// delegates all other calls to the embedded Context.</span><br><span class="line">type valueCtx struct &#123;</span><br><span class="line">   Context</span><br><span class="line">   key, val any</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>cancelCtx</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// A cancelCtx can be canceled. When canceled, it also cancels any children</span><br><span class="line">// that implement canceler.</span><br><span class="line">type cancelCtx struct &#123;</span><br><span class="line">   Context</span><br><span class="line"></span><br><span class="line">   mu       sync.Mutex            // protects following fields</span><br><span class="line">   done     atomic.Value          // of chan struct&#123;&#125;, created lazily, closed by first cancel call</span><br><span class="line">   children map[canceler]struct&#123;&#125; // set to nil by the first cancel call</span><br><span class="line">   err      error                 // set to non-nil by the first cancel call</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>timerCtx</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">// A timerCtx carries a timer and a deadline. It embeds a cancelCtx to</span><br><span class="line">// implement Done and Err. It implements cancel by stopping its timer then</span><br><span class="line">// delegating to cancelCtx.cancel.</span><br><span class="line">type timerCtx struct &#123;</span><br><span class="line">   cancelCtx</span><br><span class="line">   timer *time.Timer // Under cancelCtx.mu.</span><br><span class="line"></span><br><span class="line">   deadline time.Time</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="4-总结"><a href="#4-总结" class="headerlink" title="4 总结"></a>4 总结</h1><p>装饰模式的基本思想是通过组合和委托的方式，在不改变对象自身的情况下来动态增强对象的功能，通过装饰模式，可以将对象的功能分为不同的层级，每个层级的对象可以按照一定的顺序动态地组合进来，形成一个具有多种功能的对象。装饰模式的设计方式可以让项目能够更加灵活的组合对象，从而实现复杂的功能。</p>
+<p>装饰模式的应用场景非常广泛，除了各类语言的语言IO基础库及Go的context之外，我们常用的Web框架中的router过滤器，也常常使用装饰模式去实现（还可能会用责任链实现，请参考博主<a href="https://i6448038.github.io/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a> 的文章）。</p>
+<h1 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h1><p>更多精彩内容，请搜索我的微信公众号 <code>码农RyuGou</code></p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2023/10/21/decorator/" data-id="clzo46btd000uvajh5nuhdwg5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-pattern-linked" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/07/29/pattern-linked/" class="article-date">
+  <time datetime="2023-07-29T10:47:09.000Z" itemprop="datePublished">2023-07-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>其实很多人不知道，责任链模式是我们工作中经常遇到的模式，特别是web后端工程师，我们工作中每时每刻都在用：因为市面上大部分的web框架的过滤器基本都是基于这个设计模式为基本模式搭建的。</p>
+<h2 id="1-模式介绍"><a href="#1-模式介绍" class="headerlink" title="1.模式介绍"></a>1.模式介绍</h2><p>我们先来看一下责任链模式（Chain Of Responsibility Design Pattern ）的英文介绍：<br>Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it.</p>
+<p>翻译成中文就是：将请求的发送和接收解耦，让多个接收对象都有机会处理这个请求。将这些接收对象串成一条链，并沿着这条链传递这个请求，直到链上的某个接收对象能够处理它为止。</p>
+<p>这么说比较抽象，用更加容易理解的话来进一步解读一下。在责任链模式中，一个请求过来，会有多个处理器（也就是刚刚定义中说的“接收对象”）依次处理同一个请求。即请求先经过 A 处理器处理，然后再把请求传递给 B 处理器，B 处理器处理完后再传递给 C 处理器，以此类推，形成一个链条。链条上的每个处理器各自承担各自的处理职责，所以叫作责任链模式。</p>
+<p><img src="/img/pattern/linked/hanlder_design1.drawio.png" alt="在这里插入图片描述"></p>
+<h2 id="2-模式demo"><a href="#2-模式demo" class="headerlink" title="2.模式demo"></a>2.模式demo</h2><h3 id="2-1UML"><a href="#2-1UML" class="headerlink" title="2.1UML"></a>2.1UML</h3><p>责任链模式（Chain Of Responsibility Design Pattern ）的整体结构如下：</p>
+<p><img src="/img/pattern/linked/hanlder_chain_design1.drawio.png" alt="在这里插入图片描述"></p>
+<h3 id="2-2-标准demo"><a href="#2-2-标准demo" class="headerlink" title="2.2 标准demo"></a>2.2 标准demo</h3><p>我们依据标准的UML图，写出一个具体的例子（对应UML图）：</p>
+<p><img src="/img/pattern/linked/demo_chain.drawio.png" alt="在这里插入图片描述"></p>
+<p>首先定义一个接口<code>IHandler</code>：</p>
+<pre><code>type IHandler interface &#123;
+    SetNext(handler IHandler)
+    Handle(score int)
+&#125;
+</code></pre>
+<p>然后分别构建三个不同的实现：<br><code>ConcreteHandler1</code></p>
+<pre><code>type ConcreteHandler1 struct &#123;
+    Next IHandler
+&#125;
+
+func (c *ConcreteHandler1) Handle(score int) &#123;
+    if score &lt; 0 &#123;
+        fmt.Println(&quot;ConcreteHandler1 处理&quot;)
+        return
+    &#125;
+    if c.Next != nil &#123;
+        c.Next.Handle(score)
+    &#125;
+    return
+&#125;
+func (c *ConcreteHandler1) SetNext(handler IHandler) &#123;
+    c.Next = handler
+&#125;
+</code></pre>
+<p><code>ConcreteHandler2</code></p>
+<pre><code>type ConcreteHandler2 struct &#123;
+    Next IHandler
+&#125;
+
+func (c *ConcreteHandler2) Handle(score int) &#123;
+    if score &gt; 0 &#123;
+        fmt.Println(&quot;ConcreteHandler2 处理&quot;)
+        return
+    &#125;
+    if c.Next != nil &#123;
+        c.Next.Handle(score)
+    &#125;
+    return
+&#125;
+
+func (c *ConcreteHandler2) SetNext(handler IHandler) &#123;
+    c.Next = handler
+&#125;
+</code></pre>
+<p><code>ConcreteHandler3</code></p>
+<pre><code>type ConcreteHandler3 struct &#123;
+    Next IHandler
+&#125;
+
+func (c *ConcreteHandler3) Handle(score int) &#123;
+    if score == 0 &#123;
+        fmt.Println(&quot;ConcreteHandler3 处理&quot;)
+        return
+    &#125;
+    if c.Next != nil &#123;
+        c.Next.Handle(score)
+    &#125;
+    return
+&#125;
+
+func (c *ConcreteHandler3) SetNext(handler IHandler) &#123;
+    c.Next = handler
+&#125;
+</code></pre>
+<p>最后是<code>main</code>函数：</p>
+<pre><code>func main() &#123;
+    handler1 := &amp;ConcreteHandler1&#123;&#125;
+    handler2 := &amp;ConcreteHandler2&#123;&#125;
+    handler3 := &amp;ConcreteHandler3&#123;&#125;
+
+    handler1.SetNext(handler2)
+    handler2.SetNext(handler3)
+
+    handler1.Handle(10)
+
+&#125;
+</code></pre>
+<p>打印结果为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ConcreteHandler2 处理</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-改进版demo"><a href="#2-3-改进版demo" class="headerlink" title="2.3 改进版demo"></a>2.3 改进版demo</h3><p>通过以上标准例子不难发现：<code>main</code>函数承接了很多client自身之外的“额外工作”：构建和拼接组装责任链，这不利于后续client端的使用和扩展：一不小心可能责任链拼就接错了或者拼接少节点了。<br>我们可以对UML做一个改进：增加一个节点管理模块。改进图如下：</p>
+<p><img src="/img/pattern/linked/chain_design_uml.drawio.png" alt="在这里插入图片描述"></p>
+<p>对比上文的uml图，新增加了一个<code>ChainHandler</code>结构体用来管理拼接的<code>Handler</code>，client端无需了解<code>Handler</code>的业务，<code>Handler</code>的组合可以使用链表，也可以使用数组(当前用了数组)。<br>具体实现如下：<br>先定义<code>Handler</code>接口:</p>
+<pre><code>type Handler interface &#123;
+    Handle(score int)
+&#125;
+</code></pre>
+<p>然后分别实现<code>Handler</code>接口的三个结构体：<br><code>ConcreteHandlerOne</code></p>
+<pre><code>type ConcreteHandlerOne struct &#123;
+    Handler
+&#125;
+
+func (c *ConcreteHandlerOne) Handle(score int) &#123;
+    if score &lt; 0 &#123;
+        fmt.Println(&quot;ConcreteHandler1 处理&quot;)
+        return
+    &#125;
+&#125;
+</code></pre>
+<p><code>ConcreteHandlerTwo</code></p>
+<pre><code>type ConcreteHandlerTwo struct &#123;
+    Handler
+&#125;
+
+func (c *ConcreteHandlerTwo) Handle(score int) &#123;
+    if score &gt; 0 &#123;
+        fmt.Println(&quot;ConcreteHandler2 处理&quot;)
+        return
+    &#125;
+&#125;
+</code></pre>
+<p><code>ConcreteHandlerThree</code></p>
+<pre><code>type ConcreteHandlerThree struct &#123;
+    Handler
+&#125;
+
+func (c *ConcreteHandlerThree) Handle(score int) &#123;
+    if score == 0 &#123;
+        fmt.Println(&quot;ConcreteHandler3 处理&quot;)
+        return
+    &#125;
+&#125;
+</code></pre>
+<p><code>main</code>函数调用(client调用)：</p>
+<pre><code>func main() &#123;
+    chain := &amp;ChainHandler&#123;&#125;
+    chain.AddHandler(&amp;ConcreteHandlerOne&#123;&#125;)
+    chain.AddHandler(&amp;ConcreteHandlerTwo&#123;&#125;)
+    chain.AddHandler(&amp;ConcreteHandlerThree&#123;&#125;)
+    chain.Handle(10)
+&#125;
+</code></pre>
+<p>最终的实现结构图：</p>
+<p><img src="/img/pattern/linked/chain_demo_chain.drawio.png" alt="在这里插入图片描述"></p>
+<p>日常工作中出现的责任链模式（Chain Of Responsibility Design Pattern ）一般都是以上这种包含<code>Hanlder</code>管理的模式。</p>
+<h2 id="3-源码解析"><a href="#3-源码解析" class="headerlink" title="3. 源码解析"></a>3. 源码解析</h2><p>在日常框架和语言基础库中，经常能够看到很多场景使用了责任链模式。</p>
+<h3 id="3-1-beego过滤器"><a href="#3-1-beego过滤器" class="headerlink" title="3.1 beego过滤器"></a>3.1 beego过滤器</h3><p>可以对比改进版demo的uml图，beego的过滤器就是按照这种模式来设计的（当前参照的beego版本是2.0）。</p>
+<p><img src="/img/pattern/linked/beego_chain.drawio.png" alt="在这里插入图片描述"></p>
+<h4 id="3-1-1-client端"><a href="#3-1-1-client端" class="headerlink" title="3.1.1 client端"></a>3.1.1 client端</h4><p>调用端首先是过滤器的注册：</p>
+<pre><code>web.InsertFilter(&quot;/v2/api/*&quot;, web.BeforeRouter, auth.AuthAPIFilter)
+</code></pre>
+<p>然后在<code>github.com/beego/beego/v2@v2.0.3/server/web/router.go</code>的<code>ControllerRegister</code>结构体的<code>serveHttp</code>函数中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(p.filters[BeforeRouter]) &gt; <span class="number">0</span> &amp;&amp; p.execFilter(ctx, urlPath, BeforeRouter) &#123;</span><br><span class="line">		<span class="keyword">goto</span> Admin</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上<code> p.execFilter(ctx, urlPath, BeforeRouter)</code>处，启动调用。</p>
+<h4 id="3-1-2-Handler接口"><a href="#3-1-2-Handler接口" class="headerlink" title="3.1.2 Handler接口"></a>3.1.2 Handler接口</h4><p>Handler接口很简单</p>
+<pre><code>// HandleFunc define how to process the request
+type HandleFunc func(ctx *beecontext.Context)
+
+    ...
+    
+type FilterFunc = HandleFunc
+</code></pre>
+<h4 id="3-1-3-Handler接口实现"><a href="#3-1-3-Handler接口实现" class="headerlink" title="3.1.3 Handler接口实现"></a>3.1.3 Handler接口实现</h4><p>接口的实现扩展比较灵活，直接把用户定义的函数作为接口的实现。与client端中的过滤器注册联动。</p>
+<pre><code>// 过滤器注册
+web.InsertFilter(&quot;/v2/api/*&quot;, web.BeforeRouter, auth.AuthAPIFilter)
+
+// 自定义过滤器
+var AuthAPIFilter = func(ctx *context.Context) &#123;
+    isAccess := validateAccess(ctx)
+    if !isAccess &#123;
+        res, _ := json.Marshal(r)
+        ctx.WriteString(string(res))
+        // ctx.Redirect(401, &quot;/401&quot;)
+    &#125;
+&#125;
+</code></pre>
+<h4 id="3-1-4-Handler管理"><a href="#3-1-4-Handler管理" class="headerlink" title="3.1.4 Handler管理"></a>3.1.4 Handler管理</h4><p><code>Handler</code>的管理模块是在<code>github.com/beego/beego/v2@v2.0.3/server/web/router.go</code>的中的 <code>FilterRouter</code>和<code>ControllerRegister</code>两个结构体中</p>
+<pre><code>// ControllerRegister containers registered router rules, controller handlers and filters.
+type ControllerRegister struct &#123;
+    routers      map[string]*Tree
+    enablePolicy bool
+    enableFilter bool
+    policies     map[string]*Tree
+    filters      [FinishRouter + 1][]*FilterRouter
+    pool         sync.Pool
+
+    // the filter created by FilterChain
+    chainRoot *FilterRouter
+
+    // keep registered chain and build it when serve http
+    filterChains []filterChainConfig
+
+    cfg *Config
+&#125;
+
+
+type FilterRouter struct &#123;
+    filterFunc     FilterFunc
+    next           *FilterRouter
+    tree           *Tree
+    pattern        string
+    returnOnOutput bool
+    resetParams    bool
+&#125;
+</code></pre>
+<p><code>FilterRouter</code>是一个链表，包含用户自定义的过滤函数；<code>ControllerRegister</code>对<code>FilterRouter</code>进行管理。</p>
+<h3 id="3-2-Go源码http-handler"><a href="#3-2-Go源码http-handler" class="headerlink" title="3.2 Go源码http.handler"></a>3.2 Go源码http.handler</h3><p>我们在使用Go构建http web服务器的时候，使用的http.Handler就是使用的责任链模式。</p>
+<pre><code>package main
+
+import (
+    &quot;net/http&quot;
+)
+
+func main() &#123;
+    s := http.NewServeMux()
+
+    s.HandleFunc(&quot;/&quot;, func(writer http.ResponseWriter, request *http.Request) &#123;
+
+        // todo ....
+
+        return
+    &#125;)
+
+    http.ListenAndServe(&quot;:80&quot;, s)
+
+&#125;
+</code></pre>
+<p>以<code>2.3 的UML图</code>为标准，整体的结构图如下：</p>
+<p><img src="/img/pattern/linked/go_hanlder_demo.drawio.png" alt="在这里插入图片描述"></p>
+<h4 id="3-2-1-client端"><a href="#3-2-1-client端" class="headerlink" title="3.2.1 client端"></a>3.2.1 client端</h4><p>整个模式的启动是随着http server启动后，接受到请求后的处理开始的。在<code>net/http/server.go</code>的<code>serve</code>函数中</p>
+<pre><code>func (c *conn) serve(ctx context.Context) &#123;
+    ...
+    
+    // HTTP cannot have multiple simultaneous active requests.[*]
+    // Until the server replies to this request, it can&#39;t read another,
+    // so we might as well run the handler in this goroutine.
+    // [*] Not strictly true: HTTP pipelining. We could let them all process
+    // in parallel even if their responses need to be serialized.
+    // But we&#39;re not going to implement HTTP pipelining because it
+    // was never deployed in the wild and the answer is HTTP/2.
+    serverHandler&#123;c.server&#125;.ServeHTTP(w, w.req)
+    
+    ...
+
+&#125;
+</code></pre>
+<p>可以看到http server的原理很简单，就是for 死循环等待接收，然后一个请求过来，就对应的生成一个单独的协程<code>goroutine</code>去处理。</p>
+<h4 id="3-2-2-Handler接口"><a href="#3-2-2-Handler接口" class="headerlink" title="3.2.2 Handler接口"></a>3.2.2 Handler接口</h4><p>Go源码中对责任链模式的实现非常标准，Handler接口与设计模式中的Handler接口同名，在<code>net/http/server.go</code>中：</p>
+<pre><code>type Handler interface &#123;
+    ServeHTTP(ResponseWriter, *Request)
+&#125;
+</code></pre>
+<p>为了扩展方便，在使用过程中并非直接使用，而是中间又加了一层抽象层（相当于Java中的抽象类了，Go中没有抽象类）</p>
+<pre><code>// The HandlerFunc type is an adapter to allow the use of
+// ordinary functions as HTTP handlers. If f is a function
+// with the appropriate signature, HandlerFunc(f) is a
+// Handler that calls f.
+type HandlerFunc func(ResponseWriter, *Request)
+
+// ServeHTTP calls f(w, r).
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) &#123;
+    f(w, r)
+&#125;
+</code></pre>
+<h4 id="3-2-3-Handler接口实现"><a href="#3-2-3-Handler接口实现" class="headerlink" title="3.2.3 Handler接口实现"></a>3.2.3 Handler接口实现</h4><p>与上文中提到的Beego的过滤器类似，Go的Handler设计的也非常容易扩展，用户自定义的请求处理函数Handler都会变成<code>Handler</code>的子类。</p>
+<pre><code>func main() &#123;
+    s := http.NewServeMux()
+
+    s.HandleFunc(&quot;/&quot;, func(writer http.ResponseWriter, request *http.Request) &#123;
+
+        // todo ....
+
+        return
+    &#125;)
+
+    http.ListenAndServe(&quot;:80&quot;, s)
+
+&#125;
+
+// HandleFunc registers the handler function for the given pattern.
+func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Request)) &#123;
+    if handler == nil &#123;
+        panic(&quot;http: nil handler&quot;)
+    &#125;
+    // 强制类型转换，转成了实现了Hanlder的“抽象类”HandlerFunc
+    mux.Handle(pattern, HandlerFunc(handler)) 
+    
+&#125;
+</code></pre>
+<p>注意看上文的<code>HandleFunc</code>中的 <code>mux.Handle(pattern, HandlerFunc(handler)) </code>这一行，将用户自定义的处理函数强制转换成了上文3.2.2中的<code>Handler</code>的”抽象类”<code>HandlerFunc</code>类型，进而实现了继承。</p>
+<h4 id="3-2-4-Handler接口的管理类ChainHandler"><a href="#3-2-4-Handler接口的管理类ChainHandler" class="headerlink" title="3.2.4 Handler接口的管理类ChainHandler"></a>3.2.4 Handler接口的管理类ChainHandler</h4><p>Go中对Handler的管理类是在<code>net/http/server.go</code>文件的<code>ServeMux</code>结构体和<code>muxEntry</code>结构体中：</p>
+<pre><code>type ServeMux struct &#123;
+    mu    sync.RWMutex
+    m     map[string]muxEntry
+    es    []muxEntry // slice of entries sorted from longest to shortest.
+    hosts bool       // whether any patterns contain hostnames
+&#125;
+
+type muxEntry struct &#123;
+    h       Handler
+    pattern string
+&#125;
+</code></pre>
+<p>其中，用户自定以的处理函数都被封装到了<code>muxEntry</code>结构体的<code>Handler</code>中，一个自定义的函数对应一个<code>muxEntry</code>，<code>ServeMux</code>使用hashmap对<code>muxEntry</code>集合进行管理（上文的beego中是使用的链表，上文demo中使用了数组）。当web server接收到请求的时候，<code>ServeMux</code>会根据hashmap找到相应的handler然后处理。</p>
+<pre><code>func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) &#123;
+    if r.RequestURI == &quot;*&quot; &#123;
+        if r.ProtoAtLeast(1, 1) &#123;
+            w.Header().Set(&quot;Connection&quot;, &quot;close&quot;)
+        &#125;
+        w.WriteHeader(StatusBadRequest)
+        return
+    &#125;
+    
+    // *******寻找handler*******
+    h, _ := mux.Handler(r)
+    
+    h.ServeHTTP(w, r)
+&#125;
+
+func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string) &#123;
+
+    ...
+
+    if path != r.URL.Path &#123;
+        _, pattern = mux.handler(host, path)
+        u := &amp;url.URL&#123;Path: path, RawQuery: r.URL.RawQuery&#125;
+        return RedirectHandler(u.String(), StatusMovedPermanently), pattern
+    &#125;
+
+    // *******寻找handler*******
+    return mux.handler(host, r.URL.Path)
+&#125;
+
+func (mux *ServeMux) handler(host, path string) (h Handler, pattern string) &#123;
+    mux.mu.RLock()
+    defer mux.mu.RUnlock()
+
+    // Host-specific pattern takes precedence over generic ones
+    if mux.hosts &#123;
+        // *******寻找handler*******
+        h, pattern = mux.match(host + path)
+    &#125;
+    if h == nil &#123;
+        // *******寻找handler*******
+        h, pattern = mux.match(path)
+    &#125;
+    if h == nil &#123;
+        h, pattern = NotFoundHandler(), &quot;&quot;
+    &#125;
+    return
+&#125;
+
+
+func (mux *ServeMux) match(path string) (h Handler, pattern string) &#123;
+    
+    // ********通过hashmap找到相关handler*********
+    v, ok := mux.m[path]
+    if ok &#123;
+        return v.h, v.pattern
+    &#125;
+
+    
+    for _, e := range mux.es &#123;
+        if strings.HasPrefix(path, e.pattern) &#123;
+            return e.h, e.pattern
+        &#125;
+    &#125;
+    return nil, &quot;&quot;
+&#125;
+</code></pre>
+<p>在程序运行过程中，用户注册自定义的函数被转化成了<code>Handler</code>，然后<code>Handler</code>又结合用户自定义的<code>URL</code>地址被<code>ServeMux</code>以<code>URL</code>为Key、<code>Handler</code>为Value做成hashmap管理起来；等到请求来的时候，<code>ServeMux</code>就根据用户请求的<code>URL</code>地址，从hashmap中找到具体的<code>Hanlder</code>来处理请求。</p>
+<h2 id="4-总结"><a href="#4-总结" class="headerlink" title="4. 总结"></a>4. 总结</h2><p>责任链模式的基本思想就是要处理的请求(通常会是结构体，然后作为函数参数)；依次经过多个处理对象处理，这些处理函数可以动态的添加和删除，具备很高的灵活性和扩展性，通常会对这些处理函数做统一处理，存储方式一般是通过链表、数组、hash map等存储结构。</p>
+<p>责任链模式的应用非常广泛：</p>
+<ol>
+<li>业务场景：作为敏感词（涉黄、政治、反动等此）过滤的设计结构</li>
+<li>技术框架：路由、router过滤器、日志log框架等等</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2023/07/29/pattern-linked/" data-id="clzo46btp0021vajhd4elf94q" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-http2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2022/10/16/http2/" class="article-date">
+  <time datetime="2022-10-16T14:24:50.000Z" itemprop="datePublished">2022-10-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>自1997年HTTP&#x2F;1.1发布之后，HTTP&#x2F;1.1便迅速占领了市场，时至今日(2022年)仍是当前使用最广泛的http协议。<br>但是，这并不能说明HTTP&#x2F;1.1就完美无缺了，仍然存在很多问题。</p>
+<h1 id="HTTP1-1-当前存在的问题"><a href="#HTTP1-1-当前存在的问题" class="headerlink" title="HTTP1.1 当前存在的问题"></a>HTTP1.1 当前存在的问题</h1><p>&emsp;&emsp;当前HTTP1.1其实在协议本身的格式以及功能上在经历过HTTP0.9、HTTP1.0等几次迭代之后，已经逐渐趋于稳定。当前协议的主要问题是：协议制定初期原始依赖的底层协议带来的问题，即依赖TCP带来的问题：效率慢。</p>
+<p>&emsp;&emsp;在http协议制定初期，谁也不会想到一个小小的浏览器能够出现这么丰富多彩的内容，最初的设定，仅仅是为了发布和共享文件，根本不会考虑”交互”的体验问题，压根想象不到当今的浏览器客户端一个页面下来，会产生这么多的请求。当初的设定很简单：只是为了让欧洲的学者之间能够共享文件，保证学术信息的分享；所以，可靠性是当初优先考虑的问题，TCP是可靠连接，理所当然就选择了TCP。</p>
+<p>&emsp;&emsp;可是后来随着互联网的发展，当初选择TCP作为底层协议的弊端逐渐凸显：建立连接复杂，效率低。TCP建立连接需要三次握手和四次挥手，创建和断开过程繁琐，效率很低。</p>
+<p>&emsp;&emsp;在http1.1协议之前，每一个请求都要新建一个链接；已知平均一个站点有65 ~ 79个请求(2019年统计)，那么打开这么一个网站，就需要 65 ~ 79次请求…好在在http1.1之后新增了<code>keep-alive</code>字段，可以复用原有的TCP链接，无需每来一个请求就三次握手创建一个TCP链接，也无需一个响应结束四次挥手关闭一个TCP链接，在一定程度上提高了整体协议效率。但是，依然存在其他问题，例如：对头阻塞问题(Head-of-line blocking)。在http1.1协议下，同一个网站内所有HTTP请求的请求顺序是流水线式的顺序执行的，即虽然可能共用了同一个TCP链接通道，但是同一个TCP链接通道下的两个请求会存在阻塞等待的情况：如果前一个HTTP请求没有处理完，第二个http请求只能阻塞等待，这样停滞时间会影响整体协议的传输效率。并且，在不同的浏览器中，同一域名下并发连接的数目都是有限的，例如Chrome浏览器，同一域名下只允许最多<code>6</code>个并发连接数，这样一来，如果平均一个网站需要 65 ~ 79 个http请求(2019年官方统计数据)，假设都在同一域名下，至少需要 <code> 65 / 6</code> 11个请求等待，才能将所有请求发送完毕。而且假设其中一个链接通道中某个请求延迟或者等待，将直接阻塞后面队列中的请他请求的请求时间。<br><img src="/img/http2/1.png" alt="在这里插入图片描述"></p>
+<h1 id="HTTP2-0-做的改进"><a href="#HTTP2-0-做的改进" class="headerlink" title="HTTP2.0 做的改进"></a>HTTP2.0 做的改进</h1><p>&emsp;&emsp;为提高http的整体性能，http2.0在不改变当前协议整体格式及语义的前提下，对http协议的传输进行了优化，使得http2.0的整体传输效率得到了很大的提升。<br>可以点击以下链接感受一下速度：<a href="https://http2.akamai.com/demo">https://http2.akamai.com/demo</a></p>
+<p><img src="/img/http2/2.png" alt="在这里插入图片描述"></p>
+<p>HTTP2.0的改进主要是针对HTTP性能的提升。</p>
+<p>&emsp;&emsp;影响http网络通信性能的因素主要有两个：延迟 和 带宽。随着硬件能力的不断提升以及5G的普及，带宽逐渐不是影响网络通信效率的因素，延迟成了影响http网络通信的主要因素。而想要提升延迟，需要从网络协议的本身来找原因。早在2009年，Google就开始了对提升http性能的因素做研究；当时研发了一种叫做<code>SPDY</code>的协议，并在2012年得到了Chrome、Firefox以及Opera等浏览器的支持，并成功应用到了Google、Twitter、Facebook等大型网站中来；从此以后，越来越多的公司想要使用SPDY。</p>
+<p>&emsp;&emsp;HTTP官方看到了这个趋势，决定仿照依赖<code>SPDY</code>协议的模型，对HTTP协议进行改造，于是就有了现在的HTTP2.0。前期HTTP2.0基本继承了<code>SPDY</code>协议，后来又在此基础上做了扩展。与<code>SPDY</code>协议类似，HTTP2.0遵循了如下原则：</p>
+<ul>
+<li>目标是提升网络加载速度50%以上</li>
+<li>禁止让当前HTTP用户做兼容修改，做到用户应用无感知切换</li>
+<li>尽量的减少对当前网络协议结构的修改</li>
+</ul>
+<p>&emsp;&emsp;HTTP2.0和SPDY的原理很简单，就是仿照TCP的拆包解包来解决当前HTTP的队头阻塞(Head-of-Line blocking）的问题，以实现多个请求并发传输、多路复用的效果。</p>
+<p><img src="/img/http2/3.png" alt="在这里插入图片描述"></p>
+<p>下面，就来详细说说http2.0的改进：</p>
+<h2 id="HTTP2-0-二进制分帧"><a href="#HTTP2-0-二进制分帧" class="headerlink" title="HTTP2.0 二进制分帧"></a>HTTP2.0 二进制分帧</h2><p>&emsp;&emsp;二进制分帧，算是HTTP2.0最重大的改变了，HTTP2.0的多路复用就是基于这个才得以实现。</p>
+<p>&emsp;&emsp;二进制分帧是在当前HTTPS的TLS协议之上，抽象了一层（也就是说，使用HTTP2.0的前提是必须使用HTTPS）。可以在传输的时候把一个请求拆分成多个很小的数据包，多个请求可以同时拆成许多数据包一起发送，到了服务端，服务端再根据数据包的序号进行拼接，得到完整的每一个请求。</p>
+<p>&emsp;&emsp;这些拆分的请求最小粒度叫<code>frame</code>，按照类型可分为两类结构：<code>Headers frame</code>和<code>data frame</code>。<code>headers frame</code>是对请求头做了抽象，<code>data frame</code>是针对请求体做了抽象。</p>
+<p><img src="/img/http2/4.png" alt="在这里插入图片描述"></p>
+<p>除了<code>frame</code>结构外，整个二进制分帧层还有<code>message</code>、<code>stream</code>两种数据结构，这几种数据结构存在包含关系：<code>frame</code>最小，<code>message</code>包含多个<code>frame</code>，<code>stream</code>包含多个<code>message</code>； <code>frame</code>、<code>message</code>、<code>stream</code>三种数据结构共同构成了http2.0的二进制分帧层。三种数据结构的联系和作用分别如下：</p>
+<ul>
+<li><code>frame</code>是最小的传输单位，内部有特殊标识，能够区分此<code>frame</code>属于哪个<code>stream</code></li>
+<li><code>message</code>是逻辑层面的东西，在具体实现中没有体现，多用于表示是请求<code>message</code>还是相应<code>message</code>，一个<code>messsage</code>包含多个<code>frame</code></li>
+<li><code>stream</code>是HTTP2.0传输的最大粒度的”包”，它包含唯一性字段和优先级信息，能够包含请求或者相应<code>message</code>。</li>
+</ul>
+<p><img src="/img/http2/5.png" alt="在这里插入图片描述"></p>
+<p>那么，http2.0具体是怎样实现多路复用、解决http1.1的队头阻塞(head of block)问题的呢？</p>
+<p>首先，http2.0的所有请求都<code>只在一条tcp连接中传输的</code>，http2.0会把当前所有请求拆成无数小的frame(其实这时候已经区分出不同stream了)</p>
+<p><img src="/img/http2/6.png" alt="在这里插入图片描述"></p>
+<p>然后根据各个frame中的标识信息(frame中标有stream标识)，组成一个个的stream，最后把各种的stream在一条tcp双向管道中进行传输。</p>
+<p><img src="/img/http2/7.png" alt="在这里插入图片描述"></p>
+<p>注意：虽然二进制分帧协议中有<code>message</code>结构，但是，这只是一种逻辑层面的结构，用于区分是请求还是响应信息片段，并不参与真正的协议实现。底层实现仅仅有<code>stream</code>和<code>frame</code></p>
+<p><img src="/img/http2/8.png" alt="在这里插入图片描述"></p>
+<p>client端和server端在收到各类stream后，根据steam的标识，拼出完整的请求或者响应stream数组，再根据stream数组中的<code>frame</code>信息，解析出完整的请求或者响应信息。</p>
+<p>这样，就实现了http在传输过程中的多路复用。</p>
+<p>值得一提的是，在http2.0在传输过程中，我们不再使用纯文本，而是把请求的数据都采用二进制(0或者1)的形式进行传输，这样也减少文本转义带来的额外性能开销；</p>
+<h2 id="HTTP2-0-头部压缩"><a href="#HTTP2-0-头部压缩" class="headerlink" title="HTTP2.0 头部压缩"></a>HTTP2.0 头部压缩</h2><p>&emsp;&emsp;在http1.1传输过程中，请求体可以根据 gzip进行压缩，但是对请求头没有做处理，随着网站请求量的增多，在http2.0之后，对请求头也做了压缩处理。</p>
+<p>&emsp;&emsp;对于一个站点，大部分的请求中请求头的信息都是重复的，不同的仅仅只有少数头部属性。</p>
+<p><img src="/img/http2/9.png" alt="在这里插入图片描述"></p>
+<p>为了增加传输速率，http2.0在传输的时候，会维护一张请求头部信息的哈希表，并同时存储在客户端和服务端，每次传输的时候，如果发现传输的头部信息在哈希表中已经存在，则只传哈希表的index值，不再传输具体的内容，这样一来，就极大减少了数据的传输。同时，如果有新的头部字段，这张哈希表也会动态的在客户端以及服务端增加新值，后续再有相同字段的时候，将不会再传输，只会传哈希表的index值。</p>
+<p>&emsp;&emsp;事实上，上文所谓的那张哈希表细分下来是两张表：一张叫静态表，一张叫动态表。静态表是存放HTTP协议本身固定的一些常见值:</p>
+<img src="/img/http2/10.png?" alt="hashTable.png" width="60%" />
+
+<p>动态表存放一些网站特定的属性字段，而且会随着请求中字段的变化而进行增加。</p>
+<p>之后，请求头的内容变成了除少量header字段外大部分是哈希表index值的数据；但是这还没有结束，http2.0还会将现有的数据内容进行<code>霍夫曼编码处理</code>，再一次进行压缩。</p>
+<p>以上便是http2.0头部压缩的算法，叫做HACK算法。</p>
+<h2 id="HTTP2-0-数据推送"><a href="#HTTP2-0-数据推送" class="headerlink" title="HTTP2.0 数据推送"></a>HTTP2.0 数据推送</h2><p>&emsp;&emsp;不同于http1.1的请求-响应模式，http2.0可以由服务端向客户端推送消息，但这里的推送方式又有别于tcp、或者websocket的双向通信，有一定的局限性。</p>
+<p>&emsp;&emsp;在常见的http1.1协议下，client端和服务端严格按照 “请求-响应”的方式进行通信。这样会出现一种情况：某些请求显得很多余。例如，请求一个网站页面，在返回主要的html文件后，html文件中内联的css<br>、js等文件内容必须通过额外的客户端请求，才能从服务端拿到数据；而这些内联的数据文件，是一定且必须拿到的，这样看来，http1.1场景下，这些内联的数据文件必须由客户端再次发起请求，才能得到服务端的响应数据；而在http2.0的场景下，服务端会根据文件中关联的其他文件，预判并主动推送下次请求中必须的数据。http2.0的数据推送仅限于此了，不同于tcp、websocket的双向通信，要特别注意。</p>
+<p><img src="/img/http2/11.png" alt="在这里插入图片描述"></p>
+<p>这里可能会有人要问：“http提供了缓存能力，如果推送来的数据客户端缓存里有，该怎么办？”<br>其实很简单，如果服务端推送数据过来，客户端可以针对推送的数据自行选择放弃或者保存，但是如果客户端将推送来的数据主动放弃，这样其实就白白浪费了一次http响应传输；http2.0还有更好的方式是将客户端已有的缓存信息标识告诉服务端，服务端通过判断之后，只推送不存在的数据信息即可。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2022/10/16/http2/" data-id="clzo46btk001kvajh0oka8rgx" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-js-learning-1" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2022/03/19/js-learning-1/" class="article-date">
+  <time datetime="2022-03-19T01:35:08.000Z" itemprop="datePublished">2022-03-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文总结了JS在日常使用和面试中需要注意的知识点。</p>
+<h2 id="变量提升"><a href="#变量提升" class="headerlink" title="变量提升"></a><code>变量提升</code></h2><p>请看以下代码输出什么</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_">showName</span>()</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(myname)</span><br><span class="line"><span class="keyword">var</span> myname = <span class="string">&#x27;hello world&#x27;</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">showName</span>(<span class="params"></span>) &#123; </span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;函数showName被执行&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>答案</strong>：</p>
+<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/624818afeb2c48b08e9542a86ca196b7~tplv-k3u1fbpfcp-watermark.image" alt="image.png"></p>
+<p>答案和我们印象中js自上而下的执行顺序有些出入，这是由于js为了开发者写代码方便而省略掉的变量声明部分，而在编译阶段会将此部分补充完整，而开发者习惯了“简洁版”，并延续了”简洁版”的思路而产生的错觉。<br>现在，我们把”省去”的声明代码还原，就能发现端倪：</p>
+<p>首先看变量的“全貌”:</p>
+<p><code>var myname = &#39;hello world&#39;</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> myname <span class="comment">//声明部分</span></span><br><span class="line"></span><br><span class="line">myname = <span class="string">&#x27;hello world&#x27;</span> <span class="comment">//赋值部分</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>再看看函数的“全貌”：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 把声明提前</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">showName</span>(<span class="params"></span>) &#123; </span><br><span class="line">   <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;函数showName被执行&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//执行部分</span></span><br><span class="line"><span class="title function_">showName</span>()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>在这里，以上函数<code>showName</code>是一个完整的函数声明，没有赋值操作，而如下函数声明，是声明与赋值分开的：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">var</span> showName = <span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;函数showName被执行&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>等同于如下操作：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 声明</span></span><br><span class="line"><span class="keyword">var</span> showName = <span class="literal">undefined</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 赋值</span></span><br><span class="line">showName = <span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;函数showName被执行&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所谓的变量提升，是指在 JavaScript 代码执行过程中，JavaScript 引擎把变量的声明部分和函数的声明部分提升到代码开头的“行为”。变量被提升后，会给变量设置默认值，这个默认值就是我们熟悉的 undefined。</p>
+<h2 id="script标签"><a href="#script标签" class="headerlink" title="script标签"></a><code>script标签</code></h2><p>请看以下代码，将输出什么？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;script type=<span class="string">&quot;text/javascript&quot;</span>&gt;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;1&quot;</span>)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;&lt;/script&gt;&quot;</span>)</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;2&quot;</span>)</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<p>答案：<strong>程序报错</strong></p>
+<p>包含在&lt;script&gt;标签的内容，将会被浏览器顺序执行，直到遇到&lt;/script&gt;；特别注意：不要在代码的任何地方出现“&lt;/script&gt;”字符串，只要一出现，浏览器的解释器就认为是代码终止符到了，后续内容将不再解析；应该换为“&lt;\&#x2F;script&gt;”，这样浏览器会对内容做一个转义，程序就能正常运行了。</p>
+<h2 id="undefined"><a href="#undefined" class="headerlink" title="undefined"></a><code>undefined</code></h2><p>JS整个语言只有六种数据类型：undefined、Null、Boolean、Number、String以及Object，JS不支持自定义类型的机制。</p>
+<p>请看以下代码，试问返回什么</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">var</span> message</span><br><span class="line"></span><br><span class="line"><span class="title function_">alert</span>(message)</span><br><span class="line"><span class="title function_">alert</span>(age)</span><br></pre></td></tr></table></figure>
+<p>答案显而易见：在进行<code>alert(age)</code>的时候，报错了；那再看看如下代码，请问会输出什么：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> message</span><br><span class="line"></span><br><span class="line"><span class="title function_">alert</span>(<span class="keyword">typeof</span> message)</span><br><span class="line"><span class="title function_">alert</span>(<span class="keyword">typeof</span> age)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>答案可能很意外，会弹出两次<code>undefined</code>，而且不报错。</p>
+<p>可能让人感到很奇怪，但事实却是如此；对未初始化的变量进行<code>typeof</code>操作符会返回<code>undefined</code>的，对未定义的变量进行<code>typeof</code>操作也是会返回<code>undefined</code>；可能背后的逻辑是：无论变量是否定义，都不会真正执行吧</p>
+<h2 id="NaN"><a href="#NaN" class="headerlink" title="NaN"></a><strong>NaN</strong></h2><p>请看以下代码输出什么？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">NaN</span> === <span class="title class_">NaN</span>)</span><br></pre></td></tr></table></figure>
+
+<p>正确答案是：<code>false</code></p>
+<p>NaN的含义是：“Not a Number”;是一个特殊的值，这个数值表示一个本来返回数值的操作数未返回数值的情况，以替代直接报错。例如：“10 &#x2F; 0” 在其他语言中直接就报错了，但是JS为了防止程序报错崩溃，加入了<code>NaN</code>，<code>10 / 0 = NaN</code>，NaN与任何数操作都是NaN，例如：NaN * 10会返回NaN。有人会问，那我判断一个变量值是否是NaN该如何做呢？其实JS提供了内置函数<code>isNaN()</code> </p>
+<h2 id="函数参数"><a href="#函数参数" class="headerlink" title="函数参数"></a>函数参数</h2><p>请看以下代码输出什么？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">sum</span>(<span class="params">num1, num2</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> num1 + num2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> a = <span class="title function_">sum</span>(<span class="number">1</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(a)</span><br></pre></td></tr></table></figure>
+<p>会报错吗？<br>正确答案是：输出<code>NaN</code></p>
+<p>js函数的参数与绝大多数语言中的参数不同，js对函数参数的类型和个数都没有强制限制；在js内部，函数参数的实现是拿一个数组来表示的；因此，哪怕你定义了两个参数，只传进去一个参数，也不影响js的正常运行。<br>写代码的时候，在js的函数体内部，可以通过arguments对象来访问js的参数数组，从而获取传递给函数的每一个参数。</p>
+<p>再来看看以上这道题目，<code>sum</code>函数有俩参数，但是只传了一个参数，程序不会报错，原因不解释了。在<code>sum</code>函数中，程序变为了 1 + arguments[1]，由于 arguments[1]为传参，故值为<code>undefined</code>, <code>1 + undefined</code>为<code>NaN</code>（not a number）</p>
+<h2 id="函数名"><a href="#函数名" class="headerlink" title="函数名"></a>函数名</h2><p>请看以下代码，存在两个相同的函数名，在代码运行后，会输出什么？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">function</span> <span class="title function_">addNum</span>(<span class="params">num</span>) &#123;</span><br><span class="line">     <span class="keyword">return</span> num + <span class="number">10</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">addNum</span>(<span class="params">num</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> num + <span class="number">20</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> num = <span class="title function_">addNum</span>(<span class="number">1</span>)</span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(num)</span><br></pre></td></tr></table></figure>
+<p>正确答案：输出<code>21</code></p>
+<p>其他语言中例如Java，只要定义函数签名或者函数参数类型和数量不同，就可以定义相同的函数名，这是传统意义上的重载，但是JS中没有重载，如果定义了两个以上相同的函数名，JS最终会以最后定义的函数为准。</p>
+<h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><p>请看一下代码，最终会输出什么？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> num1 = <span class="number">5</span></span><br><span class="line"><span class="keyword">var</span> num2 = num1</span><br><span class="line">num2 = num2 + <span class="number">1</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(num1)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> obj1 = <span class="keyword">new</span> <span class="title class_">Object</span>()</span><br><span class="line"><span class="keyword">var</span> obj2 = obj1</span><br><span class="line">obj2.<span class="property">name</span> = <span class="string">&quot;ryugou&quot;</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(obj1.<span class="property">name</span>)</span><br></pre></td></tr></table></figure>
+
+<p>正确答案：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">5</span><br><span class="line">ryugou</span><br></pre></td></tr></table></figure>
+
+<p>js的变量值可分为：<code>基本类型</code>和<code>引用类型</code>两种；其中，<code>基本类型</code>值是简单的数据段，包含 <code>underfined</code>、<code>Null</code>、<code>Boolean</code>、<code>Number</code>和<code>String</code>这五种，其余为引用类型。<br>这两种类型的值在进行变量间赋值的时候，也会有所不同。对于值是<code>基本类型</code>的变量，在赋值的时候，会在给赋值变量复制一个新值。例如上题中的<code>var num2 = num1</code> 这时，是将num1的值复制一份，填写给<code>num2</code>，相当于:<code>var num2 = 5</code>。<br>但是，如果是<code>引用类型</code>的变量，在赋值的时候，各种变量还会指向原引用。例如代码中的<code>var obj2 = obj1</code>，此时<code>obj2</code>和<code>obj1</code>同时指向了同一个object。</p>
+<h1 id="更多精彩内容，请关注我的公众号"><a href="#更多精彩内容，请关注我的公众号" class="headerlink" title="更多精彩内容，请关注我的公众号"></a>更多精彩内容，请关注我的公众号</h1><p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/795aa185e1914591812cf61fb521ea65~tplv-k3u1fbpfcp-zoom-1.image"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2022/03/19/js-learning-1/" data-id="clzo46btn001rvajh9cb3ckre" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-float-binary" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/09/05/float-binary/" class="article-date">
+  <time datetime="2021-09-05T01:02:34.000Z" itemprop="datePublished">2021-09-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/09/05/float-binary/">浮点数精度丢失问题详解</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>请看以下Go代码，会返回 <code>0.7</code> 吗？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> num <span class="type">float32</span></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">7</span>; i++&#123;</span><br><span class="line">    num = num + <span class="number">0.1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fmt.Println(num)</span><br></pre></td></tr></table></figure>
+
+<p>答案可能出人意料，是：<code>0.70000005</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0.70000005</span></span><br></pre></td></tr></table></figure>
+
+<p>也许有人会问，是不是Go语言的问题？换其他语言试试？<br>OK，我们换JS试试。<br><img src="/img/float/browser.jpg"><br>答案依然令人意外。<br>除此之外，你还可以试试C、C++、Java、PHP等其他语言的float类型相加，看得到的数据是否精确；</p>
+<p>还有，除了语言之外，你还可以在MySQL等数据库中试试float类型数据的字段叠加，得到的数据是否精确。</p>
+<p>我可以先告诉你答案：<code>只要是float类型的数据相加，无论在任何语言、任何数据库、任何中间件中进行加法(减法乘除法)运算，得到的数据，都不会精确。</code></p>
+<p>这是浮点类型的精度丢失现象。(Loss of significance)</p>
+<p>要了解产生这个现象的原因，就要先了解计算机是如何定义和表示float类型的。<br>不同于正整数类型的表示方法，float类型在计算机中的表示略显复杂，遵循的是<code>IEEE 754标准</code>。</p>
+<p>下面，我们就讲一下<code>IEEE 754标准</code>。</p>
+<p>我们首先回顾一下整数类型在计算机中的表示。<br>我们知道:计算机只认识0和1；那么，对于像6一样的这种正整数，我们要做十进制到二进制的转换。<br>即：<br><img src="/img/float/integers.png"></p>
+<p>所以，十进制<code>6</code>最终转化为二进制为<code>110</code>。</p>
+<p>这很好理解，但是，如何表示 <code>6.1</code>等这类小数呢？<br>有人说了，可以找个特殊的符号，用来表示小数点<code>.</code>，把<code>6.1</code>中<code>6</code>和<code>1</code>隔开；听起来是个不错的办法。其实<code>IEEE 754</code>还真就是这么做的，只不过思路略有些复杂，总体思路就是：仿照用”科学计数法”！</p>
+<p>我们再回顾一下什么是<code>科学计数法</code>。<br><code>把一个数表示成a与10的n次幂相乘的形式（1≤|a|&lt;10，a不为分数形式，n为整数），这种记数法叫做科学记数法。</code><br>也就是：<code>1.360X10^4</code> 这种计数方式。</p>
+<p>我们可以仿照科学计数法，来表示浮点数，把二进制数统一表示成 <code>1.0110101 X 2^n</code>这种形式。<br>数据层面怎么表示出这种形式呢？根据<code>IEEE 754</code>的标准，将数据分为三部分：</p>
+<p><img src="/img/float/total.png"></p>
+<p>从左到右分别表示：符号位(正负数)、指数位和小数位</p>
+<p>以单精度浮点数为例，单精度浮点数一共32位(双精度64位，即平时所说的<code>double</code>类型)，具体内部表示为：</p>
+<p><img src="/img/float/total_01.png"></p>
+<ul>
+<li>1个bit表示符号位</li>
+<li>8个bit表示指数位</li>
+<li>23个bit表示小数位</li>
+</ul>
+<p>这里有个地方要特别注意：因为数据最终要表示成 <code>1.0110101 X 2^n</code>这种形式，整数位在二进制下，永远都是<code>1</code>，所以在表示float类型的时候，直接把<code>1</code>给去掉了，假如有就占据一个bit的空间，既然那个bit位上永远都是1，所以干脆去掉了。</p>
+<p>那么，具体该如何展示呢？例如小数点后的数字怎么表示？<code>6.1</code>能否写成<code>110.1</code>呢？如果能的话小数点后这个1代表什么呢？个数一？那添加几个零的话，能否认为是十、一百、一千？似乎是不可以，因为这样只能满足”视觉效果”,逻辑层面直接说不通。</p>
+<p>要明白在小数点后的数字代表除以2后的数字，例如二进制下小数点后的第一位1代表 1 &#x2F; 2等于 <code>0.5</code>，第二位1代表 1&#x2F;2&#x2F;2等于 <code>0.25</code>，依次类推第三位1则代表 <code>0.125</code>…具体请看下图：</p>
+<p><img src="/img/float/binary_table.png"></p>
+<p>所以，给定一个小数，譬如<code>0.1</code>，要想得到对应的二进制数，应该是和小数点左边的计算方式相反：<code>乘以2，记录整数位</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">0.1 X 2 = 0.2  0</span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line">(1.6 - 1 = 0.6)</span><br><span class="line">0.6 X 2 = 1.2  1</span><br><span class="line">(1.2 - 1 = 0.2) </span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line">(1.6 - 1 = 0.6)</span><br><span class="line">0.6 X 2 = 1.2  1</span><br><span class="line">(1.2 - 1 = 0.2) </span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line"></span><br><span class="line">... </span><br><span class="line">// 无限循环下去</span><br></pre></td></tr></table></figure>
+
+<p>所以，<code>0.1</code> 用二进制表示为：<code>0.000110011001100110011...</code><br>因此 <code>6.1</code> 用二进制应该表示为：<code>110.000110011001100110011...</code><br>用”科学计数法“表示为：<code>1.10000110011001100110011... X 2^2</code><br>OK，看来小数位的数可以确定了是<code>10000110011001100110011</code>，即去掉整数位1后，向后截取的23位数(浮点数不精确的本质原因)。</p>
+<p>符号位0表示正数，1表示负数，所以可以确定是<code>6.1</code>的符号位是0；现在符号位有了，小数位有了，只剩下指数2如的表示了，该如何表示呢？直接在8位的空间内转化为<code>000000010</code>？</p>
+<p>显然不可以，首先，如果指数位用<code>原码</code>表示，那么，针对指数位为负的情况，就得加一个符号位去表示，而且还会出现两个零的情况：<code>00000000</code>和<code>1000000</code>，操作起来过程复杂~</p>
+<p>有人要问那如果使用补码呢？<br>如果使用补码，会出现以下情况，请看例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">例如：1.01 X 2^-1 和 1.11 X 2^3比较大小？</span><br><span class="line"></span><br><span class="line">     首先对比指数位， -1 和 3，分别转化为二进制数 ``111``和``011``；</span><br><span class="line"></span><br><span class="line">     如果没有其他逻辑处理，``111``是&quot;7&quot;，``011``是&quot;3&quot;， 7会小于3吗？</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>可见使用补码，也不是很方便，于是，引用了另外一种编码方式——-移码。<br>先说说移码的定义：<code>将每一个数值加上一个偏置常数(Excess / bias)，通常，当编码位数为n的时候，bias取 &quot;2^n-1&quot; 或者 &quot;2^n-1 - 1&quot; </code></p>
+<p>承接以上1.01 X 2^-1 和 1.11 X 2^3比较大小的例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">例如：1.01 X 2^-1 和 1.11 X 2^3比较大小？</span><br><span class="line">    </span><br><span class="line">    指数为-1的则表示为 -1 + 4 = 3，二进制表示为:011</span><br><span class="line"></span><br><span class="line">    指数为3的则表示为 3 + 4 = 7 二进制表示为：111</span><br><span class="line"></span><br><span class="line">    7 &gt; 3，即 111 &gt; 011 比较完毕  </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>就这样，浮点数”科学计数法“的指数位比较变得简单了，而且，消除了”正零“ 和 ”负零“ 不相同的问题。</p>
+<p>因为 ：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">假设偏移量是：4</span><br><span class="line"></span><br><span class="line">则移码表示的0只有：0 + 4 = 4，即“100”</span><br></pre></td></tr></table></figure>
+
+<p>在<code>IEEE 754</code>中，指数位移码的偏移量为指数位数的 <code>2^n-1 - 1</code>，为127。</p>
+<p>所以，回到<code>6.1</code>表示的问题上，指数位为：<code>2 + 127 = 129</code>，二进制表示为：<code>10000001</code></p>
+<p>因此，<code>6.1</code>在<code>IEEE 754</code>单精度浮点数标准的下，表示为：</p>
+<p><img src="/img/float/ieee754.png"></p>
+<p>好了，现在了解了浮点数<code>IEEE 754</code>标准的表示方法，知道为何浮点数相加总是不精确了吧？</p>
+<p>因为浮点数很多小数在二进制环境下很多都无法完整的表示，只能截取部分数据来近似的表示，两个数相加的话，就是两个近似的数相加的和，如果相加次数足够多，精确度自然也就会越来越低</p>
+<h2 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h2><p>更多精彩内容，请搜索我的微信公众号 <code>码农RyuGou</code></p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2021/09/05/float-binary/" data-id="clzo46bte000yvajh6r9ahcfq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-reference-and-pointer" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/07/17/reference-and-pointer/" class="article-date">
+  <time datetime="2021-07-17T03:28:05.000Z" itemprop="datePublished">2021-07-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/07/17/reference-and-pointer/">图解Go的引用底层实现</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Go怎么可能有引用？得了吧~<br>有人要说了，那利用<code>make()</code>函数执行后得到的slice、map、channel等类型，不都是得到的引用吗？</p>
+<p>我要说：那能叫<strong>引用</strong>吗？你能确定啥叫<strong>引用</strong>吗？<br>如果你有点迷糊，那么请听我往下讲：</p>
+<p>这一切要从变量说起。</p>
+<h2 id="什么是变量"><a href="#什么是变量" class="headerlink" title="什么是变量"></a>什么是变量</h2><p>无论是引用变量还是指针变量，都是变量；那么，什么叫变量？<br>其实变量本质就是一块内存。通常，我们对计算机内存进行操作，最直接的方式就是：“计算机，在0x0201地址内存一个整数100，在0x00202地址存一个浮点数10.6，读取0x00203的数据…” 这种方式让机器来操作还行，如果直接写成代码让人看的话，这一堆“0x0201、0x0202…”难记的地址能把人给整崩溃了~<br>于是，聪明的人们想出了一种方法：把一堆难记的地址用其他人类可以方便读懂的方式来间接表示。例如：将“0x0201”的地址命名为“id”，将“0x0202”命名为“score”…然后，代码编译期间，再将”name”等人类能读懂的文字转化为真实的内存地址；于是，变量诞生了~</p>
+<p><img src="/img/reference_golang/variable.png"></p>
+<p>所以，其实每个变量都代表了一块内存，变量名是我们给那块儿内存起的一个别名，内存中存的值就是我们给变量赋的值。变量名在程序编译期间会直接转化为内存地址。</p>
+<h2 id="什么是引用"><a href="#什么是引用" class="headerlink" title="什么是引用"></a>什么是引用</h2><p>引用是指向另外一个变量的变量，或者说，叫一个已知变量的别名。</p>
+<p><img src="/img/reference_golang/reference.png"></p>
+<p>注意，引用和引用本身指向的变量对应的是同一块内存地址。引用本身也会在编译期间转化为真正的内存地址。当然咯，引用和它指向的变量在编译期间会转化为同一个内存地址。</p>
+<h2 id="什么是指针"><a href="#什么是指针" class="headerlink" title="什么是指针"></a>什么是指针</h2><p>指针本身也是一个变量，需要分配内存地址，但是内存地址中存的是另一个变量的内存地址。有点绕口，请看图：</p>
+<p><img src="/img/reference_golang/pointer.png"></p>
+<h2 id="GO中的引用和指针"><a href="#GO中的引用和指针" class="headerlink" title="GO中的引用和指针"></a>GO中的引用和指针</h2><p>我们先看看“正统”的引用的例子，在C++中(C中是没有引用的哈)：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> i = <span class="number">3</span>;</span><br><span class="line">        <span class="type">int</span> *ptr = &amp;i;</span><br><span class="line">        <span class="type">int</span> &amp;ref = i;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%p %p %p\n&quot;</span>, &amp;i, ptr, &amp;ref); </span><br><span class="line">        <span class="comment">// 打印出：0x7ffeeac553a8 0x7ffeeac553a8 0x7ffeeac553a8</span></span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>变量地址、引用地址、指针的值 均相同；符合常理</p>
+<p>那我们再试试Go中类似代码的例子:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    i := <span class="number">3</span></span><br><span class="line">    ref := i</span><br><span class="line">    ptr := &amp;i</span><br><span class="line">    </span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p %p&quot;</span>, &amp;i, &amp;ref, ptr))</span><br><span class="line">    <span class="comment">// 打印出 0xc000118000 0xc000118008 0xc000118000</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>变量i地址和指针ptr的值一样，这是符合预期的；但是：正如Go中没有特别的“引用符号”（C++中是<code>int &amp;ref = i;</code>）一样，上述go代码中的<code>ref</code>压根就是个变量，根本不是引用。</p>
+<p>可是，很多人不死心，是不是“实验对象”不对啊？代码中使用的是int整型，我们换做<code>slice</code>和<code>map</code>试试？毕竟网上的”资料”都是这么写的：<br>例如以下截图（只看标红部分就好）：<br><img src="/img/reference_golang/sample.jpg"><br>还有如下截图（只看标红部分就好）：<br><img src="/img/reference_golang/sample2.jpg"></p>
+<p>ok，那我们可以试试如下map的代码，看到底有没有引用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>)</span><br><span class="line">    i[<span class="string">&quot;key&quot;</span>]=<span class="string">&quot;value&quot;</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p&quot;</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印出：0xc00010e018 0xc00010e020</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>哈哈！不对呀，如果是引用的话，打印的地址应该相同才对，但是现在不相同！所以不存在？<br>别着急，紧接着看下面的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>)</span><br><span class="line">    i[<span class="string">&quot;key&quot;</span>]=<span class="string">&quot;value&quot;</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref[<span class="string">&quot;key&quot;</span>] = <span class="string">&quot;value1&quot;</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(i[<span class="string">&quot;key&quot;</span>]) <span class="comment">// 打印结果：value1</span></span><br><span class="line">    fmt.Println(ref[<span class="string">&quot;key&quot;</span>]) <span class="comment">// 打印结果：value1</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p&quot;</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印结果：0xc00000e028 0xc00000e030</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>能猜出来打印了什么吗？变量地址是不对，但是，但是值居然变了！ref变量可以“操控”i变量的内容！就和引用一样！</p>
+<p>这就很奇怪了~ 咋回事儿呢？</p>
+<p>我们细细研究一下<code>map</code>、<code>slice</code>、<code>channel</code>等具体实现（详情请看：我的其他文章 <a href="https://i6448038.github.io/2018/08/26/map-secret/">图解Go map底层实现</a>、<a href="https://i6448038.github.io/2018/08/11/array-and-slice-principle/">图解Go slice底层实现</a>、<a href="https://i6448038.github.io/2019/04/11/go-channel/">图解Go channel底层实现</a>）我们发现，这些类型的底层实现都是会有一个指针指向另外的存储地址，所以，在<code>make</code>函数创建了具体的类型实例后，实际上在内存空间中会开辟多个地址空间，而随着变量的赋值，指针引用的那个地址值也会跟着“复制”，因而其他变量可以改变原有变量的内容。</p>
+<p>听着是不是有点绕？我们来看看图：</p>
+<p>首先实例化了map并赋值</p>
+<p><img src="/img/reference_golang/variable_reference1.png"></p>
+<p>然后又赋值给了另外一个变量ref</p>
+<p><img src="/img/reference_golang/variable_reference2.png"></p>
+<p>由于对于指针变量的值而言，就是一个地址(程序实现上就是一串数字)，所以，在赋值的时候，就“复制”了一串数字，但是，这串数字背后的含义确是另外一个地址，而地址的内容，恰恰就是<code>map</code> <code>slice</code> <code>channel</code> 等数据结构真正底层存储的数据!</p>
+<p>所以，两变量因为同一个指针变量指向的内存，而产生了类似于“引用”的效果。假如实例化的类型数据中，没有<code>指针</code>属性，则不会产生这种“类引用”的效果：<br>例如如下代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="number">3</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref = <span class="number">4</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(i, ref) <span class="comment">// 打印输出：3 4</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p&quot;</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印输出：0xc000016070 0xc000016078</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以将代码上述仔细看看能输出什么，不出意外的话你会发现：“类引用”效果消失了~</p>
+<p>要想再次展现“类引用”效果，只要创建一个带有指针属性的类型即可，我们自己实现都可以，无需依赖Go基础库中的<code>map</code>、<code>slice</code>、<code>channel</code>等</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Instance <span class="keyword">struct</span> &#123;</span><br><span class="line">    Name <span class="type">string</span></span><br><span class="line">    Data *<span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i Instance)</span></span> Store(num <span class="type">int</span>) &#123;</span><br><span class="line">    *(i.Data) = num</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i Instance)</span></span> Show() <span class="type">int</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> *(i.Data)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    data := <span class="number">5</span></span><br><span class="line"></span><br><span class="line">    i := Instance&#123;</span><br><span class="line">        Name:<span class="string">&quot;hello&quot;</span>,</span><br><span class="line">        Data:&amp;data,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref.Store(<span class="number">7</span>)</span><br><span class="line"></span><br><span class="line">    fmt.Println(i.Show(), ref.Show())</span><br><span class="line">    <span class="comment">// 打印出：7 7</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p&quot;</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印出：0xc0000a6018 0xc0000a6030</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>看看以上代码，是不是实现了“类引用”？ 有人要说了<code>map</code>展示key值，<code>slice</code>展示某个下标的值，没有用方法呀？<br>这就不对了，其实<code>map</code>的展示key的值<code>mapData[key]</code>也好，更改值也好，<code>slice</code>展示下标值<code>sliceArray[0]</code>也好，更改值也好；背后底层实现也都是些“函数”和“方法”，只不过Go语言把这些函数和方法做成了语法糖，我们无感知罢了~</p>
+<p>好了，现在我再问你：还敢说Go语言有引用类型吗？是不是感觉：也有、也没有了？ 😝</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2021/07/17/reference-and-pointer/" data-id="clzo46btr0026vajhgqbx0ppp" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-stack-heap-go" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/05/20/stack-heap-go/" class="article-date">
+  <time datetime="2021-05-20T15:13:52.000Z" itemprop="datePublished">2021-05-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2021/05/20/stack-heap-go/">细谈Go变量的内存分布</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>我们程序中的变量大多被分配在内存的两个区域：<code>statck</code>和<code>heap</code>。</p>
+<h2 id="stack和heap"><a href="#stack和heap" class="headerlink" title="stack和heap"></a><code>stack</code>和<code>heap</code></h2><p>首先让我们一起来回顾一下进程的内存分配：<br>我们写的程序代码跑起来后，会是一个进程；OS会给我们的进程分配内存；内存结构大致如下：</p>
+<p><img src="/img/stack_heap/mem_total.png"></p>
+<p>OS给一个进程分配的内存空间大致可以分为：<code>代码区</code>、<code>全局数据区</code>、<code>栈(stack)</code>、<code>堆(heap)</code>、<code>环境变量区域</code>以及中间空白的<code>缓冲区</code>六个部分。其中，数据的增长路径除<code>栈(stack)</code>是由高到低之外，其余的均是由低到高(可看图中数据箭头)。</p>
+<p>我们思考一下，为什么<code>栈(stack)区</code>这么特殊和其他区域路径相反？还有，进程内存中<code>stack</code>和<code>heap</code>和数据结构中的<code>stack</code>和<code>heap</code>名字都相同，是有什么联系吗？请带着问题往下看：</p>
+<h3 id="进程内存中的stack和heap"><a href="#进程内存中的stack和heap" class="headerlink" title="进程内存中的stack和heap"></a>进程内存中的<code>stack</code>和<code>heap</code></h3><p><code>stack</code> : 是由程序侧通过<code>系统调用</code>向操作系统申请的，由操作系统管理和释放，不需要程序员手动管理；一般用于存放线程和函数中产生的临时变量。这块区域的数据使用速度较快，不用手动管理，省心省力。</p>
+<p><code>heap</code>：是由程序侧通过<code>系统调用</code>向操作系统申请的，但是需要程序员自行管理的内存区域，因为此区域的定位是<code>global variable</code>，用于存放全局的变量(虽然很多编程语言中不这么利用)； 程序员需要手动或者通过GC及时free或者delete此内存区域中的数据，但是也要注意：如果频繁的进行删除和添加，会导致内存碎片。</p>
+<h3 id="数据结构stack和heap"><a href="#数据结构stack和heap" class="headerlink" title="数据结构stack和heap"></a>数据结构<code>stack</code>和<code>heap</code></h3><p>我们再来看看数据结构中的<code>stack</code>和<code>heap</code>；</p>
+<p><strong>stack</strong><br><img src="/img/stack_heap/stack.png"><br>后进先出LIFO的数据结构。</p>
+<p><strong>Heap</strong><br><img src="/img/stack_heap/heap.png"></p>
+<p>堆的定义：</p>
+<ul>
+<li>完全二叉树</li>
+<li>每一个节点的值都必须大于等于（或小于等于）其子树中每个节点的值</li>
+</ul>
+<p>根节点是最大数的叫做“大顶堆”，根节点是最小数的叫做“小顶堆”。</p>
+<p>堆<code>heap</code>这种数据结构经常利用在“如何快速定位并获取到Top N最热门的xxx”，通常的做法如下图：</p>
+<p><img src="/img/stack_heap/heap1.png"></p>
+<h3 id="内存中的”stack和heap“与数据结构中的”stack和heap“的联系"><a href="#内存中的”stack和heap“与数据结构中的”stack和heap“的联系" class="headerlink" title="内存中的”stack和heap“与数据结构中的”stack和heap“的联系"></a>内存中的”<code>stack</code>和<code>heap</code>“与数据结构中的”<code>stack</code>和<code>heap</code>“的联系</h3><p>一句话总结：进程内存中的<code>栈区(stack)</code>使用的数据结构就是<code>stack</code>，内存中的<code>heap</code>和数据结构中的<code>heap</code>则毫无关系。</p>
+<p>看如下C代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="type">int</span> a = <span class="number">3</span>; </span><br><span class="line">   <span class="type">int</span> b = <span class="number">5</span>;</span><br><span class="line">   ret = add(a, b);</span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">&quot;%d&quot;</span>, ret);</span><br><span class="line">   reuturn <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">add</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> y)</span> &#123;</span><br><span class="line">   <span class="type">int</span> sum = <span class="number">0</span>;</span><br><span class="line">   sum = x + y;</span><br><span class="line">   <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上代码在栈区中的数据是这样的：<br><img src="/img/stack_heap/stack1.png"></p>
+<p>还及得上文中提到的：“进程内存中只有<code>栈区(stack)</code>数据是由高位向低位增长的，其余的均为由低位向高位增长吗？”</p>
+<p>栈区用的数据结构是栈，函数变量的销毁和返回顺序用逆恰好符合stack先进后出的特点，我觉得这是<code>栈区(stack)</code>逆序增长很重要的一点。</p>
+<p>但是，最根本的原因还是在于：历史遗留问题。请看下图：</p>
+<p><img src="/img/stack_heap/stack2.png"><br>在当初那个内存空间及其短缺的年代，你认为左图还是右图更适合“缓冲区”？因为<code>stack</code>区域和<code>heap</code>区域大小都是动态分配的，都有“不确定性”，很显然，左图发生<code>堆栈重叠</code>更小，且更适合内存的充分利用。</p>
+<h2 id="Go变量的位置"><a href="#Go变量的位置" class="headerlink" title="Go变量的位置"></a>Go变量的位置</h2><p>我们在写C、PHP、Java的时候，可以很容易的知道，所写的变量所在的位置：带<code>new</code>、<code>malloc</code>等字段的，那一定是在堆上分配了，至于后续GC怎么处理，有没有引用继续关联，堆有没与释放，程序是否存在内存泄露…这都是后续处理的问题了；变量的存储位置是妥妥的堆上了。但是，在用Go的时候要注意，<code>new</code>、<code>make</code>等等关键字都不好使，Go变量的位置不是由写程序的程序员来决定的，而是Go自行处理；所以可能你的变量是<code>new</code>出来的，但是，最终也不一定分配到堆上，很可能是分配在栈上。</p>
+<p>Go把变量的位置在哪儿这件事对程序员“隐藏”了，Go自行处理；因为Go认为：变量的存储位置，会对程序的性能有一定影响，而Go是计划打造对性能有极致要求的程序，因而自己管了。<br>Go是这么管的：<br>首先，栈<code>stack</code>上的效率肯定是比堆要高的，这算是常识；Go在编译期会对每一个函数变量做判断，如果不能够判断此函数中的变量在返回之后是否仍被引用到，就给把变量扔堆<code>heap</code>上，否则，就扔栈<code>stack</code>上。但是注意：如果变量非常大，还是会扔到堆<code>heap</code>上。</p>
+<h3 id="逃逸分析"><a href="#逃逸分析" class="headerlink" title="逃逸分析"></a>逃逸分析</h3><p>我们是否有办法知道我们写的Go程序中变量的位置呢？<br>答案是有的，Go向开发者提供了变量逃逸分析的工具 </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> build -gcflags <span class="string">&#x27;-m -l&#x27;</span> main.<span class="keyword">go</span> <span class="comment">// 这里的main.go也可以是某个具体的二进制应用程序</span></span><br></pre></td></tr></table></figure>
+
+<p>下面对如下代码进行逃逸分析：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a:= <span class="number">3</span></span><br><span class="line">    b := <span class="number">5</span></span><br><span class="line">    ret := add(a, b)</span><br><span class="line">    fmt.Println(ret)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">add</span><span class="params">(x,y <span class="type">int</span>)</span></span><span class="type">int</span> &#123;</span><br><span class="line">    sum := x + y</span><br><span class="line">    <span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>分析结果:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./main.<span class="keyword">go</span>:<span class="number">11</span>:<span class="number">16</span>: main ... argument does not escape</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">11</span>:<span class="number">16</span>: ret escapes to heap</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2021/05/20/stack-heap-go/" data-id="clzo46btv002lvajh1jndg9r9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-why-aviod-import-cycle" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/06/23/why-aviod-import-cycle/" class="article-date">
+  <time datetime="2020-06-22T16:06:55.000Z" itemprop="datePublished">2020-06-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/06/23/why-aviod-import-cycle/">为什么Go语言不允许循环引入?</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>每当Go程序编译出现循环引入报错的时候就非常让人头疼。</p>
+<p>那么，为什么Go不允许循环引入呢？</p>
+<p>我觉得原因如下：</p>
+<h2 id="搞清楚package包的定位"><a href="#搞清楚package包的定位" class="headerlink" title="搞清楚package包的定位"></a>搞清楚package包的定位</h2><p>首先，搞清楚Go语言中<code>package</code>包的定位；</p>
+<p>Go语言的<code>packa</code>和其他语言中的库、模块是相同的概念，在其他语言中，实现某个库或者模块需要建立”单独的项目”，而在Go中，仅仅是一个包就够了。<br>在正常Coding的时候，在我们项目中可以随便引入外来的项目(例如PHP项目引入PHP包)，但是，我们可以随意的修改引入的包吗？不可以！在我们写PHP的时候，我们可以引外来的包，并在引入的包中做修改，和现有项目循环依赖吗？更不可以！</p>
+<p>从这个角度来讲，Go语言不允许循环引入，算是合情合理的，因为Go中的<code>package</code>就是相当于其他语言中的“一个小项目”。</p>
+<h2 id="语言设计层面"><a href="#语言设计层面" class="headerlink" title="语言设计层面"></a>语言设计层面</h2><p>第二，我们考虑一下，循环引入可能带来的坏处。</p>
+<p>曾经有人提议Go语言作者Rob Pike，想要在Go以后的版本去掉循环引入；Rob Pike坚决不同意。Rob Pike觉得假如你两个包之间存在循环引入的问题，那一定是你在设计之初就没考虑好模块的划分。</p>
+<p>我们试想，假如允许循环引入，那么，模块和模块之间就存在相互的调用，随着项目的推进，模块之间的依赖关系越来越多，最后导致俩模块耦合性变的很高，最初模块之间的界限变的越来越模糊，最后都偶合在一起了，变的一团糟。一个好的设计，一个好的模块的划分，就不应该存在循环依赖的问题！</p>
+<p>因此，Go语言在设计之初，就强制要求不允许循环引入，这会迫使开发者在写代码之前就考虑模块与模块之间的依赖关系，保持依赖关系的整洁。否则，允许循环引入，虽然带来了coding的方便，但是从工程的长远角度来考虑，对整个工程的构建、代码的整洁都是非常不利的。</p>
+<h2 id="其他原因"><a href="#其他原因" class="headerlink" title="其他原因"></a>其他原因</h2><p>最后一点，禁止循环引入会让编译变的更高效。</p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝"><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝"></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code></h2><p><img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/06/23/why-aviod-import-cycle/" data-id="clzo46btw002pvajhh3gmbm3z" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-why-array-begins-zerro" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/05/05/why-array-begins-zerro/" class="article-date">
+  <time datetime="2020-05-05T05:17:37.000Z" itemprop="datePublished">2020-05-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/05/why-array-begins-zerro/">为什么数组要从零开始？</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>如题，数组第一个元素为什么要从零开始，而不从一开始？感觉这很反人类呀，正常来讲，一个集合的开始，不应该从一吗？</p>
+<p>对于这个问题，我觉得可以从以下两方面来考虑。</p>
+<h2 id="设计层面"><a href="#设计层面" class="headerlink" title="设计层面"></a>设计层面</h2><p>我们先了解一下数组最基本的结构和寻址方式（即实现方式）。</p>
+<p>现在市面上无论是C、Java、PHP，还是Go或者其他编程语言，他们数组的实现方式，应该都是一样的：一段连续的内存。</p>
+<p><img src="/img/array_begin/array.png"></p>
+<p>数组在分配内存的时候，我们会知道数组的<code>开始地址</code>(PS:在目前下标为零的情况下，也等同于数组的第一个元素的地址）；</p>
+<p><img src="/img/array_begin/array1.png"></p>
+<p>因为数组中每个元素的类型都是相同的，所以每种类型所占的内存大小是固定的，因而导致数组中每个元素的所占的内存大小都是相同的</p>
+<p><img src="/img/array_begin/array2.png"></p>
+<p>由此我们可以得出，数组中每个元素地址的计算公式：</p>
+<p><img src="/img/array_begin/array3.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">// n为数组坐标，x为数组开始的内存地址，size为每个元素的大小 </span><br><span class="line"></span><br><span class="line">array[n]的地址 = x + n * size  </span><br></pre></td></tr></table></figure>
+
+<p>这是目前数组寻址的计算公式；<br>但是这是小标起始为0的时候，假如我们想让数组的起始下标变为1，则公式会变成什么样呢？</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">//n为数组坐标，x为数组开始的内存地址，size为每个元素的大小</span><br><span class="line"></span><br><span class="line">array[n]的地址 = x + (n - 1) * size  </span><br></pre></td></tr></table></figure>
+
+<p>对比以上两个公式，会发现，如果用下面的公式，仅仅是多了一个”n - 1”的运算！</p>
+<p>要知道，数组是计算机语言的最最基本的组成单元，所有的计算机编程语言的其他组成部分，包括各种类库，各种特殊的数据结构(如Golang的channel)和语法字段等，都是基于数组等这些最最基本的组成单元之上做的封装；</p>
+<p>假如我们把数组从1开始，对数组而言只是多了一步计算，但是，对于整个编程语言的系统而言，将会是多了无数次计算！所以：在编程语言的设计中，对于数组等这些最最基本的编程操作，要把效率做到极致！因此，数组的起始下标会是0开始。</p>
+<h2 id="历史原因"><a href="#历史原因" class="headerlink" title="历史原因"></a>历史原因</h2><p>还有一个比较重要的原因我觉得是历史使然，当初初级编程语言数组的设计(例如C)，就是由零开始的；开发者们都熟悉了这种编程方式，导致后来陆陆续续出现的高级编程语言都延续了这个习惯。</p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝"><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝"></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code></h2><p><img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/05/05/why-array-begins-zerro/" data-id="clzo46btv002nvajh09p596nn" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+  <nav id="page-nav">
+    
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+  </nav>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

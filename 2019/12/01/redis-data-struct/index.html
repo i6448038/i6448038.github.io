@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>图解redis五种数据结构底层实现(动图哦) | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="redis有五种基本数据结构：字符串、hash、set、zset、list。但是你知道构成这五种结构的底层数据结构是怎样的吗？今天我们来花费五分钟的时间了解一下。(目前redis版本为3.0.6) 动态字符串SDSSDS是”simple dynamic string”的缩写。redis中所有场景中出现的字符串，基本都是由SDS来实现的  所有非数字的key。例如set msg &quot;hell">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图解redis五种数据结构底层实现(动图哦)">
+<meta property="og:url" content="http://yoursite.com/2019/12/01/redis-data-struct/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="redis有五种基本数据结构：字符串、hash、set、zset、list。但是你知道构成这五种结构的底层数据结构是怎样的吗？今天我们来花费五分钟的时间了解一下。(目前redis版本为3.0.6) 动态字符串SDSSDS是”simple dynamic string”的缩写。redis中所有场景中出现的字符串，基本都是由SDS来实现的  所有非数字的key。例如set msg &quot;hell">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/sds.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/sds.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/sds_free.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/int.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/linklist.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/ziplist_total.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/ziplist_entry.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/ziplist_bianli1.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/ziplist_bianli2.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/ziplist_refresh.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/ziplist_sub_refresh.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/hash1.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/hash2.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/hash_key.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/hash_key_dup.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/hash_refresh.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/hash_refresh_release.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/rehashidx.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/hash_refresh_slow.gif">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/inset.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/skiplist.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/skiplist1.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/object_ptr.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/object_string.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/object_list.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/object_hash.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/object_set.png">
+<meta property="og:image" content="http://yoursite.com/img/redis-data-struct/object_zset.png">
+<meta property="og:image" content="https://i6448038.github.io/img/weichat/qrcode.jpg">
+<meta property="article:published_time" content="2019-11-30T18:20:40.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.815Z">
+<meta property="article:author" content="菜刚">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/redis-data-struct/sds.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-redis-data-struct" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/12/01/redis-data-struct/" class="article-date">
+  <time datetime="2019-11-30T18:20:40.000Z" itemprop="datePublished">2019-12-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      图解redis五种数据结构底层实现(动图哦)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>redis有五种基本数据结构：字符串、hash、set、zset、list。但是你知道构成这五种结构的底层数据结构是怎样的吗？<br>今天我们来花费五分钟的时间了解一下。<br>(目前redis版本为3.0.6)</p>
+<h1 id="动态字符串SDS"><a href="#动态字符串SDS" class="headerlink" title="动态字符串SDS"></a>动态字符串SDS</h1><p>SDS是”simple dynamic string”的缩写。<br>redis中所有场景中出现的字符串，基本都是由SDS来实现的</p>
+<ul>
+<li>所有非数字的key。例如<code>set msg &quot;hello world&quot;</code> 中的key msg.</li>
+<li>字符串数据类型的值。例如&#96;&#96; set msg “hello world”中的msg的值”hello wolrd”</li>
+<li>非字符串数据类型中的“字符串值”。例如<code>RPUSH fruits &quot;apple&quot; &quot;banana&quot; &quot;cherry&quot;</code>中的”apple” “banana” “cherry”</li>
+</ul>
+<h3 id="SDS长这样："><a href="#SDS长这样：" class="headerlink" title="SDS长这样："></a>SDS长这样：</h3><p><img src="/img/redis-data-struct/sds.png"></p>
+<p>free:还剩多少空间<br>len:字符串长度<br>buf:存放的字符数组</p>
+<h3 id="空间预分配"><a href="#空间预分配" class="headerlink" title="空间预分配"></a>空间预分配</h3><p>为减少修改字符串带来的内存重分配次数，sds采用了“一次管够”的策略：</p>
+<ul>
+<li>若修改之后sds长度小于1MB,则多分配现有len长度的空间</li>
+<li>若修改之后sds长度大于等于1MB，则扩充除了满足修改之后的长度外，额外多1MB空间</li>
+</ul>
+<p><img src="/img/redis-data-struct/sds.gif"></p>
+<h3 id="惰性空间释放"><a href="#惰性空间释放" class="headerlink" title="惰性空间释放"></a>惰性空间释放</h3><p>为避免缩短字符串时候的内存重分配操作，sds在数据减少时，并不立刻释放空间。</p>
+<p><img src="/img/redis-data-struct/sds_free.gif"></p>
+<h1 id="int"><a href="#int" class="headerlink" title="int"></a>int</h1><p>就是redis中存放的各种数字<br>包括一下这种，故意加引号“”的</p>
+<p><img src="/img/redis-data-struct/int.png"></p>
+<h1 id="双向链表"><a href="#双向链表" class="headerlink" title="双向链表"></a>双向链表</h1><p>长这样：</p>
+<p><img src="/img/redis-data-struct/linklist.png"></p>
+<p>分两部分，一部分是“统筹部分”：橘黄色，一部分是“具体实施方“：蓝色。</p>
+<p>主体”统筹部分“：</p>
+<ul>
+<li><code>head</code>指向具体双向链表的头</li>
+<li><code>tail</code>指向具体双向链表的尾</li>
+<li><code>len</code>双向链表的长度</li>
+</ul>
+<p>具体”实施方”：一目了然的双向链表结构，有前驱<code>pre</code>有后继<code>next</code></p>
+<p>由<code>list</code>和<code>listNode</code>两个数据结构构成。</p>
+<h1 id="ziplist"><a href="#ziplist" class="headerlink" title="ziplist"></a>ziplist</h1><p>压缩列表。<br>redis的列表键和哈希键的底层实现之一。此数据结构是为了节约内存而开发的。和各种语言的数组类似，它是由连续的内存块组成的，这样一来，由于内存是连续的，就减少了很多内存碎片和指针的内存占用，进而节约了内存。</p>
+<p><img src="/img/redis-data-struct/ziplist_total.png"></p>
+<p>然后文中的<code>entry</code>的结构是这样的：</p>
+<p><img src="/img/redis-data-struct/ziplist_entry.png"></p>
+<h3 id="元素的遍历"><a href="#元素的遍历" class="headerlink" title="元素的遍历"></a>元素的遍历</h3><p>先找到列表尾部元素：</p>
+<p><img src="/img/redis-data-struct/ziplist_bianli1.gif"></p>
+<p>然后再根据ziplist节点元素中的<code>previous_entry_length</code>属性，来逐个遍历:</p>
+<p><img src="/img/redis-data-struct/ziplist_bianli2.gif"></p>
+<h3 id="连锁更新"><a href="#连锁更新" class="headerlink" title="连锁更新"></a>连锁更新</h3><p>再次看看<code>entry</code>元素的结构，有一个<code>previous_entry_length</code>字段，他的长度要么都是1个字节，要么都是5个字节：</p>
+<ul>
+<li>前一节点的长度小于254字节，则<code>previous_entry_length</code>长度为1字节</li>
+<li>前一节点的长度小于254字节，则<code>previous_entry_length</code>长度为5字节</li>
+</ul>
+<p>假设现在存在一组压缩列表，长度都在250字节至253字节之间，突然新增一新节点<code>new</code>，<br>长度大于等于254字节，会出现：</p>
+<p><img src="/img/redis-data-struct/ziplist_refresh.gif"></p>
+<p>程序需要不断的对压缩列表进行空间重分配工作，直到结束。</p>
+<p>除了增加操作，删除操作也有可能带来“连锁更新”。<br>请看下图，ziplist中所有entry节点的长度都在250字节至253字节之间，big节点长度大于254字节，small节点小于254字节。</p>
+<p><img src="/img/redis-data-struct/ziplist_sub_refresh.gif"></p>
+<h1 id="哈希表"><a href="#哈希表" class="headerlink" title="哈希表"></a>哈希表</h1><p>哈希表略微有点复杂。哈希表的制作方法一般有两种，一种是：<code>开放寻址法</code>，一种是<code>拉链法</code>。redis的哈希表的制作使用的是<code>拉链法</code>。</p>
+<p>整体结构如下图：</p>
+<p><img src="/img/redis-data-struct/hash1.png"></p>
+<p>也是分为两部分：左边橘黄色部分和右边蓝色部分，同样，也是”统筹“和”实施“的关系。<br>具体哈希表的实现，都是在蓝色部分实现的。<br>先来看看蓝色部分：</p>
+<p><img src="/img/redis-data-struct/hash2.png"></p>
+<p>这也分为左右两边“统筹”和“实施”的两部分。</p>
+<p>右边部分很容易理解：就是通常拉链表实现的哈希表的样式；数组就是bucket，一般不同的key首先会定位到不同的bucket，若key重复，就用链表把冲突的key串起来。</p>
+<h3 id="新建key的过程："><a href="#新建key的过程：" class="headerlink" title="新建key的过程："></a>新建key的过程：</h3><p><img src="/img/redis-data-struct/hash_key.gif"></p>
+<h3 id="假如重复了"><a href="#假如重复了" class="headerlink" title="假如重复了:"></a>假如重复了:</h3><p><img src="/img/redis-data-struct/hash_key_dup.gif"></p>
+<h2 id="rehash"><a href="#rehash" class="headerlink" title="rehash"></a>rehash</h2><p>再来看看哈希表总体图中左边橘黄色的“统筹”部分，其中有两个关键的属性：<code>ht</code>和<code>rehashidx</code>。<br><code>ht</code>是一个数组，有且只有俩元素ht[0]和ht[1];其中，ht[0]存放的是redis中使用的哈希表，而ht[1]和rehashidx和哈希表的<code>rehash</code>有关。</p>
+<p><code>rehash</code>指的是重新计算键的哈希值和索引值，然后将键值对重排的过程。</p>
+<p><code>加载因子（load factor） = ht[0].used / ht[0].size</code>。</p>
+<h3 id="扩容和收缩标准"><a href="#扩容和收缩标准" class="headerlink" title="扩容和收缩标准"></a>扩容和收缩标准</h3><p>扩容：</p>
+<ul>
+<li>没有执行BGSAVE和BGREWRITEAOF指令的情况下，哈希表的<code>加载因子</code>大于等于1。</li>
+<li>正在执行BGSAVE和BGREWRITEAOF指令的情况下，哈希表的<code>加载因子</code>大于等于5。</li>
+</ul>
+<p>收缩:</p>
+<ul>
+<li><code>加载因子</code>小于0.1时，程序自动开始对哈希表进行收缩操作。</li>
+</ul>
+<h3 id="扩容和收缩的数量"><a href="#扩容和收缩的数量" class="headerlink" title="扩容和收缩的数量"></a>扩容和收缩的数量</h3><p>扩容：</p>
+<ul>
+<li>第一个大于等于<code>ht[0].used * 2</code>的<code>2^n</code>(2的n次方幂)。</li>
+</ul>
+<p>收缩：</p>
+<ul>
+<li>第一个大于等于<code>ht[0].used</code>的<code>2^n</code>(2的n次方幂)。</li>
+</ul>
+<p><strong>(以下部分属于细节分析，可以跳过直接看扩容步骤)</strong><br>对于收缩，我当时陷入了疑虑：收缩标准是<code>加载因子</code>小于0.1的时候，也就是说假如哈希表中有4个元素的话，哈希表的长度只要大于40，就会进行收缩，假如有一个长度大于40，但是存在的元素为4即(<code>ht[0].used</code>为4)的哈希表，进行收缩，那收缩后的值为多少？</p>
+<p>我想了一下：按照前文所讲的内容，应该是4。<br>但是，假如是4，存在和收缩后的长度相等，是不是又该扩容？<br>翻开源码看看：</p>
+<p>收缩具体函数:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> dictResize(dict *d)     <span class="comment">//缩小字典d</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> minimal;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//如果dict_can_resize被设置成0，表示不能进行rehash，或正在进行rehash，返回出错标志DICT_ERR</span></span><br><span class="line">    <span class="keyword">if</span> (!dict_can_resize || dictIsRehashing(d)) <span class="keyword">return</span> DICT_ERR;</span><br><span class="line"></span><br><span class="line">    minimal = d-&gt;ht[<span class="number">0</span>].used;            <span class="comment">//获得已经有的节点数量作为最小限度minimal</span></span><br><span class="line">    <span class="keyword">if</span> (minimal &lt; DICT_HT_INITIAL_SIZE)<span class="comment">//但是minimal不能小于最低值DICT_HT_INITIAL_SIZE（4）</span></span><br><span class="line">        minimal = DICT_HT_INITIAL_SIZE;</span><br><span class="line">    <span class="keyword">return</span> dictExpand(d, minimal);      <span class="comment">//用minimal调整字典d的大小</span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> dictExpand(dict *d, unsigned long size)     <span class="comment">//根据size调整或创建字典d的哈希表</span></span><br><span class="line">&#123;</span><br><span class="line">    dictht n; </span><br><span class="line">    unsigned long realsize = _dictNextPower(size);  <span class="comment">//获得一个最接近2^n的realsize</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (dictIsRehashing(d) || d-&gt;ht[<span class="number">0</span>].used &gt; size) <span class="comment">//正在rehash或size不够大返回出错标志</span></span><br><span class="line">        <span class="keyword">return</span> DICT_ERR;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (realsize == d-&gt;ht[<span class="number">0</span>].size) <span class="keyword">return</span> DICT_ERR; <span class="comment">//如果新的realsize和原本的size一样则返回出错标志</span></span><br><span class="line">    <span class="comment">/* Allocate the new hash table and initialize all pointers to NULL */</span></span><br><span class="line">    <span class="comment">//初始化新的哈希表的成员</span></span><br><span class="line">    n.size = realsize;</span><br><span class="line">    n.sizemask = realsize<span class="number">-1</span>;</span><br><span class="line">    n.table = zcalloc(realsize*sizeof(dictEntry*));</span><br><span class="line">    n.used = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Is this the first initialization? If so it&#x27;s not really a rehashing</span></span><br><span class="line"><span class="comment">     * we just set the first hash table so that it can accept keys. */</span></span><br><span class="line">    <span class="keyword">if</span> (d-&gt;ht[<span class="number">0</span>].table == NULL) &#123;   <span class="comment">//如果ht[0]哈希表为空，则将新的哈希表n设置为ht[0]</span></span><br><span class="line">        d-&gt;ht[<span class="number">0</span>] = n;</span><br><span class="line">        <span class="keyword">return</span> DICT_OK;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    d-&gt;ht[<span class="number">1</span>] = n;           <span class="comment">//如果ht[0]非空，则需要rehash</span></span><br><span class="line">    d-&gt;rehashidx = <span class="number">0</span>;       <span class="comment">//设置rehash标志位为0，开始渐进式rehash（incremental rehashing）</span></span><br><span class="line">    <span class="keyword">return</span> DICT_OK;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">static unsigned long _dictNextPower(unsigned long size)</span><br><span class="line">&#123;</span><br><span class="line">    unsigned long i = DICT_HT_INITIAL_SIZE; <span class="comment">//DICT_HT_INITIAL_SIZE 为 4</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (size &gt;= LONG_MAX) <span class="keyword">return</span> LONG_MAX + <span class="number">1</span>LU;</span><br><span class="line">    while(<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= size)</span><br><span class="line">            <span class="keyword">return</span> i;</span><br><span class="line">        i *= <span class="number">2</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<p>由代码我们可以看到，假如收缩后长度为4，不仅不会收缩，甚至还会报错。(😝)</p>
+<p>我们回过头来再看看设定：题目可能成立吗？<br>哈希表的扩容都是2倍增长的，最小是4，<br>4 &#x3D;&#x3D;&#x3D;》 8 &#x3D;&#x3D;&#x3D;&#x3D;》 16 &#x3D;&#x3D;&#x3D;&#x3D;&#x3D;》 32 &#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;》 64 &#x3D;&#x3D;&#x3D;&#x3D;》 128</p>
+<p>也就是说：不存在长度为 40多的情况，只能是64。但是如果是64的话，64 X 0.1（收缩界限）&#x3D; 6.4 ，也就是说在减少到6的时候，哈希表就会收缩，会缩小到多少呢？是8。此时，再继续减少到4，也不会再收缩了。所以，根本不存在一个长度大于40，但是存在的元素为4的哈希表的。</p>
+<h3 id="扩容步骤"><a href="#扩容步骤" class="headerlink" title="扩容步骤"></a>扩容步骤</h3><p><img src="/img/redis-data-struct/hash_refresh.gif"></p>
+<h3 id="收缩步骤"><a href="#收缩步骤" class="headerlink" title="收缩步骤"></a>收缩步骤</h3><p><img src="/img/redis-data-struct/hash_refresh_release.gif"></p>
+<h3 id="渐进式refresh"><a href="#渐进式refresh" class="headerlink" title="渐进式refresh"></a>渐进式refresh</h3><p>在”扩容步骤”和”收缩步骤” 两幅动图中每幅图的第四步骤“将ht[0]中的数据利用哈希函数重新计算，rehash到ht[1]”，并不是一步完成的，而是分成N多步，循序渐进的完成的。<br>因为hash中有可能存放几千万甚至上亿个key，毕竟Redis中每个hash中可以存<code>2^32 - 1</code> 键值对（40多亿），假如一次性将这些键值rehash的话，可能会导致服务器在一段时间内停止服务，毕竟哈希函数就得计算一阵子呢((#^.^#))。</p>
+<p>哈希表的refresh是分多次、渐进式进行的。</p>
+<p>渐进式refresh和下图中左边橘黄色的“统筹”部分中的<code>rehashidx</code>密切相关：</p>
+<ul>
+<li>rehashidx 的数值就是现在rehash的元素位置</li>
+<li>rehashidx 等于 -1 的时候说明没有在进行refresh</li>
+</ul>
+<p><img src="/img/redis-data-struct/rehashidx.png"></p>
+<p>甚至在进行期间，每次对哈希表的增删改查操作，除了正常执行之外，还会顺带将ht[0]哈希表相关键值对rehash到ht[1]。</p>
+<p>以扩容步骤为例：</p>
+<p><img src="/img/redis-data-struct/hash_refresh_slow.gif"></p>
+<h1 id="intset"><a href="#intset" class="headerlink" title="intset"></a>intset</h1><p>整数集合是集合键的底层实现方式之一。<br><img src="/img/redis-data-struct/inset.png"></p>
+<h1 id="跳表"><a href="#跳表" class="headerlink" title="跳表"></a>跳表</h1><p>跳表这种数据结构长这样：<br><img src="/img/redis-data-struct/skiplist.png"></p>
+<p>redis中把跳表抽象成如下所示：</p>
+<p><img src="/img/redis-data-struct/skiplist1.png"></p>
+<p>看这个图，左边“统筹”，右边实现。<br>统筹部分有以下几点说明：</p>
+<ul>
+<li>header: 跳表表头</li>
+<li>tail:跳表表尾</li>
+<li>level:层数最大的那个节点的层数</li>
+<li>length：跳表的长度</li>
+</ul>
+<p>实现部分有以下几点说明：</p>
+<ul>
+<li>表头：是链表的哨兵节点，不记录主体数据。</li>
+<li>是个双向链表</li>
+<li>分值是有顺序的</li>
+<li>o1、o2、o3是节点所保存的成员，是一个指针，可以指向一个SDS值。</li>
+<li>层级高度最高是32。没每次创建一个新的节点的时候，程序都会随机生成一个介于1和32之间的值作为level数组的大小，这个大小就是“高度”</li>
+</ul>
+<h1 id="redis五种数据结构的实现"><a href="#redis五种数据结构的实现" class="headerlink" title="redis五种数据结构的实现"></a>redis五种数据结构的实现</h1><h3 id="redis对象"><a href="#redis对象" class="headerlink" title="redis对象"></a>redis对象</h3><p>redis中并没有直接使用以上所说的各种数据结构来实现键值数据库，而是基于一种对象，对象底层再间接的引用上文所说的具体的数据结构。</p>
+<p>结构如下图：</p>
+<p><img src="/img/redis-data-struct/object_ptr.png"></p>
+<h3 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h3><p><img src="/img/redis-data-struct/object_string.png"></p>
+<p>其中：embstr和raw都是由SDS动态字符串构成的。唯一区别是：raw是分配内存的时候，redisobject和 sds 各分配一块内存，而embstr是redisobject和raw在一块儿内存中。</p>
+<h3 id="列表"><a href="#列表" class="headerlink" title="列表"></a>列表</h3><p><img src="/img/redis-data-struct/object_list.png"></p>
+<h3 id="hash"><a href="#hash" class="headerlink" title="hash"></a>hash</h3><p><img src="/img/redis-data-struct/object_hash.png"></p>
+<h3 id="set"><a href="#set" class="headerlink" title="set"></a>set</h3><p><img src="/img/redis-data-struct/object_set.png"></p>
+<h3 id="zset"><a href="#zset" class="headerlink" title="zset"></a>zset</h3><p><img src="/img/redis-data-struct/object_zset.png"></p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a href="https://throwsnew.com/2017/09/12/%E4%B8%BA%E4%BB%80%E4%B9%88Redis%E4%BD%BF%E7%94%A8ziplist%E8%83%BD%E8%8A%82%E7%9C%81%E5%86%85%E5%AD%98/">https://throwsnew.com/2017/09/12/%E4%B8%BA%E4%BB%80%E4%B9%88Redis%E4%BD%BF%E7%94%A8ziplist%E8%83%BD%E8%8A%82%E7%9C%81%E5%86%85%E5%AD%98/</a></li>
+<li>《redis设计与实现》</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/12/01/redis-data-struct/" data-id="clzo46btr0028vajh4fj53aeg" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/02/15/golang-reflection/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          图解go反射实现原理
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/11/10/io-multi/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">动图了解I/O多路复用</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

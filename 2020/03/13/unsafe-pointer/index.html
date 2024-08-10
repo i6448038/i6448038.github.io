@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>图解Go的unsafe.Pointer | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="相信看过Go源码的同学已经对unsafe.Pointer非常的眼熟，因为这个类型可以说在源码中是随处可见：map、channel、interface、slice…但凡你能想到的内容，基本都会有unsafe.Pointer的影子。 看字面意思，unsafe.Pointer是“不安全的指针”，指针就指针吧，还安不安全的是个什么鬼？ 接下来，我们就来了解一下Go的这个“不安全的指针”unsafe.Poi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图解Go的unsafe.Pointer">
+<meta property="og:url" content="http://yoursite.com/2020/03/13/unsafe-pointer/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="相信看过Go源码的同学已经对unsafe.Pointer非常的眼熟，因为这个类型可以说在源码中是随处可见：map、channel、interface、slice…但凡你能想到的内容，基本都会有unsafe.Pointer的影子。 看字面意思，unsafe.Pointer是“不安全的指针”，指针就指针吧，还安不安全的是个什么鬼？ 接下来，我们就来了解一下Go的这个“不安全的指针”unsafe.Poi">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/unsafe_pointer/unsafe_pointer_0.png">
+<meta property="og:image" content="http://yoursite.com/img/unsafe_pointer/variable_pointer.jpg">
+<meta property="og:image" content="http://yoursite.com/img/unsafe_pointer/unsafe_pointer_system.png">
+<meta property="og:image" content="http://yoursite.com/img/unsafe_pointer/unsafe_pointer_persioncontrol.png">
+<meta property="og:image" content="http://yoursite.com/img/unsafe_pointer/unsafe_pointer_uintptr.png">
+<meta property="og:image" content="http://yoursite.com/img/unsafe_pointer/unsafe_pointer_total.png">
+<meta property="og:image" content="https://i6448038.github.io/img/weichat/qrcode.jpg">
+<meta property="article:published_time" content="2020-03-13T15:59:22.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.821Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="Golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/unsafe_pointer/unsafe_pointer_0.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-unsafe-pointer" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/03/13/unsafe-pointer/" class="article-date">
+  <time datetime="2020-03-13T15:59:22.000Z" itemprop="datePublished">2020-03-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      图解Go的unsafe.Pointer
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>相信看过Go源码的同学已经对<code>unsafe.Pointer</code>非常的眼熟，因为这个类型可以说在源码中是随处可见：<code>map</code>、<code>channel</code>、<code>interface</code>、<code>slice</code>…但凡你能想到的内容，基本都会有<code>unsafe.Pointer</code>的影子。</p>
+<p>看字面意思，<code>unsafe.Pointer</code>是“不安全的指针”，指针就指针吧，还安不安全的是个什么鬼？</p>
+<p>接下来，我们就来了解一下Go的这个“不安全的指针”<code>unsafe.Pointer</code>。</p>
+<h2 id="什么叫变量"><a href="#什么叫变量" class="headerlink" title="什么叫变量"></a>什么叫变量</h2><p>在了解指针之前，我们有必要先了解一下什么叫“变量”。<br>其实变量就是一个内存地址的名字，这听起来可能有些奇怪：指针不是地址码？<br>听我细细来讲：此地址非彼地址。通常，我们要在计算机内存中存数据，我们会怎么做？<br>我们肯定说：“计算机，在0x0201地址内存一个数100”。就这一句话，别看它糙，实际上在计算机中真就这么干的。然后我们接着说：“在0x0202中存什么，在0x0203中存什么，把0x0203中的值变为0x0201中的值…”</p>
+<p>这些“0x0201”、“0x0202”、“0x0203”…这些数字儿是不是不太好记？写个代码是不是头都大了？<br>于是聪明的先人给想了个办法，把这些地址换成<strong>代号</strong>，“0x0201”我叫x，“0x0202”我给他起个名字叫y，“0x0203”我给他起个名字叫z…</p>
+<p>于是 “计算机，在0x0201地址内存一个数100”。就变成了<code>var x int =100</code>。<br>而这个这个代号就是变量。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0x0201地址    =============》   100</span><br><span class="line"></span><br><span class="line">0x0201地址    ======》X ===》   100</span><br></pre></td></tr></table></figure>
+
+<p>果然，计算机界中的任何问题，都可以通过加一个中间层来解决。(#^.^#)</p>
+<p>最后，计算机会在内存中存代号和变量地址的对应关系。</p>
+<h2 id="什么叫指针"><a href="#什么叫指针" class="headerlink" title="什么叫指针"></a>什么叫指针</h2><p>我们印象中的指针这个概念，其实就是一个存了内存地址的对象，这个对象指向的内存地址可能是另外一个对象、函数或者结构体等。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_0.png"></p>
+<p>这个理解没错，但是一定要理清楚指针和变量的关系。</p>
+<p><img src="/img/unsafe_pointer/variable_pointer.jpg"></p>
+<p>在一般的指针中，由于指针只是一个地址，底层实现是一个unsigned int，所以在C语言中，指针之间的赋值和计算等同类型之间的操作很常见。</p>
+<p>以下代码扫一眼，看看是否知道输出结果。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;stdio.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> <span class="type">const</span> *argv[])</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> c = <span class="string">&#x27;b&#x27;</span>;</span><br><span class="line">    <span class="type">int</span> i = <span class="number">1000</span>;</span><br><span class="line">    <span class="type">char</span> *cp;</span><br><span class="line">    <span class="type">int</span> *ip;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//指针的正常赋值</span></span><br><span class="line">    cp = &amp;c;</span><br><span class="line">    ip = &amp;i;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;cp[%p]\n&quot;</span>, cp); <span class="comment">//cp[0x7ffee904275f]</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;ip[%p]\n&quot;</span>, ip); <span class="comment">//ip[0x7ffee9042758]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//指针的计算</span></span><br><span class="line">    cp = cp + <span class="number">1</span>;</span><br><span class="line">    ip = ip + <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;cp[%p]\n&quot;</span>, cp); <span class="comment">//cp[0x7ffee9042760]</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;ip[%p]\n&quot;</span>, ip); <span class="comment">//ip[0x7ffee904275c]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//不同&quot;类型&quot;指针之间的赋值</span></span><br><span class="line">    cp = ip;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;cp[%p] ip[%p]\n&quot;</span>, cp, ip); <span class="comment">//cp[0x7ffee904275c] ip[0x7ffee904275c]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//不同指针之间的比较  输出true</span></span><br><span class="line">    <span class="keyword">if</span> (cp == ip) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;true\n&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;false\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通常意义上我们了解的不同类型的指针，可以归为“同一类型”，无论是int类型的指针还是char类型的指针，都称之为“指针类型”。<br>指针指向对象类型的约束对指针本身而言非常弱，因为在通常C语言中的定义不同类型的指针，只是为了调用的方便。例如一个指针指向了某一个结构体，那么我写代码的时候就可以方便的使用该结构体的属性字段；可以说通常意义上的C指针，是个“万能类型”的，啥类型的指针都和<code>void*</code>一样，万能！<br>所以，在C语言中，假如不使用指针，可以认为是机器在帮我们“打理”内存。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_system.png"></p>
+<p>但是假如我们使用了指针，由于指针的自由度非常大，我们就可以自己“打理”内存了（PS:这里的打理仅限内存指向问题，分配和清除肯定必然不行）。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_persioncontrol.png"></p>
+<h2 id="Go中常用的指针"><a href="#Go中常用的指针" class="headerlink" title="Go中常用的指针"></a>Go中常用的指针</h2><p>在C语言中，指针的操作是完全不被约束的，这就非常的危险：程序猿在写的时候就得细心一点，拿着指针操作太多，指来指去，指到不该指的地方，就不好了~</p>
+<p>所以Go语言在设计的时候，也考虑到了这个问题，就给现有的指针加了约束：把指针类型的数据当成了一种数据类型，在编译的时候做严格判断。</p>
+<p>举个例子来说：<code>*int</code> 和<code>*string</code>是两种不同的类型，那既然类型都不同，那么<code>*int</code>的数据就不能够和<code>*string</code>类型的数据进行“互通”了，既不能相互赋值，也不能相互比较；<br>能不能加减运算呀？当然不能，因为“数字儿”是整型，<code>*int</code>或者<code>*string</code>是其他类型而非整型。</p>
+<p>Go语言就给指针套了个“类型”的帽子，一下子把指针限制的死死的了。</p>
+<p>而且Go最后规定：指针类型还不能相互强制转换。<br>我们知道：int和string是可以相互转换的，既然指针归根到底是地址，也就是数字儿，那指针类型和int之间能否相互强制类型转换呢？答案是不行！<br>那<code>*int</code>和<code>*string</code>之间是否可以强制类型转换呢？答案是更不行，如果能强制转换了，前面说的给指针套的那顶“类型”的帽子，是不是就白做了？</p>
+<h2 id="unsafe-Pointer"><a href="#unsafe-Pointer" class="headerlink" title="unsafe.Pointer"></a>unsafe.Pointer</h2><p>好了，扯了那么多，终于到正题了。那么unsafe.Pointer指针是什么呢？<br>其实就一句话：就是C语言中那个牛逼到爆的什么都能指的不安全的指针。再确切一点是：<code>void*</code>。</p>
+<p><code>unsafe.Pointer</code>源码就两行：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ArbitraryType <span class="type">int</span> <span class="comment">//表示任何类型</span></span><br><span class="line"><span class="keyword">type</span> Pointer *ArbitraryType <span class="comment">//表示任何类型的指针</span></span><br></pre></td></tr></table></figure>
+
+<p><code>unsafe.Pointer</code>的源码注释还提供了关于<code>unsafe.Pointer</code>的四点重要的使用规则：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、Go语言常规的任何类型的指针都可以转化为unsafe.Pointer类型</span><br><span class="line">2、unsafe.Pointer类型可以转化为Go语言常规的任何类型的指针。</span><br><span class="line">3、uintptr这个类型可以转化为unsafe.Pointer</span><br><span class="line">4、unsafe.Pointer可以转化为uintptr</span><br></pre></td></tr></table></figure>
+
+<p>看完规则，你可能会问：<code>uintptr</code>是啥？<br>来，没有比源码更好的解释的了：</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_uintptr.png"></p>
+<p>注意看<code>uintptr</code>的位置，和<code>int </code>以及<code>uint</code>在一个包内，你可以认为<code>uintptr</code>与它们”同类”，只不过是指针的专属而已，但是你想自己定义用也能用。</p>
+<p>对于<code>unsafe.Pointer</code>，多用于Go的编译时期；由于它可以绕过类型系统，直接去访问内存，所以它用起来效率会比较高，但是官方的态度是不太建议使用的，因为不太安全。我个人建议也是能不用就不用：毕竟为了这点儿效率带来的额外的附加成本比较高。</p>
+<p>好了，我们最后总结一下Go的指针：</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_total.png"></p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝"><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝"></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code></h2><p><img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/03/13/unsafe-pointer/" data-id="clzo46btu002ivajhgj8dab52" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2020/05/05/why-array-begins-zerro/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          为什么数组要从零开始？
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/02/15/golang-reflection/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">图解go反射实现原理</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

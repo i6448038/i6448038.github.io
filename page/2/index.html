@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="菜刚RyuGou的博客">
+<meta property="og:url" content="http://yoursite.com/page/2/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:locale">
+<meta property="article:author" content="菜刚">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-unsafe-pointer" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/03/13/unsafe-pointer/" class="article-date">
+  <time datetime="2020-03-13T15:59:22.000Z" itemprop="datePublished">2020-03-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/03/13/unsafe-pointer/">图解Go的unsafe.Pointer</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>相信看过Go源码的同学已经对<code>unsafe.Pointer</code>非常的眼熟，因为这个类型可以说在源码中是随处可见：<code>map</code>、<code>channel</code>、<code>interface</code>、<code>slice</code>…但凡你能想到的内容，基本都会有<code>unsafe.Pointer</code>的影子。</p>
+<p>看字面意思，<code>unsafe.Pointer</code>是“不安全的指针”，指针就指针吧，还安不安全的是个什么鬼？</p>
+<p>接下来，我们就来了解一下Go的这个“不安全的指针”<code>unsafe.Pointer</code>。</p>
+<h2 id="什么叫变量"><a href="#什么叫变量" class="headerlink" title="什么叫变量"></a>什么叫变量</h2><p>在了解指针之前，我们有必要先了解一下什么叫“变量”。<br>其实变量就是一个内存地址的名字，这听起来可能有些奇怪：指针不是地址码？<br>听我细细来讲：此地址非彼地址。通常，我们要在计算机内存中存数据，我们会怎么做？<br>我们肯定说：“计算机，在0x0201地址内存一个数100”。就这一句话，别看它糙，实际上在计算机中真就这么干的。然后我们接着说：“在0x0202中存什么，在0x0203中存什么，把0x0203中的值变为0x0201中的值…”</p>
+<p>这些“0x0201”、“0x0202”、“0x0203”…这些数字儿是不是不太好记？写个代码是不是头都大了？<br>于是聪明的先人给想了个办法，把这些地址换成<strong>代号</strong>，“0x0201”我叫x，“0x0202”我给他起个名字叫y，“0x0203”我给他起个名字叫z…</p>
+<p>于是 “计算机，在0x0201地址内存一个数100”。就变成了<code>var x int =100</code>。<br>而这个这个代号就是变量。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0x0201地址    =============》   100</span><br><span class="line"></span><br><span class="line">0x0201地址    ======》X ===》   100</span><br></pre></td></tr></table></figure>
+
+<p>果然，计算机界中的任何问题，都可以通过加一个中间层来解决。(#^.^#)</p>
+<p>最后，计算机会在内存中存代号和变量地址的对应关系。</p>
+<h2 id="什么叫指针"><a href="#什么叫指针" class="headerlink" title="什么叫指针"></a>什么叫指针</h2><p>我们印象中的指针这个概念，其实就是一个存了内存地址的对象，这个对象指向的内存地址可能是另外一个对象、函数或者结构体等。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_0.png"></p>
+<p>这个理解没错，但是一定要理清楚指针和变量的关系。</p>
+<p><img src="/img/unsafe_pointer/variable_pointer.jpg"></p>
+<p>在一般的指针中，由于指针只是一个地址，底层实现是一个unsigned int，所以在C语言中，指针之间的赋值和计算等同类型之间的操作很常见。</p>
+<p>以下代码扫一眼，看看是否知道输出结果。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;stdio.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> <span class="type">const</span> *argv[])</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> c = <span class="string">&#x27;b&#x27;</span>;</span><br><span class="line">    <span class="type">int</span> i = <span class="number">1000</span>;</span><br><span class="line">    <span class="type">char</span> *cp;</span><br><span class="line">    <span class="type">int</span> *ip;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//指针的正常赋值</span></span><br><span class="line">    cp = &amp;c;</span><br><span class="line">    ip = &amp;i;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;cp[%p]\n&quot;</span>, cp); <span class="comment">//cp[0x7ffee904275f]</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;ip[%p]\n&quot;</span>, ip); <span class="comment">//ip[0x7ffee9042758]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//指针的计算</span></span><br><span class="line">    cp = cp + <span class="number">1</span>;</span><br><span class="line">    ip = ip + <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;cp[%p]\n&quot;</span>, cp); <span class="comment">//cp[0x7ffee9042760]</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;ip[%p]\n&quot;</span>, ip); <span class="comment">//ip[0x7ffee904275c]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//不同&quot;类型&quot;指针之间的赋值</span></span><br><span class="line">    cp = ip;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;cp[%p] ip[%p]\n&quot;</span>, cp, ip); <span class="comment">//cp[0x7ffee904275c] ip[0x7ffee904275c]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">//不同指针之间的比较  输出true</span></span><br><span class="line">    <span class="keyword">if</span> (cp == ip) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;true\n&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;false\n&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通常意义上我们了解的不同类型的指针，可以归为“同一类型”，无论是int类型的指针还是char类型的指针，都称之为“指针类型”。<br>指针指向对象类型的约束对指针本身而言非常弱，因为在通常C语言中的定义不同类型的指针，只是为了调用的方便。例如一个指针指向了某一个结构体，那么我写代码的时候就可以方便的使用该结构体的属性字段；可以说通常意义上的C指针，是个“万能类型”的，啥类型的指针都和<code>void*</code>一样，万能！<br>所以，在C语言中，假如不使用指针，可以认为是机器在帮我们“打理”内存。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_system.png"></p>
+<p>但是假如我们使用了指针，由于指针的自由度非常大，我们就可以自己“打理”内存了（PS:这里的打理仅限内存指向问题，分配和清除肯定必然不行）。</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_persioncontrol.png"></p>
+<h2 id="Go中常用的指针"><a href="#Go中常用的指针" class="headerlink" title="Go中常用的指针"></a>Go中常用的指针</h2><p>在C语言中，指针的操作是完全不被约束的，这就非常的危险：程序猿在写的时候就得细心一点，拿着指针操作太多，指来指去，指到不该指的地方，就不好了~</p>
+<p>所以Go语言在设计的时候，也考虑到了这个问题，就给现有的指针加了约束：把指针类型的数据当成了一种数据类型，在编译的时候做严格判断。</p>
+<p>举个例子来说：<code>*int</code> 和<code>*string</code>是两种不同的类型，那既然类型都不同，那么<code>*int</code>的数据就不能够和<code>*string</code>类型的数据进行“互通”了，既不能相互赋值，也不能相互比较；<br>能不能加减运算呀？当然不能，因为“数字儿”是整型，<code>*int</code>或者<code>*string</code>是其他类型而非整型。</p>
+<p>Go语言就给指针套了个“类型”的帽子，一下子把指针限制的死死的了。</p>
+<p>而且Go最后规定：指针类型还不能相互强制转换。<br>我们知道：int和string是可以相互转换的，既然指针归根到底是地址，也就是数字儿，那指针类型和int之间能否相互强制类型转换呢？答案是不行！<br>那<code>*int</code>和<code>*string</code>之间是否可以强制类型转换呢？答案是更不行，如果能强制转换了，前面说的给指针套的那顶“类型”的帽子，是不是就白做了？</p>
+<h2 id="unsafe-Pointer"><a href="#unsafe-Pointer" class="headerlink" title="unsafe.Pointer"></a>unsafe.Pointer</h2><p>好了，扯了那么多，终于到正题了。那么unsafe.Pointer指针是什么呢？<br>其实就一句话：就是C语言中那个牛逼到爆的什么都能指的不安全的指针。再确切一点是：<code>void*</code>。</p>
+<p><code>unsafe.Pointer</code>源码就两行：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ArbitraryType <span class="type">int</span> <span class="comment">//表示任何类型</span></span><br><span class="line"><span class="keyword">type</span> Pointer *ArbitraryType <span class="comment">//表示任何类型的指针</span></span><br></pre></td></tr></table></figure>
+
+<p><code>unsafe.Pointer</code>的源码注释还提供了关于<code>unsafe.Pointer</code>的四点重要的使用规则：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1、Go语言常规的任何类型的指针都可以转化为unsafe.Pointer类型</span><br><span class="line">2、unsafe.Pointer类型可以转化为Go语言常规的任何类型的指针。</span><br><span class="line">3、uintptr这个类型可以转化为unsafe.Pointer</span><br><span class="line">4、unsafe.Pointer可以转化为uintptr</span><br></pre></td></tr></table></figure>
+
+<p>看完规则，你可能会问：<code>uintptr</code>是啥？<br>来，没有比源码更好的解释的了：</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_uintptr.png"></p>
+<p>注意看<code>uintptr</code>的位置，和<code>int </code>以及<code>uint</code>在一个包内，你可以认为<code>uintptr</code>与它们”同类”，只不过是指针的专属而已，但是你想自己定义用也能用。</p>
+<p>对于<code>unsafe.Pointer</code>，多用于Go的编译时期；由于它可以绕过类型系统，直接去访问内存，所以它用起来效率会比较高，但是官方的态度是不太建议使用的，因为不太安全。我个人建议也是能不用就不用：毕竟为了这点儿效率带来的额外的附加成本比较高。</p>
+<p>好了，我们最后总结一下Go的指针：</p>
+<p><img src="/img/unsafe_pointer/unsafe_pointer_total.png"></p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝"><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝"></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code></h2><p><img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/03/13/unsafe-pointer/" data-id="clzo46btu002ivajhgj8dab52" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-golang-reflection" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/02/15/golang-reflection/" class="article-date">
+  <time datetime="2020-02-15T08:12:39.000Z" itemprop="datePublished">2020-02-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/02/15/golang-reflection/">图解go反射实现原理</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Go反射的实现和<code>interface</code>和<code>unsafe.Pointer</code>密切相关。如果对golang的<code>interface</code>底层实现还没有理解，可以去看我之前的文章：<a href="https://mp.weixin.qq.com/s/re_9CmGm3xEbY7xCr5CYbQ">Go语言interface底层实现</a>，<code>unsafe.Pointer</code>会在后续的文章中做介绍。<br>（本文目前使用的Go环境是Go 1.12.9）</p>
+<h2 id="interface回顾"><a href="#interface回顾" class="headerlink" title="interface回顾"></a>interface回顾</h2><p>首先我们简单的回顾一下interface的结构，总体上是：</p>
+<p><img src="/img/reflection/interface_total.png"></p>
+<p>细分下来分为有函数的<code>iface</code>和无函数的<code>eface</code>（就是<code>interface&#123;&#125;</code>）;</p>
+<p><strong>无函数的<code>eface</code></strong></p>
+<p><img src="/img/reflection/eface.png"></p>
+<p><strong>有函数的<code>iface</code></strong></p>
+<p><img src="/img/reflection/iface.png"></p>
+<h3 id="静态类型（static-interface-type）和动态混合类型（dynamic-concrete-type）"><a href="#静态类型（static-interface-type）和动态混合类型（dynamic-concrete-type）" class="headerlink" title="静态类型（static interface type）和动态混合类型（dynamic concrete type）"></a><strong>静态类型</strong>（static interface type）和<strong>动态混合类型</strong>（dynamic concrete type）</h3><p>Go语言中，每个变量都有唯一个<strong>静态类型</strong>，这个类型是编译阶段就可以确定的。有的变量可能除了静态类型之外，还会有<strong>动态混合类型</strong>。</p>
+<p>例如以下例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//带函数的interface</span></span><br><span class="line"><span class="keyword">var</span> r io.Reader </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">tty, err := os.OpenFile(<span class="string">&quot;/dev/tty&quot;</span>, os.O_RDWR, <span class="number">0</span>)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">r = tty</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//不带函数的interface</span></span><br><span class="line"><span class="keyword">var</span> empty <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line">empty = tty</span><br></pre></td></tr></table></figure>
+
+<p><strong>有函数的<code>iface</code>的例子</strong></p>
+<p>我们一句一句来看：第1行，<code>var r io.Reader</code></p>
+<p><img src="/img/reflection/iface1.png"></p>
+<p>第4行至第七行就是简单的赋值，得到一个<code>*os.File</code>的实例,暂且不看了。最后一句第十句<code>r = tty</code></p>
+<p><img src="/img/reflection/iface2.png"></p>
+<p> <strong>无函数的<code>eface</code>的例子</strong></p>
+<p>我们接着往下看，<code>var empty interface&#123;&#125;</code></p>
+<p><img src="/img/reflection/eface1.png"></p>
+<p>最后是<code>empty = tty</code></p>
+<p><img src="/img/reflection/eface2.png"></p>
+<p>但是记住：虽然有<strong>动态混合类型</strong>，但是对外”表现”依然是静态类型。</p>
+<h2 id="Go反射简介"><a href="#Go反射简介" class="headerlink" title="Go反射简介"></a>Go反射简介</h2><p>Go反射有三大法则：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//接口数据  =====》 反射对象</span><br><span class="line">1. Reflection goes from interface value to reflection object.</span><br><span class="line"></span><br><span class="line">//反射对象 ===&gt; 接口数据</span><br><span class="line">2. Reflection goes from reflection object to interface value.</span><br><span class="line"></span><br><span class="line">// 倘若数据可更改，可通过反射对象来修改它</span><br><span class="line">3. To modify a reflection object, the value must be settable.  </span><br></pre></td></tr></table></figure>
+
+<p>Go 的反射就是对以上三项法则的实现。</p>
+<p>Go的反射主要由两部分组成：<code>Type</code>和<code>Value</code>，<code>Type</code>和<code>Value</code>是俩结构体：(这俩结构体具体内容可以略过不看，知道有这回事儿就行了)</p>
+<p>Type:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Type <span class="keyword">interface</span> &#123;</span><br><span class="line">    Align() <span class="type">int</span></span><br><span class="line">    FieldAlign() <span class="type">int</span></span><br><span class="line">    Method(<span class="type">int</span>) Method</span><br><span class="line">    MethodByName(<span class="type">string</span>) (Method, <span class="type">bool</span>)</span><br><span class="line">    NumMethod() <span class="type">int</span></span><br><span class="line">    Name() <span class="type">string</span></span><br><span class="line">    PkgPath() <span class="type">string</span></span><br><span class="line">    Size() <span class="type">uintptr</span></span><br><span class="line">    String() <span class="type">string</span></span><br><span class="line">    Kind() Kind</span><br><span class="line">    Implements(u Type) <span class="type">bool</span></span><br><span class="line">    AssignableTo(u Type) <span class="type">bool</span></span><br><span class="line">    ConvertibleTo(u Type) <span class="type">bool</span></span><br><span class="line">    Comparable() <span class="type">bool</span></span><br><span class="line">    Bits() <span class="type">int</span></span><br><span class="line">    ChanDir() ChanDir</span><br><span class="line">    IsVariadic() <span class="type">bool</span></span><br><span class="line">    Elem() Type</span><br><span class="line">    Field(i <span class="type">int</span>) StructField</span><br><span class="line">    FieldByIndex(index []<span class="type">int</span>) StructField</span><br><span class="line">    FieldByName(name <span class="type">string</span>) (StructField, <span class="type">bool</span>)</span><br><span class="line">    FieldByNameFunc(match <span class="function"><span class="keyword">func</span><span class="params">(<span class="type">string</span>)</span></span> <span class="type">bool</span>) (StructField, <span class="type">bool</span>)</span><br><span class="line">    In(i <span class="type">int</span>) Type</span><br><span class="line">    Key() Type</span><br><span class="line">    Len() <span class="type">int</span></span><br><span class="line">    NumField() <span class="type">int</span></span><br><span class="line">    NumIn() <span class="type">int</span></span><br><span class="line">    NumOut() <span class="type">int</span></span><br><span class="line">    Out(i <span class="type">int</span>) Type</span><br><span class="line">    common() *rtype</span><br><span class="line">    uncommon() *uncommonType</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Value:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Value <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ *rtype</span><br><span class="line">    ptr unsafe.Pointer</span><br><span class="line">    flag</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>你会发现反射的实现和interface的组成很相似，都是由“类型”和“数据值”构成，但是值得注意的是：interface的“类型”和“数据值”是在“一起的”，而反射的“类型”和“数据值”是分开的。</p>
+<p><code>Type</code>和<code>Value</code>提供了非常多的方法：例如获取对象的属性列表、获取和修改某个属性的值、对象所属结构体的名字、对象的底层类型(underlying type)等等</p>
+<p>Go中的反射，在使用中最核心的就两个函数：</p>
+<ul>
+<li>reflect.TypeOf(x)</li>
+<li>reflect.ValueOf(x)</li>
+</ul>
+<p>这两个函数可以分别将给定的数据对象转化为以上的<code>Type</code>和<code>Value</code>。这两个都叫做<code>反射对象</code></p>
+<h3 id="Reflection-goes-from-interface-value-to-reflection-object（法则一）"><a href="#Reflection-goes-from-interface-value-to-reflection-object（法则一）" class="headerlink" title="Reflection goes from interface value to reflection object（法则一）"></a>Reflection goes from interface value to reflection object（法则一）</h3><p>给定一个数据对象，可以将数据对象转化为反射对象<code>Type</code>和<code>Value</code>。</p>
+<p><img src="/img/reflection/law1.png"></p>
+<p>事例代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="type">float64</span> = <span class="number">3.4</span></span><br><span class="line"></span><br><span class="line">    t := reflect.TypeOf(x)</span><br><span class="line">    v := reflect.ValueOf(x)</span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;type:&quot;</span>, t)   <span class="comment">//type: float64</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;value:&quot;</span>, v.String())  <span class="comment">//value: &lt;float64 Value&gt;</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;type:&quot;</span>, v.Type()) <span class="comment">// type: float64</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;kind is float64:&quot;</span>, v.Kind() == reflect.Float64) <span class="comment">//kind is float64: true</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;value:&quot;</span>, v.Float()) <span class="comment">//value: 3.4</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>由代码17行可以看出：<code>Value</code>还可以获取到当前数据值的<code>Type</code>。<br>所以，法则一的图应为：</p>
+<p><img src="/img/reflection/law1.1.png"></p>
+<h3 id="Reflection-goes-from-reflection-object-to-interface-value-（法则二）"><a href="#Reflection-goes-from-reflection-object-to-interface-value-（法则二）" class="headerlink" title="Reflection goes from reflection object to interface value.（法则二）"></a>Reflection goes from reflection object to interface value.（法则二）</h3><p>给定的反射对象，可以转化为某种类型的数据对象。即法则一的逆向。</p>
+<p><img src="/img/reflection/law2.png"></p>
+<p>注意<code>Type</code>是没法逆向转换的，仔细想想也合理，如果可逆类型转化成什么呢？(#^.^#)</p>
+<p>承接法则一的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="type">float64</span> = <span class="number">3.4</span></span><br><span class="line"></span><br><span class="line">    t := reflect.TypeOf(x)</span><br><span class="line">    v := reflect.ValueOf(x)</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    o := v.Interface().(<span class="type">float64</span>) <span class="comment">// 法则2代码</span></span><br><span class="line">    fmt.Println(o)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="To-modify-a-reflection-object-the-value-must-be-settable-法则三"><a href="#To-modify-a-reflection-object-the-value-must-be-settable-法则三" class="headerlink" title="To modify a reflection object, the value must be settable.(法则三)"></a>To modify a reflection object, the value must be settable.(法则三)</h3><p>法则三是说：通过反射对象，可以修改原数据中的内容。</p>
+<p>这里说的反射对象，是指<code>Value</code>，毕竟<code>Type</code>只是表示原数据的类型相关的内容，而<code>Value</code>是对应着原数据对象本身。</p>
+<p>在目前以上的所有例子中，反射得到的<code>Value</code>对象的修改，都是无法直接修改原数据对象的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;reflect&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="type">float64</span> = <span class="number">3.4</span></span><br><span class="line"></span><br><span class="line">    t := reflect.TypeOf(x)</span><br><span class="line">    v := reflect.ValueOf(&amp;x)</span><br><span class="line"></span><br><span class="line">    ....</span><br><span class="line"></span><br><span class="line">    o := v.Interface().(<span class="type">float64</span>)</span><br><span class="line">    fmt.Println(o)</span><br><span class="line"></span><br><span class="line">    v.SetFloat(<span class="number">5.4</span>) <span class="comment">//此行会报错</span></span><br><span class="line">    fmt.Println(x)</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码20行会报一个panic</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reflect: reflect.Value.SetFloat using unaddressable value</span><br></pre></td></tr></table></figure>
+
+<p>这句话的意思并不是地址不可达，而是：对象<code>v</code>不可设置(<code>settable</code>)。</p>
+<p>我们可以通过<code>Value</code>结构体的<code>CanSet()</code>方法来查看是否可以设置修改新值。<br>通过以下代码可以知道<code>CanSet()</code>返回值是false。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fmt.Println(v.CanSet()) <span class="comment">// false</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="如何通过反射对象来修改原数据对象的值呢？"><a href="#如何通过反射对象来修改原数据对象的值呢？" class="headerlink" title="如何通过反射对象来修改原数据对象的值呢？"></a>如何通过反射对象来修改原数据对象的值呢？</h3><p>如何才能可以通过反射对象来修改原数据对象的值或者说为什么不能设置呢？</p>
+<p>原因简单且纯粹：在Go中，任何函数的参数都是值的拷贝，而非原数据。</p>
+<p>反射函数<code>reflect.ValueOf()</code>也不例外。我们目前得到的反射对象，都是原对象的copy的反射对象，而非原对象本身，所以不可以修改到原对象；即使可以修改，修改一个传参时候的副本，也毫无意义，不如报错儿。Go反射第三法则中的制定的<code>settable</code>属性就由此而来，还延伸出了类似于<code>CanSet()</code>的方法。</p>
+<p>那如何修改呢？</p>
+<p>首先，在Go中要想让函数“有副作用“，传值必须传指针类型的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> x <span class="type">float64</span> = <span class="number">3.4</span></span><br><span class="line">v := reflect.ValueOf(&amp;x)</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>此时还不行，因为这样反射对象对应的是原数据对象的指针类型，必须要拿到当前类型的值类型(*v)，如何做？<br>Go提供了另外一个方法<code>Elem()</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> x <span class="type">float64</span> = <span class="number">3.4</span></span><br><span class="line">v := reflect.ValueOf(&amp;x)</span><br><span class="line"></span><br><span class="line">p := v.Elem()</span><br><span class="line">fmt.Println(p.CanSet()) <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line">p.SetFloat(<span class="number">7.1</span>)</span><br><span class="line">fmt.Println(x) <span class="comment">// 7.1</span></span><br></pre></td></tr></table></figure>
+
+<p>看以上代码，就可以修改原数据了。</p>
+<h2 id="反射原理"><a href="#反射原理" class="headerlink" title="反射原理"></a>反射原理</h2><p>不难发现，go的反射和interface在结构上是如此的相近！都分为两部分：一部分是<code>Type</code>一部分是<code>value</code>。</p>
+<p>反射会不会是比着interface来实现的？</p>
+<p>反射是什么意思？反射的意思是在运行时，能够动态知道给定数据对象的类型和结构，并有机会修改它！<br>现在一个数据对象，如何判断它是什么结构？<br>数据interface中保存有结构数据呀，只要想办法拿到该数据对应的内存地址，然后把该数据转成interface，通过查看interface中的类型结构，就可以知道该数据的结构了呀~<br>其实以上就是Go反射通俗的原理。</p>
+<p>图可以展示为：<br><img src="/img/reflection/reflect.png"></p>
+<p>图中结构中牵扯到的指针，都是<code>unsafe.Pointer</code>指针，具体这是个什么指针，后续的文章中会有介绍，在此，你就姑且认为是可以指向Go系统中任意数据的指针就可以。</p>
+<h3 id="源码部分-（以下部分可以忽略，是我在查阅代码时候遇到的一点点坑。）"><a href="#源码部分-（以下部分可以忽略，是我在查阅代码时候遇到的一点点坑。）" class="headerlink" title="源码部分 （以下部分可以忽略，是我在查阅代码时候遇到的一点点坑。）"></a>源码部分 （以下部分可以忽略，是我在查阅代码时候遇到的一点点坑。）</h3><p>我们来看看具体的源码：源码在”GO SDK&#x2F;src&#x2F;refelct“包中，具体主要是包中的”type.go”和”value.go”这两个文件。</p>
+<p>可以简单的认为，反射的核心代码，主要是<code>reflect.ValueOf()</code>和<code>reflect.TypeOf()</code>这两个函数。</p>
+<p>先看类型转换：<code>reflect.TypeOf()</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// TypeOf returns the reflection Type that represents the dynamic type of i.</span></span><br><span class="line"><span class="comment">// If i is a nil interface value, TypeOf returns nil.</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TypeOf</span><span class="params">(i <span class="keyword">interface</span>&#123;&#125;)</span></span> Type &#123;</span><br><span class="line">    eface := *(*emptyInterface)(unsafe.Pointer(&amp;i))</span><br><span class="line">    <span class="keyword">return</span> toType(eface.typ)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中出现了两种数据结构，一个是<code>Type</code>，一个是<code>emptyInterface</code><br>分别看看这两者的代码：<br><code>emptyInterface</code>在 ”GO SDK&#x2F;src&#x2F;reflect&#x2F;value.go“文件中</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// emptyInterface is the header for an interface&#123;&#125; value.</span></span><br><span class="line"><span class="keyword">type</span> emptyInterface <span class="keyword">struct</span> &#123;</span><br><span class="line">    typ  *rtype</span><br><span class="line">    word unsafe.Pointer</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// nonEmptyInterface is the header for an interface value with methods.</span></span><br><span class="line"><span class="keyword">type</span> nonEmptyInterface <span class="keyword">struct</span> &#123;</span><br><span class="line">    <span class="comment">// see ../runtime/iface.go:/Itab</span></span><br><span class="line">    itab *<span class="keyword">struct</span> &#123;</span><br><span class="line">        ityp *rtype <span class="comment">// static interface type</span></span><br><span class="line">        typ  *rtype <span class="comment">// dynamic concrete type</span></span><br><span class="line">        hash <span class="type">uint32</span> <span class="comment">// copy of typ.hash</span></span><br><span class="line">        _    [<span class="number">4</span>]<span class="type">byte</span></span><br><span class="line">        fun  [<span class="number">100000</span>]unsafe.Pointer <span class="comment">// method table</span></span><br><span class="line">    &#125;</span><br><span class="line">    word unsafe.Pointer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>仔细一看，是空接口和包含方法的interface的两个结构体。且和<code>eface</code>和<code>iface</code> 内容字段一致！不是有<code>eface</code>和<code>iface</code>了吗？这两者有什么不同？？</p>
+<p>经过查阅代码，发现：</p>
+<p>interface源码(位于”Go SDK&#x2F;src&#x2F;runtime&#x2F;runtime2.go“)中的 <code>eface</code>和 <code>iface</code> 会和 反射源码(位于”GO SDK&#x2F;src&#x2F;reflect&#x2F;value.go“)中的<code>emptyInterface</code>和<code>nonEmptyInterface</code>保持数据同步！</p>
+<p>此外，还有interface源码(位于”Go SDK&#x2F;src&#x2F;runtime&#x2F;type.go“)中的<code>_type</code>会和 反射源码(位于”GO SDK&#x2F;src&#x2F;reflect&#x2F;type.go“)中的<code>rtype</code>也保持数据同步一致！</p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+<p>参考文献：<br>Go 1.12.9 反射源码：&#x2F;src&#x2F;reflect&#x2F; 包<br>Go 1.12.9 interface 源码：&#x2F;src&#x2F;runtime&#x2F;runtime2.go 以及其他<br><a href="https://studygolang.com/articles/2157">https://studygolang.com/articles/2157</a><br><a href="https://blog.golang.org/laws-of-reflection">https://blog.golang.org/laws-of-reflection</a><br><a href="https://blog.csdn.net/u011957758/article/details/81193806">https://blog.csdn.net/u011957758/article/details/81193806</a><br><a href="https://draveness.me/golang/docs/part2-foundation/ch04-basic/golang-reflect/#431-">https://draveness.me/golang/docs/part2-foundation/ch04-basic/golang-reflect/#431-</a><br><a href="https://mp.weixin.qq.com/s/Hke0mSCEa4ga_GS_LUp78A">https://mp.weixin.qq.com/s/Hke0mSCEa4ga_GS_LUp78A</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/02/15/golang-reflection/" data-id="clzo46btj001fvajhhnfc6gqj" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-redis-data-struct" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/12/01/redis-data-struct/" class="article-date">
+  <time datetime="2019-11-30T18:20:40.000Z" itemprop="datePublished">2019-12-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/01/redis-data-struct/">图解redis五种数据结构底层实现(动图哦)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>redis有五种基本数据结构：字符串、hash、set、zset、list。但是你知道构成这五种结构的底层数据结构是怎样的吗？<br>今天我们来花费五分钟的时间了解一下。<br>(目前redis版本为3.0.6)</p>
+<h1 id="动态字符串SDS"><a href="#动态字符串SDS" class="headerlink" title="动态字符串SDS"></a>动态字符串SDS</h1><p>SDS是”simple dynamic string”的缩写。<br>redis中所有场景中出现的字符串，基本都是由SDS来实现的</p>
+<ul>
+<li>所有非数字的key。例如<code>set msg &quot;hello world&quot;</code> 中的key msg.</li>
+<li>字符串数据类型的值。例如&#96;&#96; set msg “hello world”中的msg的值”hello wolrd”</li>
+<li>非字符串数据类型中的“字符串值”。例如<code>RPUSH fruits &quot;apple&quot; &quot;banana&quot; &quot;cherry&quot;</code>中的”apple” “banana” “cherry”</li>
+</ul>
+<h3 id="SDS长这样："><a href="#SDS长这样：" class="headerlink" title="SDS长这样："></a>SDS长这样：</h3><p><img src="/img/redis-data-struct/sds.png"></p>
+<p>free:还剩多少空间<br>len:字符串长度<br>buf:存放的字符数组</p>
+<h3 id="空间预分配"><a href="#空间预分配" class="headerlink" title="空间预分配"></a>空间预分配</h3><p>为减少修改字符串带来的内存重分配次数，sds采用了“一次管够”的策略：</p>
+<ul>
+<li>若修改之后sds长度小于1MB,则多分配现有len长度的空间</li>
+<li>若修改之后sds长度大于等于1MB，则扩充除了满足修改之后的长度外，额外多1MB空间</li>
+</ul>
+<p><img src="/img/redis-data-struct/sds.gif"></p>
+<h3 id="惰性空间释放"><a href="#惰性空间释放" class="headerlink" title="惰性空间释放"></a>惰性空间释放</h3><p>为避免缩短字符串时候的内存重分配操作，sds在数据减少时，并不立刻释放空间。</p>
+<p><img src="/img/redis-data-struct/sds_free.gif"></p>
+<h1 id="int"><a href="#int" class="headerlink" title="int"></a>int</h1><p>就是redis中存放的各种数字<br>包括一下这种，故意加引号“”的</p>
+<p><img src="/img/redis-data-struct/int.png"></p>
+<h1 id="双向链表"><a href="#双向链表" class="headerlink" title="双向链表"></a>双向链表</h1><p>长这样：</p>
+<p><img src="/img/redis-data-struct/linklist.png"></p>
+<p>分两部分，一部分是“统筹部分”：橘黄色，一部分是“具体实施方“：蓝色。</p>
+<p>主体”统筹部分“：</p>
+<ul>
+<li><code>head</code>指向具体双向链表的头</li>
+<li><code>tail</code>指向具体双向链表的尾</li>
+<li><code>len</code>双向链表的长度</li>
+</ul>
+<p>具体”实施方”：一目了然的双向链表结构，有前驱<code>pre</code>有后继<code>next</code></p>
+<p>由<code>list</code>和<code>listNode</code>两个数据结构构成。</p>
+<h1 id="ziplist"><a href="#ziplist" class="headerlink" title="ziplist"></a>ziplist</h1><p>压缩列表。<br>redis的列表键和哈希键的底层实现之一。此数据结构是为了节约内存而开发的。和各种语言的数组类似，它是由连续的内存块组成的，这样一来，由于内存是连续的，就减少了很多内存碎片和指针的内存占用，进而节约了内存。</p>
+<p><img src="/img/redis-data-struct/ziplist_total.png"></p>
+<p>然后文中的<code>entry</code>的结构是这样的：</p>
+<p><img src="/img/redis-data-struct/ziplist_entry.png"></p>
+<h3 id="元素的遍历"><a href="#元素的遍历" class="headerlink" title="元素的遍历"></a>元素的遍历</h3><p>先找到列表尾部元素：</p>
+<p><img src="/img/redis-data-struct/ziplist_bianli1.gif"></p>
+<p>然后再根据ziplist节点元素中的<code>previous_entry_length</code>属性，来逐个遍历:</p>
+<p><img src="/img/redis-data-struct/ziplist_bianli2.gif"></p>
+<h3 id="连锁更新"><a href="#连锁更新" class="headerlink" title="连锁更新"></a>连锁更新</h3><p>再次看看<code>entry</code>元素的结构，有一个<code>previous_entry_length</code>字段，他的长度要么都是1个字节，要么都是5个字节：</p>
+<ul>
+<li>前一节点的长度小于254字节，则<code>previous_entry_length</code>长度为1字节</li>
+<li>前一节点的长度小于254字节，则<code>previous_entry_length</code>长度为5字节</li>
+</ul>
+<p>假设现在存在一组压缩列表，长度都在250字节至253字节之间，突然新增一新节点<code>new</code>，<br>长度大于等于254字节，会出现：</p>
+<p><img src="/img/redis-data-struct/ziplist_refresh.gif"></p>
+<p>程序需要不断的对压缩列表进行空间重分配工作，直到结束。</p>
+<p>除了增加操作，删除操作也有可能带来“连锁更新”。<br>请看下图，ziplist中所有entry节点的长度都在250字节至253字节之间，big节点长度大于254字节，small节点小于254字节。</p>
+<p><img src="/img/redis-data-struct/ziplist_sub_refresh.gif"></p>
+<h1 id="哈希表"><a href="#哈希表" class="headerlink" title="哈希表"></a>哈希表</h1><p>哈希表略微有点复杂。哈希表的制作方法一般有两种，一种是：<code>开放寻址法</code>，一种是<code>拉链法</code>。redis的哈希表的制作使用的是<code>拉链法</code>。</p>
+<p>整体结构如下图：</p>
+<p><img src="/img/redis-data-struct/hash1.png"></p>
+<p>也是分为两部分：左边橘黄色部分和右边蓝色部分，同样，也是”统筹“和”实施“的关系。<br>具体哈希表的实现，都是在蓝色部分实现的。<br>先来看看蓝色部分：</p>
+<p><img src="/img/redis-data-struct/hash2.png"></p>
+<p>这也分为左右两边“统筹”和“实施”的两部分。</p>
+<p>右边部分很容易理解：就是通常拉链表实现的哈希表的样式；数组就是bucket，一般不同的key首先会定位到不同的bucket，若key重复，就用链表把冲突的key串起来。</p>
+<h3 id="新建key的过程："><a href="#新建key的过程：" class="headerlink" title="新建key的过程："></a>新建key的过程：</h3><p><img src="/img/redis-data-struct/hash_key.gif"></p>
+<h3 id="假如重复了"><a href="#假如重复了" class="headerlink" title="假如重复了:"></a>假如重复了:</h3><p><img src="/img/redis-data-struct/hash_key_dup.gif"></p>
+<h2 id="rehash"><a href="#rehash" class="headerlink" title="rehash"></a>rehash</h2><p>再来看看哈希表总体图中左边橘黄色的“统筹”部分，其中有两个关键的属性：<code>ht</code>和<code>rehashidx</code>。<br><code>ht</code>是一个数组，有且只有俩元素ht[0]和ht[1];其中，ht[0]存放的是redis中使用的哈希表，而ht[1]和rehashidx和哈希表的<code>rehash</code>有关。</p>
+<p><code>rehash</code>指的是重新计算键的哈希值和索引值，然后将键值对重排的过程。</p>
+<p><code>加载因子（load factor） = ht[0].used / ht[0].size</code>。</p>
+<h3 id="扩容和收缩标准"><a href="#扩容和收缩标准" class="headerlink" title="扩容和收缩标准"></a>扩容和收缩标准</h3><p>扩容：</p>
+<ul>
+<li>没有执行BGSAVE和BGREWRITEAOF指令的情况下，哈希表的<code>加载因子</code>大于等于1。</li>
+<li>正在执行BGSAVE和BGREWRITEAOF指令的情况下，哈希表的<code>加载因子</code>大于等于5。</li>
+</ul>
+<p>收缩:</p>
+<ul>
+<li><code>加载因子</code>小于0.1时，程序自动开始对哈希表进行收缩操作。</li>
+</ul>
+<h3 id="扩容和收缩的数量"><a href="#扩容和收缩的数量" class="headerlink" title="扩容和收缩的数量"></a>扩容和收缩的数量</h3><p>扩容：</p>
+<ul>
+<li>第一个大于等于<code>ht[0].used * 2</code>的<code>2^n</code>(2的n次方幂)。</li>
+</ul>
+<p>收缩：</p>
+<ul>
+<li>第一个大于等于<code>ht[0].used</code>的<code>2^n</code>(2的n次方幂)。</li>
+</ul>
+<p><strong>(以下部分属于细节分析，可以跳过直接看扩容步骤)</strong><br>对于收缩，我当时陷入了疑虑：收缩标准是<code>加载因子</code>小于0.1的时候，也就是说假如哈希表中有4个元素的话，哈希表的长度只要大于40，就会进行收缩，假如有一个长度大于40，但是存在的元素为4即(<code>ht[0].used</code>为4)的哈希表，进行收缩，那收缩后的值为多少？</p>
+<p>我想了一下：按照前文所讲的内容，应该是4。<br>但是，假如是4，存在和收缩后的长度相等，是不是又该扩容？<br>翻开源码看看：</p>
+<p>收缩具体函数:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> dictResize(dict *d)     <span class="comment">//缩小字典d</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> minimal;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//如果dict_can_resize被设置成0，表示不能进行rehash，或正在进行rehash，返回出错标志DICT_ERR</span></span><br><span class="line">    <span class="keyword">if</span> (!dict_can_resize || dictIsRehashing(d)) <span class="keyword">return</span> DICT_ERR;</span><br><span class="line"></span><br><span class="line">    minimal = d-&gt;ht[<span class="number">0</span>].used;            <span class="comment">//获得已经有的节点数量作为最小限度minimal</span></span><br><span class="line">    <span class="keyword">if</span> (minimal &lt; DICT_HT_INITIAL_SIZE)<span class="comment">//但是minimal不能小于最低值DICT_HT_INITIAL_SIZE（4）</span></span><br><span class="line">        minimal = DICT_HT_INITIAL_SIZE;</span><br><span class="line">    <span class="keyword">return</span> dictExpand(d, minimal);      <span class="comment">//用minimal调整字典d的大小</span></span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> dictExpand(dict *d, unsigned long size)     <span class="comment">//根据size调整或创建字典d的哈希表</span></span><br><span class="line">&#123;</span><br><span class="line">    dictht n; </span><br><span class="line">    unsigned long realsize = _dictNextPower(size);  <span class="comment">//获得一个最接近2^n的realsize</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (dictIsRehashing(d) || d-&gt;ht[<span class="number">0</span>].used &gt; size) <span class="comment">//正在rehash或size不够大返回出错标志</span></span><br><span class="line">        <span class="keyword">return</span> DICT_ERR;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (realsize == d-&gt;ht[<span class="number">0</span>].size) <span class="keyword">return</span> DICT_ERR; <span class="comment">//如果新的realsize和原本的size一样则返回出错标志</span></span><br><span class="line">    <span class="comment">/* Allocate the new hash table and initialize all pointers to NULL */</span></span><br><span class="line">    <span class="comment">//初始化新的哈希表的成员</span></span><br><span class="line">    n.size = realsize;</span><br><span class="line">    n.sizemask = realsize<span class="number">-1</span>;</span><br><span class="line">    n.table = zcalloc(realsize*sizeof(dictEntry*));</span><br><span class="line">    n.used = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Is this the first initialization? If so it&#x27;s not really a rehashing</span></span><br><span class="line"><span class="comment">     * we just set the first hash table so that it can accept keys. */</span></span><br><span class="line">    <span class="keyword">if</span> (d-&gt;ht[<span class="number">0</span>].table == NULL) &#123;   <span class="comment">//如果ht[0]哈希表为空，则将新的哈希表n设置为ht[0]</span></span><br><span class="line">        d-&gt;ht[<span class="number">0</span>] = n;</span><br><span class="line">        <span class="keyword">return</span> DICT_OK;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    d-&gt;ht[<span class="number">1</span>] = n;           <span class="comment">//如果ht[0]非空，则需要rehash</span></span><br><span class="line">    d-&gt;rehashidx = <span class="number">0</span>;       <span class="comment">//设置rehash标志位为0，开始渐进式rehash（incremental rehashing）</span></span><br><span class="line">    <span class="keyword">return</span> DICT_OK;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">static unsigned long _dictNextPower(unsigned long size)</span><br><span class="line">&#123;</span><br><span class="line">    unsigned long i = DICT_HT_INITIAL_SIZE; <span class="comment">//DICT_HT_INITIAL_SIZE 为 4</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (size &gt;= LONG_MAX) <span class="keyword">return</span> LONG_MAX + <span class="number">1</span>LU;</span><br><span class="line">    while(<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (i &gt;= size)</span><br><span class="line">            <span class="keyword">return</span> i;</span><br><span class="line">        i *= <span class="number">2</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<p>由代码我们可以看到，假如收缩后长度为4，不仅不会收缩，甚至还会报错。(😝)</p>
+<p>我们回过头来再看看设定：题目可能成立吗？<br>哈希表的扩容都是2倍增长的，最小是4，<br>4 &#x3D;&#x3D;&#x3D;》 8 &#x3D;&#x3D;&#x3D;&#x3D;》 16 &#x3D;&#x3D;&#x3D;&#x3D;&#x3D;》 32 &#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;》 64 &#x3D;&#x3D;&#x3D;&#x3D;》 128</p>
+<p>也就是说：不存在长度为 40多的情况，只能是64。但是如果是64的话，64 X 0.1（收缩界限）&#x3D; 6.4 ，也就是说在减少到6的时候，哈希表就会收缩，会缩小到多少呢？是8。此时，再继续减少到4，也不会再收缩了。所以，根本不存在一个长度大于40，但是存在的元素为4的哈希表的。</p>
+<h3 id="扩容步骤"><a href="#扩容步骤" class="headerlink" title="扩容步骤"></a>扩容步骤</h3><p><img src="/img/redis-data-struct/hash_refresh.gif"></p>
+<h3 id="收缩步骤"><a href="#收缩步骤" class="headerlink" title="收缩步骤"></a>收缩步骤</h3><p><img src="/img/redis-data-struct/hash_refresh_release.gif"></p>
+<h3 id="渐进式refresh"><a href="#渐进式refresh" class="headerlink" title="渐进式refresh"></a>渐进式refresh</h3><p>在”扩容步骤”和”收缩步骤” 两幅动图中每幅图的第四步骤“将ht[0]中的数据利用哈希函数重新计算，rehash到ht[1]”，并不是一步完成的，而是分成N多步，循序渐进的完成的。<br>因为hash中有可能存放几千万甚至上亿个key，毕竟Redis中每个hash中可以存<code>2^32 - 1</code> 键值对（40多亿），假如一次性将这些键值rehash的话，可能会导致服务器在一段时间内停止服务，毕竟哈希函数就得计算一阵子呢((#^.^#))。</p>
+<p>哈希表的refresh是分多次、渐进式进行的。</p>
+<p>渐进式refresh和下图中左边橘黄色的“统筹”部分中的<code>rehashidx</code>密切相关：</p>
+<ul>
+<li>rehashidx 的数值就是现在rehash的元素位置</li>
+<li>rehashidx 等于 -1 的时候说明没有在进行refresh</li>
+</ul>
+<p><img src="/img/redis-data-struct/rehashidx.png"></p>
+<p>甚至在进行期间，每次对哈希表的增删改查操作，除了正常执行之外，还会顺带将ht[0]哈希表相关键值对rehash到ht[1]。</p>
+<p>以扩容步骤为例：</p>
+<p><img src="/img/redis-data-struct/hash_refresh_slow.gif"></p>
+<h1 id="intset"><a href="#intset" class="headerlink" title="intset"></a>intset</h1><p>整数集合是集合键的底层实现方式之一。<br><img src="/img/redis-data-struct/inset.png"></p>
+<h1 id="跳表"><a href="#跳表" class="headerlink" title="跳表"></a>跳表</h1><p>跳表这种数据结构长这样：<br><img src="/img/redis-data-struct/skiplist.png"></p>
+<p>redis中把跳表抽象成如下所示：</p>
+<p><img src="/img/redis-data-struct/skiplist1.png"></p>
+<p>看这个图，左边“统筹”，右边实现。<br>统筹部分有以下几点说明：</p>
+<ul>
+<li>header: 跳表表头</li>
+<li>tail:跳表表尾</li>
+<li>level:层数最大的那个节点的层数</li>
+<li>length：跳表的长度</li>
+</ul>
+<p>实现部分有以下几点说明：</p>
+<ul>
+<li>表头：是链表的哨兵节点，不记录主体数据。</li>
+<li>是个双向链表</li>
+<li>分值是有顺序的</li>
+<li>o1、o2、o3是节点所保存的成员，是一个指针，可以指向一个SDS值。</li>
+<li>层级高度最高是32。没每次创建一个新的节点的时候，程序都会随机生成一个介于1和32之间的值作为level数组的大小，这个大小就是“高度”</li>
+</ul>
+<h1 id="redis五种数据结构的实现"><a href="#redis五种数据结构的实现" class="headerlink" title="redis五种数据结构的实现"></a>redis五种数据结构的实现</h1><h3 id="redis对象"><a href="#redis对象" class="headerlink" title="redis对象"></a>redis对象</h3><p>redis中并没有直接使用以上所说的各种数据结构来实现键值数据库，而是基于一种对象，对象底层再间接的引用上文所说的具体的数据结构。</p>
+<p>结构如下图：</p>
+<p><img src="/img/redis-data-struct/object_ptr.png"></p>
+<h3 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h3><p><img src="/img/redis-data-struct/object_string.png"></p>
+<p>其中：embstr和raw都是由SDS动态字符串构成的。唯一区别是：raw是分配内存的时候，redisobject和 sds 各分配一块内存，而embstr是redisobject和raw在一块儿内存中。</p>
+<h3 id="列表"><a href="#列表" class="headerlink" title="列表"></a>列表</h3><p><img src="/img/redis-data-struct/object_list.png"></p>
+<h3 id="hash"><a href="#hash" class="headerlink" title="hash"></a>hash</h3><p><img src="/img/redis-data-struct/object_hash.png"></p>
+<h3 id="set"><a href="#set" class="headerlink" title="set"></a>set</h3><p><img src="/img/redis-data-struct/object_set.png"></p>
+<h3 id="zset"><a href="#zset" class="headerlink" title="zset"></a>zset</h3><p><img src="/img/redis-data-struct/object_zset.png"></p>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+<h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><ul>
+<li><a href="https://throwsnew.com/2017/09/12/%E4%B8%BA%E4%BB%80%E4%B9%88Redis%E4%BD%BF%E7%94%A8ziplist%E8%83%BD%E8%8A%82%E7%9C%81%E5%86%85%E5%AD%98/">https://throwsnew.com/2017/09/12/%E4%B8%BA%E4%BB%80%E4%B9%88Redis%E4%BD%BF%E7%94%A8ziplist%E8%83%BD%E8%8A%82%E7%9C%81%E5%86%85%E5%AD%98/</a></li>
+<li>《redis设计与实现》</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/12/01/redis-data-struct/" data-id="clzo46btr0028vajh4fj53aeg" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-io-multi" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/11/10/io-multi/" class="article-date">
+  <time datetime="2019-11-10T11:18:08.000Z" itemprop="datePublished">2019-11-10</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/11/10/io-multi/">动图了解I/O多路复用</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>啥叫I&#x2F;O多路复用？<br>epoll又是个什么东西？<br>你或许看过很多文章，但是还是感觉云里雾里的，今天，我们抛开文字，释放动图，或许你就理解了。</p>
+<h2 id="I-O多路复用"><a href="#I-O多路复用" class="headerlink" title="I&#x2F;O多路复用"></a>I&#x2F;O多路复用</h2><p>通常的一次的请求结果如下图所示：</p>
+<p><img src="/img/io/normal.gif"></p>
+<p>但是，服务器往往不会只处理一次请求，往往是多个请求，这一个请求，这时候每来一个请求，就会生成一个进程或线程。</p>
+<p><img src="/img/io/normal_1.png"></p>
+<p>在这些请求线程或者进程中，大部分都处于等待阶段，只有少部分是接收数据。这样一来，非常耗费资源，而且这些线程或者进程的管理，也是个事儿。</p>
+<p><img src="/img/io/normal_2.png"></p>
+<p>于是，有人想到一个办法：我们只用一个线程或者进程来和系统内核打交道，并想办法把每个应用的I&#x2F;O流状态记录下来，一有响应变及时返回给相应的应用。</p>
+<p><img src="/img/io/io_multi.png"></p>
+<p>或者下图：</p>
+<p><img src="/img/io/io_multi.jpeg"></p>
+<h2 id="select、poll、epoll"><a href="#select、poll、epoll" class="headerlink" title="select、poll、epoll"></a>select、poll、epoll</h2><p>select, poll, epoll 都是I&#x2F;O多路复用的具体实现，他们出现是有先后顺序的。</p>
+<p>select是第一个实现 (1983 左右在BSD里面实现的)。</p>
+<p>select 被实现后，发现诸多问题，然后1997年实现了poll，对select进行了改进，select和poll是很类似的。</p>
+<p>再后来，2002做出重大改进实现了epoll。</p>
+<p>epoll和 select&#x2F;poll 有着很大的不同：</p>
+<p>例如：select&#x2F;poll的处理流程如下：</p>
+<p><img src="/img/io/select.gif"></p>
+<p>而epoll的处理流程如下：</p>
+<p><img src="/img/io/epoll.gif"></p>
+<p>这样，就无需遍历成千上万个消息列表了，直接可以定位哪个socket有数据。</p>
+<p>那么，这是如何实现的呢？</p>
+<p>早期的时候 epoll的实现是一个哈希表，但是后来由于占用空间比较大，改为了红黑树和链表。</p>
+<p><img src="/img/io/epoll_rbtree.png"></p>
+<p>其中链表中全部为活跃的链接，红黑树中放的是所有事件。两部分各司其职。<br>这样一来，当收到内核的数据时，只需遍历链表中的数据就行了，而注册read事件或者write事件的时候，向红黑树中记录。</p>
+<p>结果导致： </p>
+<ul>
+<li>创建\修改\删除消息效率非常高：O(logN)。</li>
+<li>获取活跃链接也非常快，因为在一个时间内，大部分是不活跃的链接，活跃的链接是少数，只需要遍历少数活跃的链接就好了</li>
+</ul>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+<p>参考文献：</p>
+<ul>
+<li><a href="https://blog.csdn.net/qq_28098067/article/details/80537564">https://blog.csdn.net/qq_28098067/article/details/80537564</a></li>
+<li><a href="https://www.jianshu.com/p/397449cadc9a">https://www.jianshu.com/p/397449cadc9a</a></li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/11/10/io-multi/" data-id="clzo46btl001mvajh9yke1xvc" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-snowflake" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/09/28/snowflake/" class="article-date">
+  <time datetime="2019-09-28T10:40:30.000Z" itemprop="datePublished">2019-09-28</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/09/28/snowflake/">图解各路分布式ID生成算法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在分布式系统中，通常会用到分布式ID来标注数据的唯一性，而分布式ID的生成方式又多种多样，今天我们就来讨论一下主流的分布式ID生成策略。</p>
+<h2 id="分布式ID基本需求"><a href="#分布式ID基本需求" class="headerlink" title="分布式ID基本需求"></a>分布式ID基本需求</h2><ul>
+<li>全局唯一</li>
+<li>趋势递增</li>
+<li>信息安全</li>
+</ul>
+<h3 id="全局唯一"><a href="#全局唯一" class="headerlink" title="全局唯一"></a>全局唯一</h3><p>这是基本要求，不必解释</p>
+<h3 id="趋势递增"><a href="#趋势递增" class="headerlink" title="趋势递增"></a>趋势递增</h3><p>为什么要趋势递增呢？<br>第一，由于我们的分布式ID，是用来标识数据唯一性的，所以多数时候会被定义为主键或者唯一索引。<br>第二，并且绝大多数互联网公司使用的数据库是：MySQL，存储引擎为innoDB。<br>对于<code>B + Tree</code>这个数据结构来讲，数据以自增顺序来写入的话，b+tree的结构不会时常被打乱重塑，存取效率是最高的。</p>
+<h3 id="信息安全"><a href="#信息安全" class="headerlink" title="信息安全"></a>信息安全</h3><p>由于数据是递增的，所以，恶意用户的可以根据当前ID推测出下一个，非常危险，所以，我们的分布式ID尽量做到不易被破解。</p>
+<h2 id="数据库主键自增-Flicker"><a href="#数据库主键自增-Flicker" class="headerlink" title="数据库主键自增(Flicker)"></a>数据库主键自增(Flicker)</h2><p>基于数据库主键自增的方案，名为<code>Flicker</code>。<br>主要是利用MySQL的自增主键来实现分布式ID。</p>
+<p>以下为<code>Flicker</code>实现分布式ID的主流做法：</p>
+<h3 id="1、需要单独建立一个数据库实例：flicker"><a href="#1、需要单独建立一个数据库实例：flicker" class="headerlink" title="1、需要单独建立一个数据库实例：flicker"></a>1、需要单独建立一个数据库实例：flicker</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create database `flicker`;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2、创建一张表：sequence-id"><a href="#2、创建一张表：sequence-id" class="headerlink" title="2、创建一张表：sequence_id"></a>2、创建一张表：sequence_id</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">create table sequence_id(</span><br><span class="line">    id bigint(20) unsigned NOT NULL auto_increment, </span><br><span class="line">    stub char(10) NOT NULL default &#x27;&#x27;,</span><br><span class="line">    PRIMARY KEY (id),</span><br><span class="line">    UNIQUE KEY stub (stub)</span><br><span class="line">) ENGINE=MyISAM;</span><br></pre></td></tr></table></figure>
+<p>为什么用<code>MyISAM</code>？不用<code>InnoDB</code>？个人推测原因是：<code>flicker</code>算法出来的时候，MySQL的默认引擎还依旧是<code>MyISAM</code>而不是<code>InnoDB</code>，作者只是想用默认引擎而已，并无其他原因。</p>
+<ul>
+<li>stub: 票根，对应需要生成 Id 的业务方编码，可以是项目名、表名甚至是服务器 IP 地址。</li>
+<li>stub 要设置为唯一索引</li>
+</ul>
+<h3 id="3、使用以下SQL来获取ID"><a href="#3、使用以下SQL来获取ID" class="headerlink" title="3、使用以下SQL来获取ID"></a>3、使用以下SQL来获取ID</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">REPLACE INTO ticket_center (stub) VALUES (&#x27;test&#x27;);  </span><br><span class="line">SELECT LAST_INSERT_ID();  </span><br></pre></td></tr></table></figure>
+
+<p><code>Replace into</code> 先尝试插入数据到表中，如果发现表中已经有此行数据（根据主键或者唯一索引判断）则先删除此行数据，然后插入新的数据， 否则直接插入新数据。<br>一般<code>stub</code>为特殊的相同的值。</p>
+<p>这样，一个分布式ID系统算是可以搭建运行了。但是，有人要问：“这是一个单实例、单点的系统，万一挂了，岂不是影响所有关联的业务方？”</p>
+<h3 id="改进升华"><a href="#改进升华" class="headerlink" title="改进升华"></a>改进升华</h3><p>是的。确实如此，因此又有人说：“可以利用MySQL主从模式，主库挂了，使用从库。”<br>这只能算是一种比较low的策略，因为如果主库挂了，从库没来得及同步，就会生成重复的ID。<br>有没有更好的方法呢？<br>我们可以使用“双主模式“，也就是有两个MySQL实例，这两个都能生成ID。<br>如图所示，我们原来的模式：<br><img src="/img/snowflake/mysql1.png"></p>
+<p>双主模式是该怎么样呢？如何保持唯一性？<br>我们可以让一台实例生成奇数ID，另一台生成偶数ID。</p>
+<p>奇数那一台：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">set @@auto_increment_offset = 1;     -- 起始值</span><br><span class="line">set @@auto_increment_increment = 2;  -- 步长</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>偶数那一台：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">set @@auto_increment_offset = 2;     -- 起始值</span><br><span class="line">set @@auto_increment_increment = 2;  -- 步长</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>当两台都OK的时候，随机取其中的一台生成ID；若其中一台挂了，则取另外一台生成ID。<br>如图所示：<br><img src="/img/snowflake/mysql2.png"></p>
+<p>细心会发现，N个节点，只要起始值为1，2，…N，然后步长为N，就会生成各不相同的ID。(PS:后文有推导公式)</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>优点：</p>
+<ul>
+<li>简单。充分利用了数据库自增 ID 机制，生成的 ID 有序递增。</li>
+<li>ID递增</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>并发量不大。</li>
+<li>水平扩展困难，系统定义好了起始值、步长和机器台数，跑起来之后，添加额外的机器困难。</li>
+<li>安全系数低</li>
+</ul>
+<h2 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h2><p>Redis为单线程的，所以操作为原子操作，利用<code>incrby</code>命令可以生成唯一的递增ID。</p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p><img src="/img/snowflake/redis1.png"></p>
+<p>单机单点，吞吐不够，加集群</p>
+<p><img src="/img/snowflake/redis2.png"></p>
+<p>假设N个节点，则步长为N，节点起始值为1，2，…… N。则三个节点生成的ID一定不同！<br>想想为什么？<br>以上信息条件可以转化为数学推理：<br><code>1 + x * N = 2 + y * N 且 x、y、N都为整成数且N不为1，试问等式存不存在？</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">答：</span><br><span class="line">假设存在在起始值是1的节点上叠加x次之后等于起始值为2、叠加y次的值，</span><br><span class="line">既 “1 + x * N = 2 + y * N” 等式成立</span><br><span class="line">则：</span><br><span class="line">x * N = 1 + y * N</span><br><span class="line">x * N - y * N = 1</span><br><span class="line">(x - y) * N = 1</span><br><span class="line">(x - y) = 1 / N</span><br><span class="line"></span><br><span class="line">又因为 x、y都为整成数；</span><br><span class="line">所以x - y 必为整成数；</span><br><span class="line">又因为只有N等于1的时候，1/N才为整成数；</span><br><span class="line">与条件N为1不符合，所以不存在。</span><br></pre></td></tr></table></figure>
+<p>同理可证<code>1 + x * N = 3 + y * N </code>和<code>2 + x * N = 3 + y * N </code>也是如此。</p>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>性能显然高于基于数据库的<code>Flicker</code>方案</li>
+<li>ID递增</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>水平扩展困难</li>
+<li>Redis集群宕机可能会产生重复的id</li>
+<li>易破解</li>
+</ul>
+<h2 id="UUID"><a href="#UUID" class="headerlink" title="UUID"></a>UUID</h2><p>想必这个大家都熟悉。<br><code>UUID</code>是通用唯一识别码（Universally Unique Identifier）的缩写，是一种软件建构的标准，亦为开放软件基金会组织在分布式计算环境领域的一部分。</p>
+<h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><p><img src="/img/snowflake/uuid1.png"></p>
+<p>UUID是由一组32位数的16进制数字所构成，是故UUID理论上的总数为16^32 &#x3D; 2^128，约等于3.4 x 10^38。也就是说若每纳秒产生1兆个UUID，要花100亿年才会将所有UUID用完。</p>
+<p><code>UUID</code>是利用同一时空中的所有机器都是唯一的这一规则来确保唯一性的。</p>
+<p><img src="/img/snowflake/uuid3.png"></p>
+<p>具体外形为：<br><img src="/img/snowflake/uuid2.png"></p>
+<p>通常由以下几部分组成：</p>
+<ul>
+<li>系统时间</li>
+<li>时钟序列</li>
+<li>全局唯一的IEEE机器识别，如网卡MAC、机器SN等</li>
+</ul>
+<p>生成方式多种多样，业界公认的是五种，分别是uuid1,uuid2,uuid3,uuid4,uuid5。<br>目前使用最广泛的UUID是微软的<code>GUID</code>。</p>
+<h3 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>本地生成，性能极佳。无网络消耗</li>
+<li>全局唯一</li>
+</ul>
+<h3 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>存储麻烦。16字节128位，通常以36长度的字符串表示，很多场景不适用</li>
+<li>通常是字符串，非自增，无序，不利于做主键。每次插入都会对B+tree结构进行修改</li>
+<li>破解相对困难，但是也不安全。参考”梅丽莎病毒事件，病毒作者制作的UUID包含Mac地址，被警方破解后，直接定位，抓捕归案😝”</li>
+</ul>
+<h2 id="snowflake"><a href="#snowflake" class="headerlink" title="snowflake"></a>snowflake</h2><p>snowflake即雪花算法，Twitter发明的。</p>
+<h3 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h3><p>外形长这样：<br><img src="/img/snowflake/snowflake.jpeg"></p>
+<ul>
+<li><code>1位</code>不用。二进制中最高位为1的都是负数，但是我们生成的id一般都使用整数，所以这个最高位固定是0。</li>
+<li><code>41位</code>，用来记录毫秒的时间戳。41位可以表示的数值范围是：0 至 2^{41}-1，减1是因为可表示的数值范围是从0开始算的，而不是1，转化为年则是<code>2^&#123;41&#125;-1) / (1000 * 60 * 60 * 24 * 365) = 69</code>年。</li>
+<li><code>10位</code>，用来记录工作机器id。最多可以部署在2^{10} &#x3D; 1024个节点，我们可以根据具体的业务来定制具体分配的机器数量和每台机器1毫秒产生的id序号number数。例如可以把10bit分5bit给IDC，分5bit给工作机器。这样就可以表示32个IDC，每个IDC下可以有32台机器，可以将内容配置在配置文件中，服务去获取。</li>
+<li><code>12位</code>。用来表示单台机器每毫秒生成的id序号，12位bit可以表示的最大正整数为2^12 - 1 &#x3D; 4096，若超过4096，则重新从0开始。即，每台机器1毫秒内最多产生4096个ID，足够用了。</li>
+</ul>
+<p>最后将上述4段bit通过位运算拼接起来组成64位bit.<br>由于是64位bit,所以完全可以用数字来表示ID。</p>
+<p>基本是根据：</p>
+<p><img src="/img/snowflake/snowflake1.png"></p>
+<h3 id="优点-2"><a href="#优点-2" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>ID为数字且时间位在高位，整个ID都是趋势递增的。</li>
+<li>不依赖任何第三方库，完全可以自己写，且性能非常高。</li>
+<li>可根据业务定制分配bit位，非常灵活。得益于<code>10位</code>机器IDbit位。</li>
+<li>不太容易破解</li>
+</ul>
+<h3 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>依赖机器的时间，如果机器时间不准或者回拨，可能导致重复</li>
+</ul>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p>在国内也得到了比较普遍的应用，各大厂根据其基本原理，生成了自己的规则：</p>
+<ul>
+<li>百度的uid-generator：<a href="https://github.com/baidu/uid-generator">https://github.com/baidu/uid-generator</a></li>
+<li>美团Leaf：<a href="https://github.com/zhuzhong/idleaf">https://github.com/zhuzhong/idleaf</a></li>
+</ul>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+<p>参考文献：<br>[flicker算法原文] <a href="http://code.flickr.com/blog/2010/02/08/ticket-servers-distributed-unique-primary-keys-on-the-cheap/">http://code.flickr.com/blog/2010/02/08/ticket-servers-distributed-unique-primary-keys-on-the-cheap/</a></p>
+<p>[分布式唯一ID极简教程] <a href="https://mp.weixin.qq.com/s/cqIK5Bv1U0mT97C7EOxmnA">https://mp.weixin.qq.com/s/cqIK5Bv1U0mT97C7EOxmnA</a></p>
+<p>[分布式 ID 生成策略] <a href="https://mp.weixin.qq.com/s/UAvSUDFJ8Fr0a-Na2Vr22g">https://mp.weixin.qq.com/s/UAvSUDFJ8Fr0a-Na2Vr22g</a></p>
+<p>[分布式ID系列（2）——UUID适合做分布式ID吗] <a href="https://mp.weixin.qq.com/s/kZAnYz_Jj4aBrtsk8Q9w_A">https://mp.weixin.qq.com/s/kZAnYz_Jj4aBrtsk8Q9w_A</a></p>
+<p><a href="https://segmentfault.com/a/1190000011282426">https://segmentfault.com/a/1190000011282426</a></p>
+<p><a href="https://juejin.im/post/5d6fc8eff265da03ef7a324b#comment">https://juejin.im/post/5d6fc8eff265da03ef7a324b#comment</a></p>
+<p><a href="https://segmentfault.com/a/1190000010978305">https://segmentfault.com/a/1190000010978305</a></p>
+<p>[Leaf——美团点评分布式ID生成系统] <a href="https://tech.meituan.com/2017/04/21/mt-leaf.html">https://tech.meituan.com/2017/04/21/mt-leaf.html</a></p>
+<p>[UUID的含义及实现原理]<a href="https://blog.csdn.net/reggergdsg/article/details/92091404">https://blog.csdn.net/reggergdsg/article/details/92091404</a></p>
+<p>[通用唯一标识码UUID的介绍及使用] <a href="https://mp.weixin.qq.com/s/BjCL076USuhLj9GjhXDaTA">https://mp.weixin.qq.com/s/BjCL076USuhLj9GjhXDaTA</a><br>[UUID简史] <a href="https://www.infoq.cn/article/talk-about-the-history-of-uuid/?utm_source=tuicool&utm_medium=referral">https://www.infoq.cn/article/talk-about-the-history-of-uuid/?utm_source=tuicool&amp;utm_medium=referral</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/09/28/snowflake/" data-id="clzo46btt002gvajh8tjmax84" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-golang-mem" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/05/18/golang-mem/" class="article-date">
+  <time datetime="2019-05-18T10:15:56.000Z" itemprop="datePublished">2019-05-18</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/05/18/golang-mem/">图解Golang的内存分配</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="一般程序的内存分配"><a href="#一般程序的内存分配" class="headerlink" title="一般程序的内存分配"></a>一般程序的内存分配</h2><p>在讲Golang的内存分配之前，让我们先来看看一般程序的内存分布情况：</p>
+<p><img src="/img/go_mem/mem.png"></p>
+<p>以上是程序内存的逻辑分类情况。</p>
+<p>我们再来看看一般程序的内存的真实(真实逻辑)图:</p>
+<p><img src="/img/go_mem/mem1.png"></p>
+<h2 id="Go的内存分配核心思想"><a href="#Go的内存分配核心思想" class="headerlink" title="Go的内存分配核心思想"></a>Go的内存分配核心思想</h2><p>Go是内置运行时的编程语言(runtime)，像这种内置运行时的编程语言通常会抛弃传统的内存分配方式，改为自己管理。这样可以完成类似预分配、内存池等操作，以避开系统调用带来的性能问题，防止每次分配内存都需要系统调用。</p>
+<p>Go的内存分配的核心思想可以分为以下几点：</p>
+<ul>
+<li>每次从操作系统申请一大块儿的内存，由Go来对这块儿内存做分配，减少系统调用</li>
+<li>内存分配算法采用Google的<code>TCMalloc算法</code>。算法比较复杂，究其原理可自行查阅。其核心思想就是把内存切分的非常的细小，分为多级管理，以降低锁的粒度。</li>
+<li>回收对象内存时，并没有将其真正释放掉，只是放回预先分配的大块内存中，以便复用。只有内存闲置过多的时候，才会尝试归还部分内存给操作系统，降低整体开销</li>
+</ul>
+<h2 id="Go的内存结构"><a href="#Go的内存结构" class="headerlink" title="Go的内存结构"></a>Go的内存结构</h2><p>Go在程序启动的时候，会分配一块连续的内存(虚拟内存)。整体如下：</p>
+<p><img src="/img/go_mem/mem2.png"></p>
+<p>图中span和bitmap的大小会随着heap的改变而改变</p>
+<h3 id="arena"><a href="#arena" class="headerlink" title="arena"></a>arena</h3><p>arena区域就是我们通常所说的heap。<br>heap中按照管理和使用两个维度可认为存在两类“东西”：</p>
+<p>一类是从管理分配角度，由多个连续的页(page)组成的大块内存：<br><img src="/img/go_mem/mem3.png"><br>另一类是从使用角度出发，就是平时咱们所了解的:heap中存在很多”对象”：<br><img src="/img/go_mem/mem4.png"></p>
+<h3 id="spans"><a href="#spans" class="headerlink" title="spans"></a>spans</h3><p>spans区域，可以认为是用于上面所说的管理分配arena(即heap)的区域。<br>此区域存放了<code>mspan</code>的指针，<code>mspan</code>是啥后面会讲。<br>spans区域用于表示arena区中的某一页(page)属于哪个<code>mspan</code>。<br><img src="/img/go_mem/mem5.png"></p>
+<p><code>mspan</code>可以说是go内存管理的最基本单元，但是内存的使用最终还是要落脚到“对象”上。<code>mspan</code>和对象是什么关系呢？<br>其实“对象”肯定也放到<code>page</code>中，毕竟<code>page</code>是内存存储的基本单元。</p>
+<p>我们抛开问题不看，先看看一般情况下的对象和内存的分配是如何的：如下图<br><img src="/img/go_mem/mem6.png"></p>
+<p>假如再分配“p4”的时候，是不是内存不足没法分配了？是不是有很多碎片？</p>
+<p>这种一般的分配情况会出现内存碎片的情况，go是如何解决的呢？</p>
+<p>可以归结为四个字：按需分配。go将内存块分为大小不同的67种，然后再把这67种大内存块，逐个分为小块(可以近似理解为大小不同的相当于<code>page</code>)称之为<code>span</code>(连续的<code>page</code>)，在go语言中就是上文提及的<code>mspan</code>。<br><img src="/img/go_mem/mem7.png"><br>对象分配的时候，根据对象的大小选择大小相近的<code>span</code>，这样，碎片问题就解决了。</p>
+<p>67中不同大小的span代码注释如下(目前版本1.11)：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class  bytes/obj  bytes/span  objects  tail waste  max waste</span></span><br><span class="line"><span class="comment">//     1          8        8192     1024           0     87.50%</span></span><br><span class="line"><span class="comment">//     2         16        8192      512           0     43.75%</span></span><br><span class="line"><span class="comment">//     3         32        8192      256           0     46.88%</span></span><br><span class="line"><span class="comment">//     4         48        8192      170          32     31.52%</span></span><br><span class="line"><span class="comment">//     5         64        8192      128           0     23.44%</span></span><br><span class="line"><span class="comment">//     6         80        8192      102          32     19.07%</span></span><br><span class="line"><span class="comment">//     7         96        8192       85          32     15.95%</span></span><br><span class="line"><span class="comment">//     8        112        8192       73          16     13.56%</span></span><br><span class="line"><span class="comment">//     9        128        8192       64           0     11.72%</span></span><br><span class="line"><span class="comment">//    10        144        8192       56         128     11.82%</span></span><br><span class="line"><span class="comment">//    11        160        8192       51          32      9.73%</span></span><br><span class="line"><span class="comment">//    12        176        8192       46          96      9.59%</span></span><br><span class="line"><span class="comment">//    13        192        8192       42         128      9.25%</span></span><br><span class="line"><span class="comment">//    14        208        8192       39          80      8.12%</span></span><br><span class="line"><span class="comment">//    15        224        8192       36         128      8.15%</span></span><br><span class="line"><span class="comment">//    16        240        8192       34          32      6.62%</span></span><br><span class="line"><span class="comment">//    17        256        8192       32           0      5.86%</span></span><br><span class="line"><span class="comment">//    18        288        8192       28         128     12.16%</span></span><br><span class="line"><span class="comment">//    19        320        8192       25         192     11.80%</span></span><br><span class="line"><span class="comment">//    20        352        8192       23          96      9.88%</span></span><br><span class="line"><span class="comment">//    21        384        8192       21         128      9.51%</span></span><br><span class="line"><span class="comment">//    22        416        8192       19         288     10.71%</span></span><br><span class="line"><span class="comment">//    23        448        8192       18         128      8.37%</span></span><br><span class="line"><span class="comment">//    24        480        8192       17          32      6.82%</span></span><br><span class="line"><span class="comment">//    25        512        8192       16           0      6.05%</span></span><br><span class="line"><span class="comment">//    26        576        8192       14         128     12.33%</span></span><br><span class="line"><span class="comment">//    27        640        8192       12         512     15.48%</span></span><br><span class="line"><span class="comment">//    28        704        8192       11         448     13.93%</span></span><br><span class="line"><span class="comment">//    29        768        8192       10         512     13.94%</span></span><br><span class="line"><span class="comment">//    30        896        8192        9         128     15.52%</span></span><br><span class="line"><span class="comment">//    31       1024        8192        8           0     12.40%</span></span><br><span class="line"><span class="comment">//    32       1152        8192        7         128     12.41%</span></span><br><span class="line"><span class="comment">//    33       1280        8192        6         512     15.55%</span></span><br><span class="line"><span class="comment">//    34       1408       16384       11         896     14.00%</span></span><br><span class="line"><span class="comment">//    35       1536        8192        5         512     14.00%</span></span><br><span class="line"><span class="comment">//    36       1792       16384        9         256     15.57%</span></span><br><span class="line"><span class="comment">//    37       2048        8192        4           0     12.45%</span></span><br><span class="line"><span class="comment">//    38       2304       16384        7         256     12.46%</span></span><br><span class="line"><span class="comment">//    39       2688        8192        3         128     15.59%</span></span><br><span class="line"><span class="comment">//    40       3072       24576        8           0     12.47%</span></span><br><span class="line"><span class="comment">//    41       3200       16384        5         384      6.22%</span></span><br><span class="line"><span class="comment">//    42       3456       24576        7         384      8.83%</span></span><br><span class="line"><span class="comment">//    43       4096        8192        2           0     15.60%</span></span><br><span class="line"><span class="comment">//    44       4864       24576        5         256     16.65%</span></span><br><span class="line"><span class="comment">//    45       5376       16384        3         256     10.92%</span></span><br><span class="line"><span class="comment">//    46       6144       24576        4           0     12.48%</span></span><br><span class="line"><span class="comment">//    47       6528       32768        5         128      6.23%</span></span><br><span class="line"><span class="comment">//    48       6784       40960        6         256      4.36%</span></span><br><span class="line"><span class="comment">//    49       6912       49152        7         768      3.37%</span></span><br><span class="line"><span class="comment">//    50       8192        8192        1           0     15.61%</span></span><br><span class="line"><span class="comment">//    51       9472       57344        6         512     14.28%</span></span><br><span class="line"><span class="comment">//    52       9728       49152        5         512      3.64%</span></span><br><span class="line"><span class="comment">//    53      10240       40960        4           0      4.99%</span></span><br><span class="line"><span class="comment">//    54      10880       32768        3         128      6.24%</span></span><br><span class="line"><span class="comment">//    55      12288       24576        2           0     11.45%</span></span><br><span class="line"><span class="comment">//    56      13568       40960        3         256      9.99%</span></span><br><span class="line"><span class="comment">//    57      14336       57344        4           0      5.35%</span></span><br><span class="line"><span class="comment">//    58      16384       16384        1           0     12.49%</span></span><br><span class="line"><span class="comment">//    59      18432       73728        4           0     11.11%</span></span><br><span class="line"><span class="comment">//    60      19072       57344        3         128      3.57%</span></span><br><span class="line"><span class="comment">//    61      20480       40960        2           0      6.87%</span></span><br><span class="line"><span class="comment">//    62      21760       65536        3         256      6.25%</span></span><br><span class="line"><span class="comment">//    63      24576       24576        1           0     11.45%</span></span><br><span class="line"><span class="comment">//    64      27264       81920        3         128     10.00%</span></span><br><span class="line"><span class="comment">//    65      28672       57344        2           0      4.91%</span></span><br><span class="line"><span class="comment">//    66      32768       32768        1           0     12.50%</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>说说每列代表的含义：</p>
+<ul>
+<li>class： class ID，每个span结构中都有一个class ID, 表示该span可处理的对象类型</li>
+<li>bytes&#x2F;obj：该class代表对象的字节数</li>
+<li>bytes&#x2F;span：每个span占用堆的字节数，也即页数*页大小</li>
+<li>objects: 每个span可分配的对象个数，也即（bytes&#x2F;spans）&#x2F;（bytes&#x2F;obj）</li>
+<li>waste bytes: 每个span产生的内存碎片，也即（bytes&#x2F;spans）%（bytes&#x2F;obj）</li>
+</ul>
+<p>阅读方式如下：<br>以类型(class)为1的span为例,span中的元素大小是8 byte, span本身占1页也就是8K, 一共可以保存1024个对象。</p>
+<p>细心的同学可能会发现代码中一共有66种，还有一种特殊的span：<br>即对于大于32k的对象出现时，会直接从heap分配一个特殊的span，这个特殊的span的类型(class)是0, 只包含了一个大对象, span的大小由对象的大小决定。</p>
+<h3 id="bitmap"><a href="#bitmap" class="headerlink" title="bitmap"></a>bitmap</h3><p>bitmap 有好几种:Stack, data, and bss bitmaps，再就是这次要说的<code>heap bitmaps</code>。<br>在此bitmap的做作用是标记标记<code>arena</code>(即heap)中的对象。一是的标记对应地址中是否存在对象，另外是标记此对象是否被gc标记过。一个功能一个bit位，所以，<code>heap bitmaps</code>用两个bit位。<br>bitmap区域中的一个byte对应arena区域的四个指针大小的内存的结构如下：</p>
+<p><img src="/img/go_mem/mem8.png"></p>
+<p>bitmap的地址是由高地址向低地址增长的。</p>
+<p>宏观的图为：</p>
+<p><img src="/img/go_mem/mem9.png"><br>bitmap 主要的作用还是服务于GC。</p>
+<p><code>arena</code>中包含基本的管理单元和程序运行时候生成的对象或实体，这两部分分别被<code>spans</code>和<code>bitmap</code>这两块非heap区域的内存所对应着。<br>逻辑图如下：<br><img src="/img/go_mem/mem10.png"><br>spans和bitmap都会根据arena的动态变化而动态调整大小。</p>
+<h2 id="内存管理组件"><a href="#内存管理组件" class="headerlink" title="内存管理组件"></a>内存管理组件</h2><p>go的内存管理组件主要有：<code>mspan</code>、<code>mcache</code>、<code>mcentral</code>和<code>mheap</code></p>
+<ul>
+<li><code>mspan</code>为内存管理的基础单元，直接存储数据的地方。</li>
+<li><code>mcache</code>：每个运行期的goroutine都会绑定的一个<code>mcache</code>(具体来讲是绑定的GMP并发模型中的P，所以可以无锁分配<code>mspan</code>，后续还会说到)，<code>mcache</code>会分配goroutine运行中所需要的内存空间(即<code>mspan</code>)。</li>
+<li><code>mcentral</code>为所有<code>mcache</code>切分好后备的<code>mspan</code></li>
+<li><code>mheap</code>代表Go程序持有的所有堆空间。还会管理闲置的span，需要时向操作系统申请新内存。</li>
+</ul>
+<h3 id="mspan"><a href="#mspan" class="headerlink" title="mspan"></a>mspan</h3><p><img src="/img/go_mem/mem11.png"><br>有人会问：mspan结构体存放在哪儿？其实，mspan结构本身的内存是从系统分配的，在此不做过多讨论。<br><code>mspan</code>在上文讲<code>spans</code>的时候具体讲过，就是方便根据对象大小来分配使用的内存块，一共有67种类型；最主要解决的是内存碎片问题，减少了内存碎片，提高了内存使用率。<br><code>mspan</code>是双向链表，其中主要的属性如下图所示：<br><img src="/img/go_mem/mem12.png"></p>
+<p><code>mspan</code>是go中内存管理的基本单元，在上文<code>spans</code>中其实已经做了详细的解说，在此就不在赘述了。</p>
+<h3 id="mcache"><a href="#mcache" class="headerlink" title="mcache"></a>mcache</h3><p>为了避免多线程申请内存时不断的加锁，goroutine为每个线程分配了<code>span</code>内存块的缓存，这个缓存即是<code>mcache</code>，每个goroutine都会绑定的一个<code>mcache</code>，各个goroutine申请内存时不存在锁竞争的情况。</p>
+<p>如何做到的？</p>
+<p>在讲之前，请先回顾一下Go的并发调度模型，如果你还不了解，请看我这篇文章 <a href="https://mp.weixin.qq.com/s/74hbRTQ2TjdH5G9F2of4_g">https://mp.weixin.qq.com/s/74hbRTQ2TjdH5G9F2of4_g</a></p>
+<p>然后请看下图：</p>
+<p><img src="/img/go_mem/mem13.png"></p>
+<p>大体上就是上图这个样子了。注意看我们的<code>mcache</code>在哪儿呢？就在P上！<br>知道为什么没有锁竞争了吧，因为运行期间一个goroutine只能和一个P关联，而<code>mcache</code>就在P上，所以，不可能有锁的竞争。</p>
+<p>我们再来看看<code>mcache</code>具体的结构：</p>
+<p><img src="/img/go_mem/mem14.png"></p>
+<p>mcache中的span链表分为两组，一组是包含指针类型的对象，另一组是不包含指针类型的对象。为什么分开呢？</p>
+<p>主要是方便GC，在进行垃圾回收的时候，对于不包含指针的对象列表无需进一步扫描是否引用其他活跃的对象(如果对go的gc不是很了解，请看我这篇文章 <a href="https://mp.weixin.qq.com/s/_h0-8hma5y_FHKBeFuOOyw)%E3%80%82">https://mp.weixin.qq.com/s/_h0-8hma5y_FHKBeFuOOyw)。</a></p>
+<p>对于 <code>&lt;=32k</code>的对象，将直接通过<code>mcache</code>分配。</p>
+<p>在此，我觉的有必要说一下go中对象按照的大小维度的分类。<br>分为三类：</p>
+<ul>
+<li>tinny allocations (size &lt; 16 bytes，no pointers)</li>
+<li>small allocations (16 bytes &lt; size &lt;&#x3D; 32k)</li>
+<li>large allocations (size &gt; 32k)</li>
+</ul>
+<p>前两类：<code>tiny allocations</code>和<code>small allocations</code>是直接通过<code>mcache</code>来分配的。</p>
+<p>对于<code>tiny allocations</code>的分配，有一个微型分配器<code>tiny allocator</code>来分配，分配的对象都是不包含指针的，例如一些小的字符串和不包含指针的独立的逃逸变量等。</p>
+<p><code>small allocations</code>的分配，就是<code>mcache</code>根据对象的大小来找自身存在的大小相匹配<code>mspan</code>来分配。<br>当<code>mcach</code>没有可用空间时，会从<code>mcentral</code>的 <code>mspans</code> 列表获取一个新的所需大小规格的<code>mspan</code>。</p>
+<h3 id="mcentral"><a href="#mcentral" class="headerlink" title="mcentral"></a>mcentral</h3><p>为所有<code>mcache</code>提供切分好的<code>mspan</code>。<br>每个<code>mcentral</code>保存一种特定类型的全局<code>mspan</code>列表，包括已分配出去的和未分配出去的。 </p>
+<p><img src="/img/go_mem/mem15.png"></p>
+<p>还记得<code>mspan</code>的67种类型吗？有多少种类型的<code>mspan</code>就有多少个<code>mcentral</code>。</p>
+<p>每个<code>mcentral</code>都会包含两个<code>mspan</code>的列表：</p>
+<ul>
+<li>没有空闲对象或<code>mspan</code>已经被<code>mcache</code>缓存的<code>mspan</code>列表(empty mspanList)</li>
+<li>有空闲对象的<code>mspan</code>列表(empty mspanList)</li>
+</ul>
+<p>由于<code>mspan</code>是全局的，会被所有的<code>mcache</code>访问，所以会出现并发性问题，因而<code>mcentral</code>会存在一个锁。</p>
+<p>单个的<code>mcentral</code>结构如下：<br><img src="/img/go_mem/mem16.png"></p>
+<p>假如需要分配内存时，<code>mcentral</code>没有空闲的<code>mspan</code>列表了，此时需要向<code>mheap</code>去获取。</p>
+<h3 id="mheap"><a href="#mheap" class="headerlink" title="mheap"></a>mheap</h3><p><code>mheap</code>可以认为是Go程序持有的整个堆空间，<code>mheap</code>全局唯一，可以认为是个全局变量。<br>其结构如下：</p>
+<p><img src="/img/go_mem/mem17.png"></p>
+<p><code>mheap</code>包含了除了上文中讲的<code>mcache</code>之外的一切，<code>mcache</code>是存在于Go的GMP调度模型的P中的，上文中已经讲过了，关于GMP并发模型，可以参考我的文章 <a href="https://mp.weixin.qq.com/s/74hbRTQ2TjdH5G9F2of4_g%E3%80%82">https://mp.weixin.qq.com/s/74hbRTQ2TjdH5G9F2of4_g。</a><br>仔细观察，可以发现<code>mheap</code>中也存在一个锁lock。这个lock是作用是什么呢？</p>
+<p>我们知道，大于32K的对象被定义为大对象，直接通过<code>mheap</code> 分配。这些大对象的申请是由<code>mcache</code>发出的，而<code>mcache</code>在P上，程序运行的时候往往会存在多个P，因此，这个内存申请是并发的；所以为了保证线程安全，必须有一个全局锁。</p>
+<p>假如需要分配的内存时，<code>mheap</code>中也没有了，则向操作系统申请一系列新的页（最小 1MB）。</p>
+<h2 id="Go内存分配流程总结"><a href="#Go内存分配流程总结" class="headerlink" title="Go内存分配流程总结"></a>Go内存分配流程总结</h2><p>对象分三种：</p>
+<ul>
+<li>微小对象，size &lt; 16B</li>
+<li>一般小对象， 16 bytes &lt; size &lt;&#x3D; 32k</li>
+<li>大对象 size &gt; 32k</li>
+</ul>
+<p>分配方式分三种：</p>
+<ul>
+<li>tinny allocations (size &lt; 16 bytes，no pointers) 微型分配器分配。</li>
+<li>small allocations ( size &lt;&#x3D; 32k) 正常分配；首先通过计算使用的大小规格，然后使用 mcache 中对应大小规格的块分配</li>
+<li>large allocations (size &gt; 32k) 大对象分配；直接通过<code>mheap</code>分配。这些大对象的申请是以一个全局锁为代价的，因此任何给定的时间点只能同时供一个 P 申请。</li>
+</ul>
+<p>对象分配：</p>
+<ul>
+<li>size范围在在( size &lt; 16B)，不包含指针的对象。 <code>mcache</code>上的微型分配器分配</li>
+<li>size范围在(0 &lt; size &lt; 16B)， 包含指针的对象：正常分配</li>
+<li>size范围在(16B &lt; size &lt;&#x3D; 32KB)， : 正常分配</li>
+<li>size范围在( size &gt; 32KB) : 大对象分配</li>
+</ul>
+<p>分配顺序：</p>
+<ul>
+<li>首先通过计算使用的大小规格。</li>
+<li>然后使用<code>mcache</code>中对应大小规格的块分配。</li>
+<li>如果<code>mcentral</code>中没有可用的块，则向<code>mheap</code>申请，并根据算法找到最合适的<code>mspan</code>。</li>
+<li>如果申请到的<code>mspan</code> 超出申请大小，将会根据需求进行切分，以返回用户所需的页数。剩余的页构成一个新的 mspan 放回 mheap 的空闲列表。</li>
+<li>如果 mheap 中没有可用 span，则向操作系统申请一系列新的页（最小 1MB）。</li>
+</ul>
+<p>Go的内存管理是非常复杂的，且每个版本都有细微的变化，在此，只讲了些最容易宏观掌握的东西，希望大家多多提意见，如有什么问题，请及时与我沟通，以下是联系方式：</p>
+<h2 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h2><p>更多精彩内容，请搜索我的微信公众号 <code>码农RyuGou</code></p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+<p>参考文献:</p>
+<ul>
+<li>程序在内存中的分布 <a href="https://www.cnblogs.com/Lynn-Zhang/p/5449199.html">https://www.cnblogs.com/Lynn-Zhang/p/5449199.html</a></li>
+<li>从内存分配开始 <a href="https://mp.weixin.qq.com/s/EyWKFRu1xryoHY386QUcuA">https://mp.weixin.qq.com/s/EyWKFRu1xryoHY386QUcuA</a></li>
+<li>译文：Go 内存分配器可视化指南 <a href="https://www.linuxzen.com/go-memory-allocator-visual-guide.html">https://www.linuxzen.com/go-memory-allocator-visual-guide.html</a></li>
+<li>图解Go语言内存分配 <a href="https://juejin.im/post/5c888a79e51d456ed11955a8">https://juejin.im/post/5c888a79e51d456ed11955a8</a></li>
+<li>Golang源码探索(三) GC的实现原理 <a href="https://www.cnblogs.com/zkweb/p/7880099.html">https://www.cnblogs.com/zkweb/p/7880099.html</a></li>
+<li>简单易懂的 Go 内存分配原理解读 <a href="https://yq.aliyun.com/articles/652551">https://yq.aliyun.com/articles/652551</a></li>
+<li>雨痕&lt;&lt;Go源码解析&gt;&gt;</li>
+<li>go内存分配(英文) <a href="https://andrestc.com/post/go-memory-allocation-pt1/">https://andrestc.com/post/go-memory-allocation-pt1/</a></li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/05/18/golang-mem/" data-id="clzo46bth0018vajh5j8x05jp" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-character" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/04/24/character/" class="article-date">
+  <time datetime="2019-04-24T14:04:05.000Z" itemprop="datePublished">2019-04-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/04/24/character/">图解字符编码</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="啥叫字符集"><a href="#啥叫字符集" class="headerlink" title="啥叫字符集"></a>啥叫字符集</h2><p>计算机只认识0和1</p>
+<p><img src="/img/character/c_1.png"></p>
+<p>那字符串“abc”咋显示呢？<br>有个类似于字典的东西，告诉计算机在此种情况（在此编码格式）下，某些数字该显示什么。</p>
+<p><img src="/img/character/c_2.png"></p>
+<p>这种字典，就是字符集</p>
+<p><img src="/img/character/c_3.png"></p>
+<h2 id="现有的字符集"><a href="#现有的字符集" class="headerlink" title="现有的字符集"></a>现有的字符集</h2><p>目前主要有以下几种字符集：</p>
+<ul>
+<li>ASCII字符集</li>
+<li>ISO 8859-1字符集</li>
+<li>GB2312字符集</li>
+<li>GBK字符集</li>
+<li>Unicode编码</li>
+</ul>
+<h3 id="ASCII字符集"><a href="#ASCII字符集" class="headerlink" title="ASCII字符集"></a>ASCII字符集</h3><p>共收录128个字符，都是些最最基础的字符。详情请看<a href="https://baike.baidu.com/item/ASCII/309296?fr=aladdin">百度百科</a> </p>
+<p><em>大小：占一个字节</em></p>
+<h3 id="ISO-8859-1字符集-别名latin1"><a href="#ISO-8859-1字符集-别名latin1" class="headerlink" title="ISO 8859-1字符集(别名latin1)"></a>ISO 8859-1字符集(别名latin1)</h3><p><em>ASCII字符集的扩充</em>。共收录256个字符。ASCII字符集基础上扩充了128个西欧常用字符(包括德法两国的字母)</p>
+<p><em>大小：占一个字节</em></p>
+<h3 id="GB2312字符集"><a href="#GB2312字符集" class="headerlink" title="GB2312字符集"></a>GB2312字符集</h3><p><em>划重点：made in china</em>。<br>百度百科~曰：”共收录6763个汉字，其中一级汉字3755个，二级汉字3008个；同时，GB 2312收录了包括拉丁字母、希腊字母、日文平假名及片假名字母、俄语西里尔字母在内的682个全角字符。“详情请看<a href="https://baike.baidu.com/item/%E4%BF%A1%E6%81%AF%E4%BA%A4%E6%8D%A2%E7%94%A8%E6%B1%89%E5%AD%97%E7%BC%96%E7%A0%81%E5%AD%97%E7%AC%A6%E9%9B%86/8074272?fr=aladdin">百度百科</a> </p>
+<p>兼容ASCII字符集。</p>
+<p><em>大小：如果该字符在ASCII字符集中，则采用1字节编码。否则采用2字节编码。</em></p>
+<h3 id="GBK字符集"><a href="#GBK字符集" class="headerlink" title="GBK字符集"></a>GBK字符集</h3><p><em>划重点：made in china</em>。<br>继<code>GB2312字符集</code>之后中国又出的一套标准。这套更牛逼：不仅完全兼容GB2312字符集。还扩充了很多：<br>”共23940个码位，共收录了21003个汉字…全部中日韩汉字…“ 总之一个字：牛逼！</p>
+<p><em>大小：如果该字符在ASCII字符集中，则采用1字节编码。否则采用2字节编码。</em></p>
+<h3 id="Unicode编码。"><a href="#Unicode编码。" class="headerlink" title="Unicode编码。"></a>Unicode编码。</h3><p>牛逼的玩意儿来了。先看看它的中文译名：统一码、万国码、单一码。<br>收录地球上的所有字符，现在还在不断扩充。<br><em>但是，需要注意的是，Unicode只是一个符号集，它只规定了符号的二进制代码，却没有规定这个二进制代码应该如何存储。</em></p>
+<p><img src="/img/character/c_4.png"></p>
+<p>其中，Unicode编码规定的符号代码必须以”U+”做前缀。</p>
+<p>编号怎么对应到二进制表示呢？有多种方案：主要有 UTF-8，UTF-16，UTF-32。</p>
+<ul>
+<li>UTF-32字符集。将unicode编码的码号直接转成对应的二进制数。<em>大小：4个字节</em>。</li>
+<li>UTF-16字符集。使用变长字节表示。<em>大小：对于编号在 U+0000 到 U+FFFF 的字符（常用字符集），直接用两个字节表示，其余的用4个字节</em></li>
+<li>UTF-8字符集。使用变长字节表示。兼容ASCII字符集。<em>大小:1~4个字节</em></li>
+</ul>
+<h2 id="字符集之间的关系"><a href="#字符集之间的关系" class="headerlink" title="字符集之间的关系"></a>字符集之间的关系</h2><p><img src="/img/character/c_6.png"></p>
+<p>参考文献:</p>
+<ul>
+<li>掘金小册《MySQL 是怎样运行的：从根儿上理解 MySQL》</li>
+<li><a href="https://blog.csdn.net/zhusongziye/article/details/84261211">https://blog.csdn.net/zhusongziye/article/details/84261211</a></li>
+<li><a href="https://www.cnblogs.com/kingstarspe/p/ASCII.html">https://www.cnblogs.com/kingstarspe/p/ASCII.html</a></li>
+</ul>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/04/24/character/" data-id="clzo46btb000mvajh3d3m0omp" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-go-channel" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/04/11/go-channel/" class="article-date">
+  <time datetime="2019-04-11T15:43:20.000Z" itemprop="datePublished">2019-04-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/04/11/go-channel/">图解Go的channel底层实现</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>废话不多说，直奔主题。</p>
+<h2 id="channel的整体结构图"><a href="#channel的整体结构图" class="headerlink" title="channel的整体结构图"></a>channel的整体结构图</h2><p><img src="/img/channel/hchan.png"></p>
+<p>简单说明：</p>
+<ul>
+<li><code>buf</code>是有缓冲的channel所特有的结构，用来存储缓存数据。是个循环链表</li>
+<li><code>sendx</code>和<code>recvx</code>用于记录<code>buf</code>这个循环链表中的<del>发送或者接收的</del>index</li>
+<li><code>lock</code>是个互斥锁。</li>
+<li><code>recvq</code>和<code>sendq</code>分别是接收(&lt;-channel)或者发送(channel &lt;- xxx)的goroutine抽象出来的结构体(sudog)的队列。是个双向链表</li>
+</ul>
+<p>源码位于<code>/runtime/chan.go</code>中(目前版本：1.11)。结构体为<code>hchan</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> hchan <span class="keyword">struct</span> &#123;</span><br><span class="line">    qcount   <span class="type">uint</span>           <span class="comment">// total data in the queue</span></span><br><span class="line">    dataqsiz <span class="type">uint</span>           <span class="comment">// size of the circular queue</span></span><br><span class="line">    buf      unsafe.Pointer <span class="comment">// points to an array of dataqsiz elements</span></span><br><span class="line">    elemsize <span class="type">uint16</span></span><br><span class="line">    closed   <span class="type">uint32</span></span><br><span class="line">    elemtype *_type <span class="comment">// element type</span></span><br><span class="line">    sendx    <span class="type">uint</span>   <span class="comment">// send index</span></span><br><span class="line">    recvx    <span class="type">uint</span>   <span class="comment">// receive index</span></span><br><span class="line">    recvq    waitq  <span class="comment">// list of recv waiters</span></span><br><span class="line">    sendq    waitq  <span class="comment">// list of send waiters</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// lock protects all fields in hchan, as well as several</span></span><br><span class="line">    <span class="comment">// fields in sudogs blocked on this channel.</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// Do not change another G&#x27;s status while holding this lock</span></span><br><span class="line">    <span class="comment">// (in particular, do not ready a G), as this can deadlock</span></span><br><span class="line">    <span class="comment">// with stack shrinking.</span></span><br><span class="line">    lock mutex</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面我们来详细介绍<code>hchan</code>中各部分是如何使用的。</p>
+<h2 id="先从创建开始"><a href="#先从创建开始" class="headerlink" title="先从创建开始"></a>先从创建开始</h2><p>我们首先创建一个channel。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">3</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/channel/hchan1.png"></p>
+<p>创建channel实际上就是在内存中实例化了一个<code>hchan</code>的结构体，并返回一个ch指针，我们使用过程中channel在函数之间的传递都是用的这个指针，这就是为什么函数传递中无需使用channel的指针，而直接用channel就行了，因为channel本身就是一个指针。</p>
+<h2 id="channel中发送send-ch"><a href="#channel中发送send-ch" class="headerlink" title="channel中发送send(ch &lt;- xxx)和recv(&lt;- ch)接收"></a>channel中发送send(ch &lt;- xxx)和recv(&lt;- ch)接收</h2><p>先考虑一个问题，如果你想让goroutine以先进先出(FIFO)的方式进入一个结构体中，你会怎么操作？<br>加锁！对的！channel就是用了一个锁。hchan本身包含一个互斥锁<code>mutex</code></p>
+<h3 id="channel中队列是如何实现的"><a href="#channel中队列是如何实现的" class="headerlink" title="channel中队列是如何实现的"></a>channel中队列是如何实现的</h3><p>channel中有个缓存buf，是用来缓存数据的(假如实例化了带缓存的channel的话)队列。我们先来看看是如何实现“队列”的。<br>还是刚才创建的那个channel</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">3</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/channel/hchan_gif1.png"></p>
+<p>当使用<code>send (ch &lt;- xx)</code>或者<code>recv ( &lt;-ch)</code>的时候，首先要锁住<code>hchan</code>这个结构体。</p>
+<p><img src="/img/channel/hchan_gif2.png"></p>
+<p>然后开始<code>send (ch &lt;- xx)</code>数据。<br>一</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch &lt;- <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>二</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch &lt;- <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>三</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ch &lt;- <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p>这时候满了，队列塞不进去了<br>动态图表示为：<br><img src="/img/channel/send.gif"></p>
+<p>然后是取<code>recv ( &lt;-ch)</code>的过程，是个逆向的操作，也是需要加锁。</p>
+<p><img src="/img/channel/hchan_gif6.png"></p>
+<p>然后开始<code>recv (&lt;-ch)</code>数据。<br>一</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;-ch</span><br></pre></td></tr></table></figure>
+<p>二</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;-ch</span><br></pre></td></tr></table></figure>
+<p>三</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;-ch</span><br></pre></td></tr></table></figure>
+
+<p>图为：<br><img src="/img/channel/recv.gif"></p>
+<p>注意以上两幅图中<code>buf</code>和<code>recvx</code>以及<code>sendx</code>的变化，<code>recvx</code>和<code>sendx</code>是根据循环链表<code>buf</code>的变动而改变的。<br>至于为什么channel会使用循环链表作为缓存结构，我个人认为是在缓存列表在动态的<code>send</code>和<code>recv</code>过程中，定位当前<code>send</code>或者<code>recvx</code>的位置、选择<code>send</code>的和<code>recvx</code>的位置比较方便吧，只要顺着链表顺序一直旋转操作就好。</p>
+<p>缓存中按链表顺序存放，取数据的时候按链表顺序读取，符合FIFO的原则。</p>
+<h3 id="send-recv的细化操作"><a href="#send-recv的细化操作" class="headerlink" title="send&#x2F;recv的细化操作"></a>send&#x2F;recv的细化操作</h3><p>注意：缓存链表中以上每一步的操作，都是需要加锁操作的！</p>
+<p>每一步的操作的细节可以细化为：</p>
+<ul>
+<li>第一，加锁</li>
+<li>第二，把数据从goroutine中copy到“队列”中(或者从队列中copy到goroutine中）。</li>
+<li>第三，释放锁</li>
+</ul>
+<p>每一步的操作总结为动态图为：(发送过程)<br><img src="/img/channel/send_single.gif"></p>
+<p>或者为：(接收过程)<br><img src="/img/channel/recv_single.gif"></p>
+<p>所以不难看出，Go中那句经典的话：<code>Do not communicate by sharing memory; instead, share memory by communicating.</code>的具体实现就是利用channel把数据从一端copy到了另一端！<br>还真是符合<code>channel</code>的英文含义：</p>
+<p><img src="/img/channel/hchan_channl.gif"></p>
+<h3 id="当channel缓存满了之后会发生什么？这其中的原理是怎样的？"><a href="#当channel缓存满了之后会发生什么？这其中的原理是怎样的？" class="headerlink" title="当channel缓存满了之后会发生什么？这其中的原理是怎样的？"></a>当channel缓存满了之后会发生什么？这其中的原理是怎样的？</h3><p>使用的时候，我们都知道，当channel缓存满了，或者没有缓存的时候，我们继续send(ch &lt;- xxx)或者recv(&lt;- ch)会阻塞当前goroutine，但是，是如何实现的呢？</p>
+<p>我们知道，Go的goroutine是用户态的线程(<code>user-space threads</code>)，用户态的线程是需要自己去调度的，Go有运行时的scheduler去帮我们完成调度这件事情。关于Go的调度模型GMP模型我在此不做赘述，如果不了解，可以看我另一篇文章(<a href="https://i6448038.github.io/2017/12/04/golang-concurrency-principle/">Go调度原理</a>)</p>
+<p>goroutine的阻塞操作，实际上是调用<code>send (ch &lt;- xx)</code>或者<code>recv ( &lt;-ch)</code>的时候主动触发的，具体请看以下内容：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//goroutine1 中，记做G1</span></span><br><span class="line"></span><br><span class="line">ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">int</span>, <span class="number">3</span>)</span><br><span class="line"></span><br><span class="line">ch &lt;- <span class="number">1</span></span><br><span class="line">ch &lt;- <span class="number">1</span></span><br><span class="line">ch &lt;- <span class="number">1</span></span><br></pre></td></tr></table></figure>
+<p><img src="/img/channel/hchan_block.png"></p>
+<p><img src="/img/channel/hchan_block1.png"></p>
+<p>这个时候G1正在正常运行,当再次进行send操作(ch&lt;-1)的时候，会主动调用Go的调度器,让G1等待，并从让出M，让其他G去使用</p>
+<p><img src="/img/channel/hchan_block2.png"></p>
+<p>同时G1也会被抽象成含有G1指针和send元素的<code>sudog</code>结构体保存到hchan的<code>sendq</code>中等待被唤醒。</p>
+<p><img src="/img/channel/hchan_blok3.gif"></p>
+<p>那么，G1什么时候被唤醒呢？这个时候G2隆重登场。</p>
+<p><img src="/img/channel/hchan_block4.png"></p>
+<p>G2执行了recv操作<code>p := &lt;-ch</code>，于是会发生以下的操作：</p>
+<p><img src="/img/channel/hchan_block5.gif"></p>
+<p>G2从缓存队列中取出数据，channel会将等待队列中的G1推出，将G1当时send的数据推到缓存中，然后调用Go的scheduler，唤醒G1，并把G1放到可运行的Goroutine队列中。</p>
+<p><img src="/img/channel/hchan_block6.gif"></p>
+<h3 id="假如是先进行执行recv操作的G2会怎么样？"><a href="#假如是先进行执行recv操作的G2会怎么样？" class="headerlink" title="假如是先进行执行recv操作的G2会怎么样？"></a>假如是先进行执行recv操作的G2会怎么样？</h3><p>你可能会顺着以上的思路反推。首先：</p>
+<p><img src="/img/channel/hchan_block7_1.png"></p>
+<p>这个时候G2会主动调用Go的调度器,让G2等待，并从让出M，让其他G去使用。<br>G2还会被抽象成含有G2指针和recv空元素的<code>sudog</code>结构体保存到hchan的<code>recvq</code>中等待被唤醒</p>
+<p><img src="/img/channel/hchan_block7.gif"></p>
+<p>此时恰好有个goroutine G1开始向channel中推送数据 <code>ch &lt;- 1</code>。<br>此时，非常有意思的事情发生了：</p>
+<p><img src="/img/channel/hchan_block8.gif"></p>
+<p>G1并没有锁住channel，然后将数据放到缓存中，而是直接把数据从G1直接copy到了G2的栈中。<br>这种方式非常的赞！在唤醒过程中，G2无需再获得channel的锁，然后从缓存中取数据。减少了内存的copy，提高了效率。</p>
+<p>之后的事情显而易见：<br><img src="/img/channel/hchan_block9.gif"></p>
+<h2 id="更多精彩内容，请关注我的微信公众号-码农RyuGou"><a href="#更多精彩内容，请关注我的微信公众号-码农RyuGou" class="headerlink" title="更多精彩内容，请关注我的微信公众号 码农RyuGou"></a>更多精彩内容，请关注我的微信公众号 <code>码农RyuGou</code></h2><p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+<p>参考文献：</p>
+<ul>
+<li><a href="https://www.youtube.com/watch?v=KBZlN0izeiY">https://www.youtube.com/watch?v=KBZlN0izeiY</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/27917262">https://zhuanlan.zhihu.com/p/27917262</a></li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/04/11/go-channel/" data-id="clzo46btd000wvajhgotkdxjg" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-go-select-principle" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/23/go-select-principle/" class="article-date">
+  <time datetime="2019-03-23T12:08:40.000Z" itemprop="datePublished">2019-03-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/23/go-select-principle/">图解Go select语句原理</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Go 的select语句是一种仅能用于channl发送和接收消息的专用语句，此语句运行期间是阻塞的；当select中没有case语句的时候，会阻塞当前的groutine。所以，有人也会说select是用来阻塞监听goroutine的。<br>还有人说：select是Golang在语言层面提供的I&#x2F;O多路复用的机制，其专门用来检测多个channel是否准备完毕：可读或可写。</p>
+<p>以上说法都正确。</p>
+<h2 id="I-O多路复用"><a href="#I-O多路复用" class="headerlink" title="I&#x2F;O多路复用"></a>I&#x2F;O多路复用</h2><p>我们来回顾一下是什么是<code>I/O多路复用</code>。</p>
+<h3 id="普通多线程（或进程）I-O"><a href="#普通多线程（或进程）I-O" class="headerlink" title="普通多线程（或进程）I&#x2F;O"></a>普通多线程（或进程）I&#x2F;O</h3><p><img src="/img/select_priciple/select-principle_0.png"></p>
+<p>每来一个进程，都会建立连接，然后阻塞，直到接收到数据返回响应。<br>普通这种方式的缺点其实很明显：系统需要创建和维护额外的线程或进程。因为大多数时候，大部分阻塞的线程或进程是处于等待状态，只有少部分会接收并处理响应，而其余的都在等待。系统为此还需要多做很多额外的线程或者进程的管理工作。</p>
+<p><img src="/img/select_priciple/select-principle_1.png"></p>
+<p>为了解决图中这些多余的线程或者进程，于是有了”I&#x2F;O多路复用”</p>
+<h3 id="I-O多路复用-1"><a href="#I-O多路复用-1" class="headerlink" title="I&#x2F;O多路复用"></a>I&#x2F;O多路复用</h3><p><img src="/img/select_priciple/select-principle_2.png"></p>
+<p>每个线程或者进程都先到图中”装置“中注册，然后阻塞，然后只有一个线程在”运输“，当注册的线程或者进程准备好数据后，”装置“会根据注册的信息得到相应的数据。从始至终kernel只会使用图中这个黄黄的线程，无需再对额外的线程或者进程进行管理，提升了效率。</p>
+<h2 id="select组成结构"><a href="#select组成结构" class="headerlink" title="select组成结构"></a>select组成结构</h2><p>select的实现经历了多个版本的修改，当前版本为：1.11<br>select这个语句底层实现实际上主要由两部分组成：<code>case语句</code>和<code>执行函数</code>。<br>源码地址为：&#x2F;go&#x2F;src&#x2F;runtime&#x2F;select.go</p>
+<p>每个case语句，单独抽象出以下结构体：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> scase <span class="keyword">struct</span> &#123;</span><br><span class="line">    c           *hchan         <span class="comment">// chan</span></span><br><span class="line">    elem        unsafe.Pointer <span class="comment">// 读或者写的缓冲区地址</span></span><br><span class="line">    kind        <span class="type">uint16</span>   <span class="comment">//case语句的类型，是default、传值写数据(channel &lt;-) 还是  取值读数据(&lt;- channel)</span></span><br><span class="line">    pc          <span class="type">uintptr</span> <span class="comment">// race pc (for race detector / msan)</span></span><br><span class="line">    releasetime <span class="type">int64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>结构体可以用下图表示：</p>
+<p><img src="/img/select_priciple/select-principle_3.png"><br>其中比较关键的是：<code>hchan</code>，它是channel的指针。<br>在一个select中，所有的case语句会构成一个<code>scase</code>结构体的数组。</p>
+<p><img src="/img/select_priciple/select-principle_4.png"></p>
+<p>然后执行select语句实际上就是调用<code>func selectgo(cas0 *scase, order0 *uint16, ncases int) (int, bool)</code>函数。</p>
+<p><img src="/img/select_priciple/select-principle_5.png"></p>
+<p><code>func selectgo(cas0 *scase, order0 *uint16, ncases int) (int, bool)</code>函数参数：</p>
+<ul>
+<li>cas0 为上文提到的case语句抽象出的结构体<code>scase</code>数组的第一个元素地址</li>
+<li>order0为一个两倍cas0数组长度的buffer，保存scase随机序列pollorder和scase中channel地址序列lockorder。</li>
+<li>nncases表示<code>scase</code>数组的长度</li>
+</ul>
+<p><code>selectgo</code>返回所选scase的索引(该索引与其各自的select {recv，send，default}调用的序号位置相匹配)。此外，如果选择的scase是接收操作(recv)，则返回是否接收到值。</p>
+<p>谁负责调用<code>func selectgo(cas0 *scase, order0 *uint16, ncases int) (int, bool)</code>函数呢？</p>
+<p>在<code>/reflect/value.go</code>中有个<code>func rselect([]runtimeSelect) (chosen int, recvOK bool)</code>函数，此函数的实现在<code>/runtime/select.go</code>文件中的<code>func reflect_rselect(cases []runtimeSelect) (int, bool)</code>函数中:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reflect_rselect</span><span class="params">(cases []runtimeSelect)</span></span> (<span class="type">int</span>, <span class="type">bool</span>) &#123; </span><br><span class="line">    <span class="comment">//如果cases语句为空，则阻塞当前groutine</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(cases) == <span class="number">0</span> &#123;</span><br><span class="line">        block()</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//实例化case的结构体</span></span><br><span class="line">    sel := <span class="built_in">make</span>([]scase, <span class="built_in">len</span>(cases))</span><br><span class="line">    order := <span class="built_in">make</span>([]<span class="type">uint16</span>, <span class="number">2</span>*<span class="built_in">len</span>(cases))</span><br><span class="line">    <span class="keyword">for</span> i := <span class="keyword">range</span> cases &#123;</span><br><span class="line">        rc := &amp;cases[i]</span><br><span class="line">        <span class="keyword">switch</span> rc.dir &#123;</span><br><span class="line">        <span class="keyword">case</span> selectDefault:</span><br><span class="line">            sel[i] = scase&#123;kind: caseDefault&#125;</span><br><span class="line">        <span class="keyword">case</span> selectSend:</span><br><span class="line">            sel[i] = scase&#123;kind: caseSend, c: rc.ch, elem: rc.val&#125;</span><br><span class="line">        <span class="keyword">case</span> selectRecv:</span><br><span class="line">            sel[i] = scase&#123;kind: caseRecv, c: rc.ch, elem: rc.val&#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> raceenabled || msanenabled &#123;</span><br><span class="line">            selectsetpc(&amp;sel[i])</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> selectgo(&amp;sel[<span class="number">0</span>], &amp;order[<span class="number">0</span>], <span class="built_in">len</span>(cases))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那谁调用的<code>func rselect([]runtimeSelect) (chosen int, recvOK bool)</code>呢？<br>在<code>/refect/value.go</code>中，有一个<code>func Select(cases []SelectCase) (chosen int, recv Value, recvOK bool)</code>的函数，其调用了<code>rselect</code>函数，并将最终Go中select语句的返回值的返回。</p>
+<p>以上这三个函数的调用栈按顺序如下：</p>
+<ul>
+<li><code>func Select(cases []SelectCase) (chosen int, recv Value, recvOK bool)</code></li>
+<li><code>func rselect([]runtimeSelect) (chosen int, recvOK bool)</code></li>
+<li><code>func selectgo(cas0 *scase, order0 *uint16, ncases int) (int, bool)</code></li>
+</ul>
+<p>这仨函数中无论是返回值还是参数都大同小异，可以简单粗暴的认为：函数参数传入的是case语句，返回值返回被选中的case语句。<br>那谁调用了<code>func Select(cases []SelectCase) (chosen int, recv Value, recvOK bool)</code>呢？<br>可以简单的认为是系统了。<br>来个简单的图：<br><img src="/img/select_priciple/select-principle_18.png"></p>
+<p>前两个函数<code>Select</code>和<code>rselect</code>都是做了简单的初始化参数，调用下一个函数的操作。select真正的核心功能，是在最后一个函数<code>func selectgo(cas0 *scase, order0 *uint16, ncases int) (int, bool)</code>中实现的。</p>
+<h3 id="selectgo函数做了什么"><a href="#selectgo函数做了什么" class="headerlink" title="selectgo函数做了什么"></a>selectgo函数做了什么</h3><p>打乱传入的case结构体顺序</p>
+<p><img src="/img/select_priciple/select-principle_6.png"></p>
+<p>锁住其中的所有的channel<br><img src="/img/select_priciple/select-principle_7.png"></p>
+<p>遍历所有的channel，查看其是否可读或者可写</p>
+<p><img src="/img/select_priciple/select-principle_8.png"></p>
+<p>如果其中的channel可读或者可写，则解锁所有channel，并返回对应的channel数据</p>
+<p><img src="/img/select_priciple/select-principle_9.png"></p>
+<p><img src="/img/select_priciple/select-principle_10.png"></p>
+<p>假如没有channel可读或者可写，但是有default语句，则同上:返回default语句对应的scase并解锁所有的channel。</p>
+<p><img src="/img/select_priciple/select-principle_11.png"></p>
+<p>假如既没有channel可读或者可写，也没有default语句，则将当前运行的groutine阻塞，并加入到当前所有channel的等待队列中去。</p>
+<p><img src="/img/select_priciple/select-principle_12.png"></p>
+<p>然后解锁所有channel，等待被唤醒。<br><img src="/img/select_priciple/select-principle_13.png"></p>
+<p>此时如果有个channel可读或者可写ready了，则唤醒，并再次加锁所有channel，<br><img src="/img/select_priciple/select-principle_14.png"></p>
+<p>遍历所有channel找到那个对应的channel和G，唤醒G，并将没有成功的G从所有channel的等待队列中移除。</p>
+<p><img src="/img/select_priciple/select-principle_15.png"></p>
+<p>如果对应的scase值不为空，则返回需要的值，并解锁所有channel</p>
+<p><img src="/img/select_priciple/select-principle_16.png"></p>
+<p>如果对应的scase为空，则循环此过程。</p>
+<h3 id="select和channel之间的关系"><a href="#select和channel之间的关系" class="headerlink" title="select和channel之间的关系"></a>select和channel之间的关系</h3><p>在想想select和channel做了什么事儿，我觉得和多路复用是一回事儿</p>
+<p><img src="/img/select_priciple/select-principle_17.png"></p>
+<h4 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h4><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+<p>参考文献：</p>
+<ul>
+<li><a href="https://my.oschina.net/renhc/blog/2253937">https://my.oschina.net/renhc/blog/2253937</a></li>
+<li><a href="https://blog.csdn.net/xd_rbt_/article/details/80287959">https://blog.csdn.net/xd_rbt_/article/details/80287959</a></li>
+<li><a href="https://blog.csdn.net/qq_34199383/article/details/80303629">https://blog.csdn.net/qq_34199383/article/details/80303629</a></li>
+<li><a href="https://blog.csdn.net/wangxindong11/article/details/78591308">https://blog.csdn.net/wangxindong11/article/details/78591308</a></li>
+<li><a href="https://draveness.me/golang-select">https://draveness.me/golang-select</a></li>
+<li><a href="https://studygolang.com/articles/1807">https://studygolang.com/articles/1807</a></li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/23/go-select-principle/" data-id="clzo46bte0010vajhh5cy0gd5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-golang-garbage-collector" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/03/04/golang-garbage-collector/" class="article-date">
+  <time datetime="2019-03-04T06:04:26.000Z" itemprop="datePublished">2019-03-04</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/04/golang-garbage-collector/">图解Golang的GC算法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>虽然Golang的GC自打一开始，就被人所诟病，但是经过这么多年的发展，Golang的GC已经改善了非常多，变得非常优秀了。</p>
+<p>以下是Golang GC算法的里程碑：</p>
+<ul>
+<li>v1.1 STW</li>
+<li>v1.3 Mark STW, Sweep 并行</li>
+<li>v1.5 三色标记法</li>
+<li>v1.8 hybrid write barrier</li>
+</ul>
+<p>经典的GC算法有三种：<code>引用计数(reference counting)</code>、<code>标记-清扫(mark &amp; sweep)</code>、<code>复制收集(Copy and Collection)</code>。</p>
+<p>Golang的GC算法主要是基于<code>标记-清扫(mark and sweep)</code>算法，并在此基础上做了改进。因此，在此主要介绍一下标记-清扫(mark and sweep)算法，关于引用计数(reference counting)和复制收集(copy and collection)可自行百度。</p>
+<h2 id="标记-清扫-Mark-And-Sweep-算法"><a href="#标记-清扫-Mark-And-Sweep-算法" class="headerlink" title="标记-清扫(Mark And Sweep)算法"></a>标记-清扫(Mark And Sweep)算法</h2><p>此算法主要有两个主要的步骤：</p>
+<ul>
+<li>标记(Mark phase)</li>
+<li>清除(Sweep phase)</li>
+</ul>
+<p>第一步，找出不可达的对象，然后做上标记。<br>第二步，回收标记好的对象。</p>
+<p>操作非常简单，但是有一点需要额外注意：mark and sweep算法在执行的时候，需要程序暂停！即<code>stop the world</code>。<br>也就是说，这段时间程序会卡在哪儿。故中文翻译成<code>卡顿</code>。</p>
+<p>我们来看一下图解：</p>
+<p>开始标记，程序暂停。程序和对象的此时关系是这样的：</p>
+<p><img src="/img/gc/mark_sweep_1.png"></p>
+<p>然后开始标记，process找出它所有可达的对象，并做上标记。如下图所示：</p>
+<p><img src="/img/gc/mark_sweep_2.png"></p>
+<p>标记完了之后，然后开始清除未标记的对象：</p>
+<p><img src="/img/gc/mark_sweep_3.png"></p>
+<p>然后垃圾清除了，变成了下图这样。</p>
+<p><img src="/img/gc/mark_sweep_4.png"></p>
+<p>最后，停止暂停，让程序继续跑。然后循环重复这个过程，直到process生命周期结束。</p>
+<h3 id="标记-清扫-Mark-And-Sweep-算法存在什么问题？"><a href="#标记-清扫-Mark-And-Sweep-算法存在什么问题？" class="headerlink" title="标记-清扫(Mark And Sweep)算法存在什么问题？"></a>标记-清扫(Mark And Sweep)算法存在什么问题？</h3><p>标记-清扫(Mark And Sweep)算法这种算法虽然非常的简单，但是还存在一些问题：</p>
+<ul>
+<li>STW，stop the world；让程序暂停，程序出现卡顿。</li>
+<li>标记需要扫描整个heap</li>
+<li>清除数据会产生heap碎片</li>
+</ul>
+<p>这里面最重要的问题就是：mark-and-sweep 算法会暂停整个程序。</p>
+<p>Go是如何面对并这个问题的呢？</p>
+<h2 id="三色并发标记法"><a href="#三色并发标记法" class="headerlink" title="三色并发标记法"></a>三色并发标记法</h2><p>我们先来看看Golang的三色标记法的大体流程。</p>
+<p>首先：程序创建的对象都标记为白色。</p>
+<p><img src="/img/gc/mark_sweep_5.png"></p>
+<p>gc开始：扫描所有可到达的对象，标记为灰色</p>
+<p><img src="/img/gc/mark_sweep_6.png"></p>
+<p>从灰色对象中找到其引用对象标记为灰色，把灰色对象本身标记为黑色</p>
+<p><img src="/img/gc/mark_sweep_7.png"></p>
+<p>监视对象中的内存修改，并持续上一步的操作，直到灰色标记的对象不存在</p>
+<p><img src="/img/gc/mark_sweep_8.png"></p>
+<p>此时，gc回收白色对象。</p>
+<p><img src="/img/gc/mark_sweep_9.png"></p>
+<p>最后，将所有黑色对象变为白色，并重复以上所有过程。</p>
+<p><img src="/img/gc/mark_sweep_10.png"></p>
+<p>好了，大体的流程就是这样的，让我们回到刚才的问题：Go是如何解决标记-清除(mark and sweep)算法中的卡顿(stw，stop the world)问题的呢？</p>
+<h2 id="gc和用户逻辑如何并行操作？"><a href="#gc和用户逻辑如何并行操作？" class="headerlink" title="gc和用户逻辑如何并行操作？"></a>gc和用户逻辑如何并行操作？</h2><p>标记-清除(mark and sweep)算法的STW(stop the world)操作，就是runtime把所有的线程全部冻结掉，所有的线程全部冻结意味着用户逻辑是暂停的。这样所有的对象都不会被修改了，这时候去扫描是绝对安全的。</p>
+<p>Go如何减短这个过程呢？标记-清除(mark and sweep)算法包含两部分逻辑：标记和清除。<br>我们知道Golang三色标记法中最后只剩下的黑白两种对象，黑色对象是程序恢复后接着使用的对象，如果不碰触黑色对象，只清除白色的对象，肯定不会影响程序逻辑。所以：<code>清除操作和用户逻辑可以并发。</code></p>
+<p>标记操作和用户逻辑也是并发的，用户逻辑会时常生成对象或者改变对象的引用，那么标记和用户逻辑如何并发呢？</p>
+<h3 id="process新生成对象的时候，GC该如何操作呢？不会乱吗？"><a href="#process新生成对象的时候，GC该如何操作呢？不会乱吗？" class="headerlink" title="process新生成对象的时候，GC该如何操作呢？不会乱吗？"></a>process新生成对象的时候，GC该如何操作呢？不会乱吗？</h3><p>我们看如下图，在此状态下：process程序又新生成了一个对象，我们设想会变成这样：</p>
+<p><img src="/img/gc/mark_sweep_11.png"></p>
+<p>但是这样显然是不对的，因为按照三色标记法的步骤，这样新生成的对象A最后会被清除掉，这样会影响程序逻辑。</p>
+<p>Golang为了解决这个问题，引入了<code>写屏障</code>这个机制。<br>写屏障：该屏障之前的写操作和之后的写操作相比，先被系统其它组件感知。<br>通俗的讲：就是在gc跑的过程中，可以监控对象的内存修改，并对对象进行重新标记。(实际上也是超短暂的stw，然后对对象进行标记)</p>
+<p>在上述情况中，<code>新生成的对象，一律都标位灰色！</code><br>即下图：</p>
+<p><img src="/img/gc/mark_sweep_12.png"></p>
+<h3 id="那么，灰色或者黑色对象的引用改为白色对象的时候，Golang是该如何操作的？"><a href="#那么，灰色或者黑色对象的引用改为白色对象的时候，Golang是该如何操作的？" class="headerlink" title="那么，灰色或者黑色对象的引用改为白色对象的时候，Golang是该如何操作的？"></a>那么，灰色或者黑色对象的引用改为白色对象的时候，Golang是该如何操作的？</h3><p>看如下图，一个黑色对象引用了曾经标记的白色对象。</p>
+<p><img src="/img/gc/mark_sweep_13.png"></p>
+<p>这时候，写屏障机制被触发，向GC发送信号，GC重新扫描对象并标位灰色。</p>
+<p><img src="/img/gc/mark_sweep_14.png"></p>
+<p>因此，gc一旦开始，无论是创建对象还是对象的引用改变，都会先变为灰色。</p>
+<h2 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h2><p>更多精彩内容，请搜索我的微信公众号 <code>码农RyuGou</code></p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+<p>参考文献：<br><a href="https://making.pusher.com/golangs-real-time-gc-in-theory-and-practice/">Golang’s Real-time GC in Theory and Practice</a><br><a href="https://www.youtube.com/watch?v=n59VtiRx34s&t=1151">Golang’s realtime garbage collector</a><br><a href="https://mp.weixin.qq.com/s/Wh7A6czDIRofxveY_bEDNQ">Golang 垃圾回收剖析</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/03/04/golang-garbage-collector/" data-id="clzo46btg0015vajh6ld18gcp" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+  <nav id="page-nav">
+    
+    <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/">Next &raquo;</a>
+  </nav>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

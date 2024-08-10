@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>raft一致性算法详解 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在现实的分布式系统中，不能可能保证集群中的每一台机器都是100%可用可靠的，集群中的任何机器都可能发生宕机、网络连接等问题导致集群中的某个节点不可用，这样，那个节点的数据就有可能和集群不一致，所以需要有一种机制，来保证在大多数机器都存在的情况下向外提供可靠的数据服务。这里的大多数节点指的是集群半数以上的节点。 raft算法就是一种在分布式系统中解决集群中多节点之间数据一致性的算法。Golang生态">
+<meta property="og:type" content="article">
+<meta property="og:title" content="raft一致性算法详解">
+<meta property="og:url" content="http://yoursite.com/2018/12/12/raft/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="在现实的分布式系统中，不能可能保证集群中的每一台机器都是100%可用可靠的，集群中的任何机器都可能发生宕机、网络连接等问题导致集群中的某个节点不可用，这样，那个节点的数据就有可能和集群不一致，所以需要有一种机制，来保证在大多数机器都存在的情况下向外提供可靠的数据服务。这里的大多数节点指的是集群半数以上的节点。 raft算法就是一种在分布式系统中解决集群中多节点之间数据一致性的算法。Golang生态">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/raft/1.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/2.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/3.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/4.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/5.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/6.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/7.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/8.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/9.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/10.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/11.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/12.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/13.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/14.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/15.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/16.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/17.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/18.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/19.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/20.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/21.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/22.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/23.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/24.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/25.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/26.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/raft/27.jpeg">
+<meta property="article:published_time" content="2018-12-12T10:18:07.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.817Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/raft/1.jpeg">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-raft" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/12/12/raft/" class="article-date">
+  <time datetime="2018-12-12T10:18:07.000Z" itemprop="datePublished">2018-12-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      raft一致性算法详解
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在现实的分布式系统中，不能可能保证集群中的每一台机器都是100%可用可靠的，集群中的任何机器都可能发生宕机、网络连接等问题导致集群中的某个节点不可用，这样，那个节点的数据就有可能和集群不一致，所以需要有一种机制，来保证在大多数机器都存在的情况下向外提供可靠的数据服务。这里的大多数节点指的是<code>集群半数以上</code>的节点。</p>
+<p>raft算法就是一种在分布式系统中解决集群中多节点之间数据一致性的算法。Golang生态圈中大名鼎鼎的etcd就是使用的raft算法来保持数据一致性的，与raft类似的一致性算法还有Paxos算法、Zab协议等。</p>
+<p>其实，raft算法维持数据一致性的核心思想很简单，就是：“少数服从多数”。</p>
+<h1 id="leader选举"><a href="#leader选举" class="headerlink" title="leader选举"></a>leader选举</h1><p>保证数据一致性，最好的方式就是只有唯一的一个节点，唯一的这个节点读，唯一的这个节点写，这样数据肯定是一致的；但是分布式架构显然不可以一个节点，于是，raft算法提出，在集群的所有节点中，需要有一个节点来充当这一个唯一的节点，在一段时间内，只有这一个节点负责读写数据，然后其他节点同步数据。这个唯一的节点叫<code>leader</code>节点，其他负责同步数据的节点叫做<code>follower</code>节点。在集群中，还会有其他状态的节点，例如<code>candidate</code>节点，这种节点只有在选举<code>leader</code>的时候才会有。<br>节点的<code>leader</code>选举和现实生活中的选举十分类似，就是投票，集群中获票数最多的那个，就是<code>leader</code>节点，所以为防止出现平局的情况(平局的情况也有解决方案，下文会说)，一般在部署节点的时候，会将节点数设置为奇数(2n + 1)。</p>
+<p>这些节点是如何选举的呢？我们先从<code>follower</code>、<code>leader</code>、<code>candidate</code>这三种状态说起。<br>在集群中，有三个节点 A 、B、C。</p>
+<!-- ![](/img/raft/WechatIMG8.jpeg) -->
+<p><img src="/img/raft/1.jpeg"></p>
+<p>在集群刚刚开始的时候，他们仨都是<code>follower</code>。</p>
+<!-- ![](/img/raft/WechatIMG9.jpeg) -->
+<p><img src="/img/raft/2.jpeg"></p>
+<p>过一段时间后，A变成了<code>Candidate</code>，这是要选举了！</p>
+<!-- ![](/img/raft/WechatIMG10.jpeg) -->
+<p><img src="/img/raft/3.jpeg"></p>
+<p>为啥A能变成<code>Candidate</code>？凭啥？因为A的<code>election timeout</code>到期了，<code>election timeout</code>是选举超时时间，集群中的每个节点都有一个<code>election timeout</code>，每个节点的<code>election timeout</code>都是150ms ~ 300ms之间的一个随机数。每当节点的<code>election timeout</code>时间到了，就会触发节点变为<code>candidate</code>状态。A的选举超时时间到了，所以A理所当然变为了<code>Candidate</code>。<br>所以，我们知道，其实A、B、C三个节点除了有状态，还有个选举超时时间<code>election timeout</code></p>
+<!-- ![](/img/raft/WechatIMG11.jpeg) -->
+<p><img src="/img/raft/4.jpeg"></p>
+<p>此时，<code>candidate</code>节点A会向整个集群发起选举投票，它会先投自己一票，然后告诉B、C 大选开始了！</p>
+<!-- ![](/img/raft/WechatIMG12.jpeg) -->
+<p><img src="/img/raft/5.jpeg"></p>
+<p>注意！只有<code>candidate</code>状态的节点，才可以参加竞选变为<code>leader</code>，B、C这两个follower是没有资格的！<br>除此之外，每个节点中还有一个字段，叫<code>term</code>意思就是任期，和美国大选的第几期总统差不多一个意思，这个<code>term</code>是一个全局的、连续递增的整数，每进行一次选举，<code>term</code>就会加一，如果<code>candidate</code>赢得选举，它会当<code>leader</code>直到此次任期结束。<br>此时，A触发了选举，它的<code>term</code>应该是加一的。</p>
+<!-- ![](/img/raft/WechatIMG13.jpeg) -->
+<p><img src="/img/raft/6.jpeg"></p>
+<p>当B、C收到A发出的大选消息后，B、C开始投票，此时只有A这一个<code>candidate</code>，所以理所当然发消息都只能投A。</p>
+<!-- ![](/img/raft/WechatIMG14.jpeg) -->
+<p><img src="/img/raft/7.jpeg"></p>
+<p>此时A当选<code>leader</code>!<br>为了巩固自己的“统治”，防止A在任期之间其他节点因为自身<code>election timout</code>而触发选举，<code>leader</code>节点A会不定时的向两个<code>follower</code>节点B、C发送心跳消息，B和C收到心跳消息后，会重置<code>election timout</code>。心跳检测时间很短，要远远小于选举超时时间<code>election timout</code>。</p>
+<!-- ![](/img/raft/WechatIMG16.jpeg) -->
+<p><img src="/img/raft/8.jpeg"></p>
+<p>B、C收到心跳检测后，返回心跳响应，并重置超时时间<code>election timeout</code>。</p>
+<!-- ![](/img/raft/WechatIMG17.jpeg) -->
+<p><img src="/img/raft/9.jpeg"></p>
+<p>假设A发送的心跳检测消息由于网络原因例如延迟、丢包等等没有传送到B、C中的某个Follower节点，而此时这个节点刚好<code>election timeout</code>，则触发选举。<br>C修改自身节点任期值<code>term</code>为2，自身状态变为<code>candidate</code>，且投自身一票后，发起选举！</p>
+<!-- ![](/img/raft/WechatIMG19.jpeg) -->
+<p><img src="/img/raft/10.jpeg"></p>
+<p>这时候，由于C的任期值<code>term</code>变为2大于A的，在raft协议中，但收到任期值大于自身的节点，都会更改自身节点的term值，并切换为<code>Follower</code>状态并重置<code>election time</code>。<br>因此，这时候A由<code>leader</code>直接变为<code>Follower</code>！</p>
+<!-- ![](/img/raft/WechatIMG20.jpeg) -->
+<p><img src="/img/raft/11.jpeg"></p>
+<p>我们再来考虑一种极端情况：假设有偶数个节点，并且同时有两个节点进入<code>candiate</code>状态！<br>例如有以下四个节点A、B、C、D。A和B同时进入了<code>cadidate</code>状态并开始选举。</p>
+<!-- ![](/img/raft/WechatIMG21.jpeg) -->
+<p><img src="/img/raft/12.jpeg"></p>
+<p>假如A和B中任意一个获得了超过半数以上的多数票，则变为leader！</p>
+<!-- ![](/img/raft/WechatIMG22.jpeg) -->
+<p><img src="/img/raft/13.jpeg"></p>
+<p>但是假如两个经过一次选举后得的票数相同或者都没有超过半数，则宣告选举失败并结束！等待A和C这两个<code>candidate</code>节点中任意一个节点的<code>election time</code>超时，然后发起新一轮选举。<br>注意：虽然票数相同或者都没有超过半数导致的选举失败了，但是任期值<code>term</code>还是要叠加的！<br>A、B票数相同，等待哪个先超时。</p>
+<!-- ![](/img/raft/WechatIMG23.jpeg) -->
+<p><img src="/img/raft/14.jpeg"></p>
+<p>此时A先超时。则A发起选举，由于A<code>term</code>值显然是最大的，则A会最终当选为<code>leader</code>。</p>
+<!-- ![](/img/raft/WechatIMG24.jpeg) -->
+<p><img src="/img/raft/15.jpeg"></p>
+<h1 id="日志复制"><a href="#日志复制" class="headerlink" title="日志复制"></a>日志复制</h1><p>当<code>leader</code>选出来后，无论读和写都会由<code>leader</code>节点来处理。<br>是的，读也由<code>leader</code>来处理，<code>leader</code>拿到请求后，再决定由哪一个节点来处理，要么将请求分发，要么自己处理；即使client端请求的是follower节点，Follower节点也会现将请求信息转给<code>leader</code>，再由<code>leader</code>决定由哪个节点来处理。</p>
+<p>下面来说说写的情况：<br>以下有A、B、C三个节点，其中A是<code>leader</code>节点</p>
+<!-- ![](/img/raft/WechatIMG25.jpeg) -->
+<p><img src="/img/raft/16.jpeg"></p>
+<p>当client请求过来要求写操作的时候，<code>leader</code> A先把数据写在本身节点的log文件中</p>
+<!-- ![](/img/raft/WechatIMG26.jpeg) -->
+<p><img src="/img/raft/17.jpeg"></p>
+<p>然后A将发<code>append entries</code>消息发送给B、C节点。<br>注意！<code>append entries</code>消息其实是根据节点的不同而消息也不同的，因为集群中数据可能不一致，一味的传相同数据，显然不可以。具体怎么不一致，稍后再说。</p>
+<!-- ![](/img/raft/WechatIMG36_new.jpeg) -->
+<p><img src="/img/raft/18.jpeg"></p>
+<p>B、C再收到消息后，把数据添加到本地，然后向A发消息，告诉A已经收到。</p>
+<!-- ![](/img/raft/WechatIMG27.jpeg) -->
+<p><img src="/img/raft/19.jpeg"></p>
+<p><code>leader</code>A收到后，先提交记录，然后返回客户端响应。</p>
+<!-- ![](/img/raft/WechatIMG28.jpeg) -->
+<p><img src="/img/raft/20.jpeg"></p>
+<p>然后，<code>leader</code>A继续向B、C两个follower发送写数据commit的通知。</p>
+<!-- ![](/img/raft/WechatIMG29.jpeg) -->
+<p><img src="/img/raft/21.jpeg"></p>
+<p>B、C两个节点收到通知后，先commit自身的log数据，然后再通知<code>leader</code>A已更新结束。</p>
+<!-- ![](/img/raft/WechatIMG30.jpeg) -->
+<p><img src="/img/raft/22.jpeg"></p>
+<p>到此整个数据同步也就结束了。<br>每次写数据，都需要先更新，然后commit。每个节点中都有两个索引，一个是当前提交的索引值commitIndex，一个是目前数据的最后一行索引值lastApplied。</p>
+<!-- ![](/img/raft/WechatIMG31.jpeg) -->
+<p><img src="/img/raft/23.jpeg"></p>
+<p>而leader节点中，除了需要存储自身节点的commitIndex和lastApplied之外，还需要知道所有<code>Follower</code>的存储情况，因而<code>leader</code>节点中多了一张表，这张表中记录了所有<code>follower</code>节点的存储情况，这张表中有两个属性，一个属性叫<code>nextIndex</code>记录的是<code>Follower</code>节点没有的数据索引，需要发送<code>append entries</code>的数据索引；还有一个<code>matchIndex</code>记录的是<code>leader</code>节点已知的，<code>follower</code>节点的数据。如下图所示:</p>
+<!-- ![](/img/raft/WechatIMG32.jpeg) -->
+<p><img src="/img/raft/24.jpeg"></p>
+<p>因此，当数据更新的时候，<code>leader</code>A 向节点B、C发送不同的<code>append entries</code>。</p>
+<!-- ![](/img/raft/WechatIMG33.jpeg) -->
+<p><img src="/img/raft/25.jpeg"></p>
+<p>当A节点不再当leader时，其他节点并不能知道<code>leader</code>A保存的<code>matchIndex</code>和<code>nextIndex</code>这两个数组的数据。当其他节点成功当选为<code>leader</code>节点后，会将<code>nextIndex</code>全部重置为自身的<code>commitIndex</code>，而<code>matchIndex</code>则全部重置为0。如下图：</p>
+<!-- ![](/img/raft/WechatIMG34.jpeg) -->
+<p><img src="/img/raft/26.jpeg"></p>
+<p>则，<code>leader</code>B会向A和C节点发<code>append entries</code>，去”补全”数据</p>
+<!-- ![](/img/raft/WechatIMG35.jpeg) -->
+<p><img src="/img/raft/27.jpeg"></p>
+<p>节点收到请求后，如果存在数据，就不动直接返回，如果没有数据则缺哪个补哪个。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ul>
+<li>触发选举的唯一条件是<code>election timeout</code>，心跳超时等其他条件仅仅是触发了非<code>leader</code>节点的<code>election timeout</code>。</li>
+<li>节点选举的时候，<code>term</code>值大的一定会力压<code>term</code>值小的当选leader。</li>
+<li><code>leader</code>节点向<code>follower</code>节点中发送<code>append entries</code>的时候，并不是缺少1、2、3就直接发送1、2、3而是分批次，一次发送一条。1！ 2！ 3！三条数据，分三次发完。(怕图片误导，特此说明!)</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/12/12/raft/" data-id="clzo46btq0023vajh4o0j0oaf" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/12/18/Golang-no-csp/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Golang非CSP并发模型外的其他并行方法总结
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/10/01/Golang-interface/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go语言interface底层实现</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

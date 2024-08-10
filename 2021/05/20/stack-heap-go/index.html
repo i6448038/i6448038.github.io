@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>细谈Go变量的内存分布 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="我们程序中的变量大多被分配在内存的两个区域：statck和heap。 stack和heap首先让我们一起来回顾一下进程的内存分配：我们写的程序代码跑起来后，会是一个进程；OS会给我们的进程分配内存；内存结构大致如下：  OS给一个进程分配的内存空间大致可以分为：代码区、全局数据区、栈(stack)、堆(heap)、环境变量区域以及中间空白的缓冲区六个部分。其中，数据的增长路径除栈(stack)是由">
+<meta property="og:type" content="article">
+<meta property="og:title" content="细谈Go变量的内存分布">
+<meta property="og:url" content="http://yoursite.com/2021/05/20/stack-heap-go/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="我们程序中的变量大多被分配在内存的两个区域：statck和heap。 stack和heap首先让我们一起来回顾一下进程的内存分配：我们写的程序代码跑起来后，会是一个进程；OS会给我们的进程分配内存；内存结构大致如下：  OS给一个进程分配的内存空间大致可以分为：代码区、全局数据区、栈(stack)、堆(heap)、环境变量区域以及中间空白的缓冲区六个部分。其中，数据的增长路径除栈(stack)是由">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/stack_heap/mem_total.png">
+<meta property="og:image" content="http://yoursite.com/img/stack_heap/stack.png">
+<meta property="og:image" content="http://yoursite.com/img/stack_heap/heap.png">
+<meta property="og:image" content="http://yoursite.com/img/stack_heap/heap1.png">
+<meta property="og:image" content="http://yoursite.com/img/stack_heap/stack1.png">
+<meta property="og:image" content="http://yoursite.com/img/stack_heap/stack2.png">
+<meta property="og:image" content="https://i6448038.github.io/img/weichat/qrcode.jpg">
+<meta property="article:published_time" content="2021-05-20T15:13:52.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.807Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/stack_heap/mem_total.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-stack-heap-go" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/05/20/stack-heap-go/" class="article-date">
+  <time datetime="2021-05-20T15:13:52.000Z" itemprop="datePublished">2021-05-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      细谈Go变量的内存分布
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>我们程序中的变量大多被分配在内存的两个区域：<code>statck</code>和<code>heap</code>。</p>
+<h2 id="stack和heap"><a href="#stack和heap" class="headerlink" title="stack和heap"></a><code>stack</code>和<code>heap</code></h2><p>首先让我们一起来回顾一下进程的内存分配：<br>我们写的程序代码跑起来后，会是一个进程；OS会给我们的进程分配内存；内存结构大致如下：</p>
+<p><img src="/img/stack_heap/mem_total.png"></p>
+<p>OS给一个进程分配的内存空间大致可以分为：<code>代码区</code>、<code>全局数据区</code>、<code>栈(stack)</code>、<code>堆(heap)</code>、<code>环境变量区域</code>以及中间空白的<code>缓冲区</code>六个部分。其中，数据的增长路径除<code>栈(stack)</code>是由高到低之外，其余的均是由低到高(可看图中数据箭头)。</p>
+<p>我们思考一下，为什么<code>栈(stack)区</code>这么特殊和其他区域路径相反？还有，进程内存中<code>stack</code>和<code>heap</code>和数据结构中的<code>stack</code>和<code>heap</code>名字都相同，是有什么联系吗？请带着问题往下看：</p>
+<h3 id="进程内存中的stack和heap"><a href="#进程内存中的stack和heap" class="headerlink" title="进程内存中的stack和heap"></a>进程内存中的<code>stack</code>和<code>heap</code></h3><p><code>stack</code> : 是由程序侧通过<code>系统调用</code>向操作系统申请的，由操作系统管理和释放，不需要程序员手动管理；一般用于存放线程和函数中产生的临时变量。这块区域的数据使用速度较快，不用手动管理，省心省力。</p>
+<p><code>heap</code>：是由程序侧通过<code>系统调用</code>向操作系统申请的，但是需要程序员自行管理的内存区域，因为此区域的定位是<code>global variable</code>，用于存放全局的变量(虽然很多编程语言中不这么利用)； 程序员需要手动或者通过GC及时free或者delete此内存区域中的数据，但是也要注意：如果频繁的进行删除和添加，会导致内存碎片。</p>
+<h3 id="数据结构stack和heap"><a href="#数据结构stack和heap" class="headerlink" title="数据结构stack和heap"></a>数据结构<code>stack</code>和<code>heap</code></h3><p>我们再来看看数据结构中的<code>stack</code>和<code>heap</code>；</p>
+<p><strong>stack</strong><br><img src="/img/stack_heap/stack.png"><br>后进先出LIFO的数据结构。</p>
+<p><strong>Heap</strong><br><img src="/img/stack_heap/heap.png"></p>
+<p>堆的定义：</p>
+<ul>
+<li>完全二叉树</li>
+<li>每一个节点的值都必须大于等于（或小于等于）其子树中每个节点的值</li>
+</ul>
+<p>根节点是最大数的叫做“大顶堆”，根节点是最小数的叫做“小顶堆”。</p>
+<p>堆<code>heap</code>这种数据结构经常利用在“如何快速定位并获取到Top N最热门的xxx”，通常的做法如下图：</p>
+<p><img src="/img/stack_heap/heap1.png"></p>
+<h3 id="内存中的”stack和heap“与数据结构中的”stack和heap“的联系"><a href="#内存中的”stack和heap“与数据结构中的”stack和heap“的联系" class="headerlink" title="内存中的”stack和heap“与数据结构中的”stack和heap“的联系"></a>内存中的”<code>stack</code>和<code>heap</code>“与数据结构中的”<code>stack</code>和<code>heap</code>“的联系</h3><p>一句话总结：进程内存中的<code>栈区(stack)</code>使用的数据结构就是<code>stack</code>，内存中的<code>heap</code>和数据结构中的<code>heap</code>则毫无关系。</p>
+<p>看如下C代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">   <span class="type">int</span> a = <span class="number">3</span>; </span><br><span class="line">   <span class="type">int</span> b = <span class="number">5</span>;</span><br><span class="line">   ret = add(a, b);</span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">&quot;%d&quot;</span>, ret);</span><br><span class="line">   reuturn <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">add</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> y)</span> &#123;</span><br><span class="line">   <span class="type">int</span> sum = <span class="number">0</span>;</span><br><span class="line">   sum = x + y;</span><br><span class="line">   <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上代码在栈区中的数据是这样的：<br><img src="/img/stack_heap/stack1.png"></p>
+<p>还及得上文中提到的：“进程内存中只有<code>栈区(stack)</code>数据是由高位向低位增长的，其余的均为由低位向高位增长吗？”</p>
+<p>栈区用的数据结构是栈，函数变量的销毁和返回顺序用逆恰好符合stack先进后出的特点，我觉得这是<code>栈区(stack)</code>逆序增长很重要的一点。</p>
+<p>但是，最根本的原因还是在于：历史遗留问题。请看下图：</p>
+<p><img src="/img/stack_heap/stack2.png"><br>在当初那个内存空间及其短缺的年代，你认为左图还是右图更适合“缓冲区”？因为<code>stack</code>区域和<code>heap</code>区域大小都是动态分配的，都有“不确定性”，很显然，左图发生<code>堆栈重叠</code>更小，且更适合内存的充分利用。</p>
+<h2 id="Go变量的位置"><a href="#Go变量的位置" class="headerlink" title="Go变量的位置"></a>Go变量的位置</h2><p>我们在写C、PHP、Java的时候，可以很容易的知道，所写的变量所在的位置：带<code>new</code>、<code>malloc</code>等字段的，那一定是在堆上分配了，至于后续GC怎么处理，有没有引用继续关联，堆有没与释放，程序是否存在内存泄露…这都是后续处理的问题了；变量的存储位置是妥妥的堆上了。但是，在用Go的时候要注意，<code>new</code>、<code>make</code>等等关键字都不好使，Go变量的位置不是由写程序的程序员来决定的，而是Go自行处理；所以可能你的变量是<code>new</code>出来的，但是，最终也不一定分配到堆上，很可能是分配在栈上。</p>
+<p>Go把变量的位置在哪儿这件事对程序员“隐藏”了，Go自行处理；因为Go认为：变量的存储位置，会对程序的性能有一定影响，而Go是计划打造对性能有极致要求的程序，因而自己管了。<br>Go是这么管的：<br>首先，栈<code>stack</code>上的效率肯定是比堆要高的，这算是常识；Go在编译期会对每一个函数变量做判断，如果不能够判断此函数中的变量在返回之后是否仍被引用到，就给把变量扔堆<code>heap</code>上，否则，就扔栈<code>stack</code>上。但是注意：如果变量非常大，还是会扔到堆<code>heap</code>上。</p>
+<h3 id="逃逸分析"><a href="#逃逸分析" class="headerlink" title="逃逸分析"></a>逃逸分析</h3><p>我们是否有办法知道我们写的Go程序中变量的位置呢？<br>答案是有的，Go向开发者提供了变量逃逸分析的工具 </p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">go</span> build -gcflags <span class="string">&#x27;-m -l&#x27;</span> main.<span class="keyword">go</span> <span class="comment">// 这里的main.go也可以是某个具体的二进制应用程序</span></span><br></pre></td></tr></table></figure>
+
+<p>下面对如下代码进行逃逸分析：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a:= <span class="number">3</span></span><br><span class="line">    b := <span class="number">5</span></span><br><span class="line">    ret := add(a, b)</span><br><span class="line">    fmt.Println(ret)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">add</span><span class="params">(x,y <span class="type">int</span>)</span></span><span class="type">int</span> &#123;</span><br><span class="line">    sum := x + y</span><br><span class="line">    <span class="keyword">return</span> sum</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>分析结果:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">./main.<span class="keyword">go</span>:<span class="number">11</span>:<span class="number">16</span>: main ... argument does not escape</span><br><span class="line">./main.<span class="keyword">go</span>:<span class="number">11</span>:<span class="number">16</span>: ret escapes to heap</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2021/05/20/stack-heap-go/" data-id="clzo46btv002lvajh1jndg9r9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/07/17/reference-and-pointer/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          图解Go的引用底层实现
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2020/06/23/why-aviod-import-cycle/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">为什么Go语言不允许循环引入?</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

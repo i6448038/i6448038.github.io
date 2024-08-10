@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>浮点数精度丢失问题详解 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="请看以下Go代码，会返回 0.7 吗？ 123456var num float32for i :&#x3D; 0; i &lt; 7; i++&#123;    num &#x3D; num + 0.1&#125;fmt.Println(num)  答案可能出人意料，是：0.70000005 10.70000005  也许有人会问，是不是Go语言的问题？换其他语言试试？OK，我们换JS试试。答案依然令人意外。除此之外">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浮点数精度丢失问题详解">
+<meta property="og:url" content="http://yoursite.com/2021/09/05/float-binary/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="请看以下Go代码，会返回 0.7 吗？ 123456var num float32for i :&#x3D; 0; i &lt; 7; i++&#123;    num &#x3D; num + 0.1&#125;fmt.Println(num)  答案可能出人意料，是：0.70000005 10.70000005  也许有人会问，是不是Go语言的问题？换其他语言试试？OK，我们换JS试试。答案依然令人意外。除此之外">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/float/browser.jpg">
+<meta property="og:image" content="http://yoursite.com/img/float/integers.png">
+<meta property="og:image" content="http://yoursite.com/img/float/total.png">
+<meta property="og:image" content="http://yoursite.com/img/float/total_01.png">
+<meta property="og:image" content="http://yoursite.com/img/float/binary_table.png">
+<meta property="og:image" content="http://yoursite.com/img/float/ieee754.png">
+<meta property="og:image" content="http://yoursite.com/img/weichat/qrcode.jpg">
+<meta property="article:published_time" content="2021-09-05T01:02:34.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.819Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="计算机基础">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/float/browser.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-float-binary" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/09/05/float-binary/" class="article-date">
+  <time datetime="2021-09-05T01:02:34.000Z" itemprop="datePublished">2021-09-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      浮点数精度丢失问题详解
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>请看以下Go代码，会返回 <code>0.7</code> 吗？</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> num <span class="type">float32</span></span><br><span class="line"><span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">7</span>; i++&#123;</span><br><span class="line">    num = num + <span class="number">0.1</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fmt.Println(num)</span><br></pre></td></tr></table></figure>
+
+<p>答案可能出人意料，是：<code>0.70000005</code></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0.70000005</span></span><br></pre></td></tr></table></figure>
+
+<p>也许有人会问，是不是Go语言的问题？换其他语言试试？<br>OK，我们换JS试试。<br><img src="/img/float/browser.jpg"><br>答案依然令人意外。<br>除此之外，你还可以试试C、C++、Java、PHP等其他语言的float类型相加，看得到的数据是否精确；</p>
+<p>还有，除了语言之外，你还可以在MySQL等数据库中试试float类型数据的字段叠加，得到的数据是否精确。</p>
+<p>我可以先告诉你答案：<code>只要是float类型的数据相加，无论在任何语言、任何数据库、任何中间件中进行加法(减法乘除法)运算，得到的数据，都不会精确。</code></p>
+<p>这是浮点类型的精度丢失现象。(Loss of significance)</p>
+<p>要了解产生这个现象的原因，就要先了解计算机是如何定义和表示float类型的。<br>不同于正整数类型的表示方法，float类型在计算机中的表示略显复杂，遵循的是<code>IEEE 754标准</code>。</p>
+<p>下面，我们就讲一下<code>IEEE 754标准</code>。</p>
+<p>我们首先回顾一下整数类型在计算机中的表示。<br>我们知道:计算机只认识0和1；那么，对于像6一样的这种正整数，我们要做十进制到二进制的转换。<br>即：<br><img src="/img/float/integers.png"></p>
+<p>所以，十进制<code>6</code>最终转化为二进制为<code>110</code>。</p>
+<p>这很好理解，但是，如何表示 <code>6.1</code>等这类小数呢？<br>有人说了，可以找个特殊的符号，用来表示小数点<code>.</code>，把<code>6.1</code>中<code>6</code>和<code>1</code>隔开；听起来是个不错的办法。其实<code>IEEE 754</code>还真就是这么做的，只不过思路略有些复杂，总体思路就是：仿照用”科学计数法”！</p>
+<p>我们再回顾一下什么是<code>科学计数法</code>。<br><code>把一个数表示成a与10的n次幂相乘的形式（1≤|a|&lt;10，a不为分数形式，n为整数），这种记数法叫做科学记数法。</code><br>也就是：<code>1.360X10^4</code> 这种计数方式。</p>
+<p>我们可以仿照科学计数法，来表示浮点数，把二进制数统一表示成 <code>1.0110101 X 2^n</code>这种形式。<br>数据层面怎么表示出这种形式呢？根据<code>IEEE 754</code>的标准，将数据分为三部分：</p>
+<p><img src="/img/float/total.png"></p>
+<p>从左到右分别表示：符号位(正负数)、指数位和小数位</p>
+<p>以单精度浮点数为例，单精度浮点数一共32位(双精度64位，即平时所说的<code>double</code>类型)，具体内部表示为：</p>
+<p><img src="/img/float/total_01.png"></p>
+<ul>
+<li>1个bit表示符号位</li>
+<li>8个bit表示指数位</li>
+<li>23个bit表示小数位</li>
+</ul>
+<p>这里有个地方要特别注意：因为数据最终要表示成 <code>1.0110101 X 2^n</code>这种形式，整数位在二进制下，永远都是<code>1</code>，所以在表示float类型的时候，直接把<code>1</code>给去掉了，假如有就占据一个bit的空间，既然那个bit位上永远都是1，所以干脆去掉了。</p>
+<p>那么，具体该如何展示呢？例如小数点后的数字怎么表示？<code>6.1</code>能否写成<code>110.1</code>呢？如果能的话小数点后这个1代表什么呢？个数一？那添加几个零的话，能否认为是十、一百、一千？似乎是不可以，因为这样只能满足”视觉效果”,逻辑层面直接说不通。</p>
+<p>要明白在小数点后的数字代表除以2后的数字，例如二进制下小数点后的第一位1代表 1 &#x2F; 2等于 <code>0.5</code>，第二位1代表 1&#x2F;2&#x2F;2等于 <code>0.25</code>，依次类推第三位1则代表 <code>0.125</code>…具体请看下图：</p>
+<p><img src="/img/float/binary_table.png"></p>
+<p>所以，给定一个小数，譬如<code>0.1</code>，要想得到对应的二进制数，应该是和小数点左边的计算方式相反：<code>乘以2，记录整数位</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">0.1 X 2 = 0.2  0</span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line">(1.6 - 1 = 0.6)</span><br><span class="line">0.6 X 2 = 1.2  1</span><br><span class="line">(1.2 - 1 = 0.2) </span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line">(1.6 - 1 = 0.6)</span><br><span class="line">0.6 X 2 = 1.2  1</span><br><span class="line">(1.2 - 1 = 0.2) </span><br><span class="line">0.2 X 2 = 0.4  0</span><br><span class="line">0.4 X 2 = 0.8  0</span><br><span class="line">0.8 X 2 = 1.6  1</span><br><span class="line"></span><br><span class="line">... </span><br><span class="line">// 无限循环下去</span><br></pre></td></tr></table></figure>
+
+<p>所以，<code>0.1</code> 用二进制表示为：<code>0.000110011001100110011...</code><br>因此 <code>6.1</code> 用二进制应该表示为：<code>110.000110011001100110011...</code><br>用”科学计数法“表示为：<code>1.10000110011001100110011... X 2^2</code><br>OK，看来小数位的数可以确定了是<code>10000110011001100110011</code>，即去掉整数位1后，向后截取的23位数(浮点数不精确的本质原因)。</p>
+<p>符号位0表示正数，1表示负数，所以可以确定是<code>6.1</code>的符号位是0；现在符号位有了，小数位有了，只剩下指数2如的表示了，该如何表示呢？直接在8位的空间内转化为<code>000000010</code>？</p>
+<p>显然不可以，首先，如果指数位用<code>原码</code>表示，那么，针对指数位为负的情况，就得加一个符号位去表示，而且还会出现两个零的情况：<code>00000000</code>和<code>1000000</code>，操作起来过程复杂~</p>
+<p>有人要问那如果使用补码呢？<br>如果使用补码，会出现以下情况，请看例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">例如：1.01 X 2^-1 和 1.11 X 2^3比较大小？</span><br><span class="line"></span><br><span class="line">     首先对比指数位， -1 和 3，分别转化为二进制数 ``111``和``011``；</span><br><span class="line"></span><br><span class="line">     如果没有其他逻辑处理，``111``是&quot;7&quot;，``011``是&quot;3&quot;， 7会小于3吗？</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>可见使用补码，也不是很方便，于是，引用了另外一种编码方式——-移码。<br>先说说移码的定义：<code>将每一个数值加上一个偏置常数(Excess / bias)，通常，当编码位数为n的时候，bias取 &quot;2^n-1&quot; 或者 &quot;2^n-1 - 1&quot; </code></p>
+<p>承接以上1.01 X 2^-1 和 1.11 X 2^3比较大小的例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">例如：1.01 X 2^-1 和 1.11 X 2^3比较大小？</span><br><span class="line">    </span><br><span class="line">    指数为-1的则表示为 -1 + 4 = 3，二进制表示为:011</span><br><span class="line"></span><br><span class="line">    指数为3的则表示为 3 + 4 = 7 二进制表示为：111</span><br><span class="line"></span><br><span class="line">    7 &gt; 3，即 111 &gt; 011 比较完毕  </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>就这样，浮点数”科学计数法“的指数位比较变得简单了，而且，消除了”正零“ 和 ”负零“ 不相同的问题。</p>
+<p>因为 ：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">假设偏移量是：4</span><br><span class="line"></span><br><span class="line">则移码表示的0只有：0 + 4 = 4，即“100”</span><br></pre></td></tr></table></figure>
+
+<p>在<code>IEEE 754</code>中，指数位移码的偏移量为指数位数的 <code>2^n-1 - 1</code>，为127。</p>
+<p>所以，回到<code>6.1</code>表示的问题上，指数位为：<code>2 + 127 = 129</code>，二进制表示为：<code>10000001</code></p>
+<p>因此，<code>6.1</code>在<code>IEEE 754</code>单精度浮点数标准的下，表示为：</p>
+<p><img src="/img/float/ieee754.png"></p>
+<p>好了，现在了解了浮点数<code>IEEE 754</code>标准的表示方法，知道为何浮点数相加总是不精确了吧？</p>
+<p>因为浮点数很多小数在二进制环境下很多都无法完整的表示，只能截取部分数据来近似的表示，两个数相加的话，就是两个近似的数相加的和，如果相加次数足够多，精确度自然也就会越来越低</p>
+<h2 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h2><p>更多精彩内容，请搜索我的微信公众号 <code>码农RyuGou</code></p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2021/09/05/float-binary/" data-id="clzo46bte000yvajh6r9ahcfq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2022/03/19/js-learning-1/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          JS的那些坑（一）
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/07/17/reference-and-pointer/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">图解Go的引用底层实现</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

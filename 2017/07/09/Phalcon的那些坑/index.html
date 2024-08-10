@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Phalcon 的那些坑 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Phalcon route路由只能访问根路径的问题问题现象   我用Phalcon-dev-tools创建了一个空的项目，然后比着文档一步一步往下做。刚开始还行，修改IndexController中的indexAction方法啥的都没有问题，可是，一旦自己写一个Controller或者在原有的Controller上添加其他Action方法，还是返回根路径&#x2F;下的内容。   这tm是咋回事儿？   反">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Phalcon 的那些坑">
+<meta property="og:url" content="http://yoursite.com/2017/07/09/Phalcon%E7%9A%84%E9%82%A3%E4%BA%9B%E5%9D%91/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="Phalcon route路由只能访问根路径的问题问题现象   我用Phalcon-dev-tools创建了一个空的项目，然后比着文档一步一步往下做。刚开始还行，修改IndexController中的indexAction方法啥的都没有问题，可是，一旦自己写一个Controller或者在原有的Controller上添加其他Action方法，还是返回根路径&#x2F;下的内容。   这tm是咋回事儿？   反">
+<meta property="og:locale">
+<meta property="article:published_time" content="2017-07-08T17:29:30.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.822Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="php">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Phalcon的那些坑" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/07/09/Phalcon%E7%9A%84%E9%82%A3%E4%BA%9B%E5%9D%91/" class="article-date">
+  <time datetime="2017-07-08T17:29:30.000Z" itemprop="datePublished">2017-07-09</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Phalcon 的那些坑
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Phalcon-route路由只能访问根路径的问题"><a href="#Phalcon-route路由只能访问根路径的问题" class="headerlink" title="Phalcon route路由只能访问根路径的问题"></a>Phalcon route路由只能访问根路径的问题</h1><h2 id="问题现象"><a href="#问题现象" class="headerlink" title="问题现象"></a>问题现象</h2><p>   我用Phalcon-dev-tools创建了一个空的项目，然后比着文档一步一步往下做。刚开始还行，修改IndexController中的indexAction方法啥的都没有问题，可是，一旦自己写一个Controller或者在原有的Controller上添加其他<code>Action</code>方法，还是返回根路径<code>/</code>下的内容。<br>   这tm是咋回事儿？<br>   反复寻找答案，看文档的每一个细节，是否漏了某些代码？<br>   环境没问题吧？这都跑起来了，肯定是代码问题吧？</p>
+<h2 id="问题原因以及解决"><a href="#问题原因以及解决" class="headerlink" title="问题原因以及解决"></a>问题原因以及解决</h2><p>   还真就是环境问题，不是php版本、Phalcon版本bug，是nginx配置问题！<br>   坑！<br>   Phalcon默认的URI信息是从<code>$_GET[&#39;_url&#39;]</code>获得，也可以设置为<code>$_SERER[&#39;REQUEST_URI&#39;]</code>获取。<br>   使用这两种不同方法获取，还得要不同的nginx配置！！（详情请看Phalcon文档 <a href="https://docs.phalconphp.com/zh/latest/reference/nginx.html#basic-configuration">Phalcon nginx配置</a>）<br>   这特么也得配置！<br>   使用<code>$_GET[&#39;_url&#39;]</code>（默认）：</p>
+<pre><code>location / &#123;
+        try_files $uri $uri/ /index.php?_url=$uri&amp;$args;
+&#125;
+</code></pre>
+<p>   使用<code>$_SERVER[&#39;REQUEST_URI&#39;]</code>，nginx配置：</p>
+<pre><code>location / &#123;
+        try_files $uri $uri/ /index.php;
+&#125;
+</code></pre>
+<p>   想要正常使用<code>$_SERVER[&#39;REQUEST_URI&#39;]</code>的方式，nginx配置完了还不要紧，还得在php代码里修改：</p>
+<pre><code>use Phalcon\Mvc\Router;
+$router-&gt;setUriSource(Router::URI_SOURCE_SERVER_REQUEST_URI);
+</code></pre>
+<h1 id="Phalcon3-1版本无法结合mongodb的问题"><a href="#Phalcon3-1版本无法结合mongodb的问题" class="headerlink" title="Phalcon3.1版本无法结合mongodb的问题"></a>Phalcon3.1版本无法结合mongodb的问题</h1><h2 id="问题现象-1"><a href="#问题现象-1" class="headerlink" title="问题现象"></a>问题现象</h2><p>   我在php5.6、Phalcon2.0的环境下按照如下方式把<code>mongodb</code>服务注入到Phalcon中是没问题的：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$di</span>-&gt;<span class="title function_ invoke__">set</span>(</span><br><span class="line">  <span class="string">&quot;mongo&quot;</span>,</span><br><span class="line">  function () &#123;</span><br><span class="line">    <span class="variable">$mongo</span> = <span class="keyword">new</span> <span class="title class_">MongoClient</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$mongo</span>-&gt;<span class="title function_ invoke__">selectDB</span>(<span class="string">&quot;store&quot;</span>);</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="literal">true</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>  但是在php7.1、Phalcon3.1的环境下，却报错了。说找不到mongo类…</p>
+<h2 id="问题原因以及解决-1"><a href="#问题原因以及解决-1" class="headerlink" title="问题原因以及解决"></a>问题原因以及解决</h2><p>左思右想，谷歌百度，刷新调试。原来，MongoClient这个类用到了php5.6的<code>mongo</code>这个扩展，PHP官方文档提示<code>mongo</code>扩展将由<code>mongodb</code>所替代，而<code>mongo</code>这个扩展在php7中已经不支持。php7中只支持<code>mongodb</code>这个扩展。<br>但是Phalcon3.1封装的类库MongoClient却引用了<code>mongo</code>这个库，所以报了错…</p>
+<p>Phalcon研发组发现了这个问题，所以提供了一个php类库：<code>&quot;phalcon/incubator&quot;</code><br>只需要在composer包中加入此类库，用类库的类替代原来的类就可以了：</p>
+<ul>
+<li>在composer中加入（Phalcon2.x版本对应2.x版本，Phalcon3.x版本对应3.x版本）<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;phalcon/incubator&quot;: &quot;^3.1&quot;</span><br></pre></td></tr></table></figure></li>
+<li>代码中引入<code>use Phalcon\Db\Adapter\MongoDB\Client</code>，然后代码中这样注入：<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$di</span>-&gt;<span class="title function_ invoke__">setShared</span>(<span class="string">&quot;mongo&quot;</span>, function()&#123;</span><br><span class="line">    <span class="variable">$mongoConfig</span> = <span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">getConfig</span>()-&gt;mongo;</span><br><span class="line">    <span class="keyword">return</span> (<span class="keyword">new</span> <span class="title class_">Client</span>(<span class="string">&quot;mongodb://<span class="subst">&#123;$mongoConfig-&gt;host&#125;</span>:<span class="subst">&#123;$mongoConfig-&gt;port&#125;</span>/?replicaSet=<span class="subst">&#123;$mongoConfig-&gt;replicaSet&#125;</span>&quot;</span>))</span><br><span class="line">        -&gt;<span class="title function_ invoke__">selectDatabase</span>(<span class="variable">$mongoConfig</span>-&gt;database);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure></li>
+<li>如果想使用Phalcon中的<code>ODM</code>，原来是引用<code>use Phalcon\Mvc\Collection;</code>并继承。现在是引用以下：<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> <span class="title">Phalcon</span>\<span class="title">Mvc</span>\<span class="title">MongoCollection</span>;</span><br></pre></td></tr></table></figure>
+并继承它。</li>
+</ul>
+<h2 id="其他问题，出现-A-dependency-injector-container-is-required-to-obtain-the-services-related-to-the-ODM"><a href="#其他问题，出现-A-dependency-injector-container-is-required-to-obtain-the-services-related-to-the-ODM" class="headerlink" title="其他问题，出现 A dependency injector container is required to obtain the services related to the ODM"></a>其他问题，出现 <code>A dependency injector container is required to obtain the services related to the ODM</code></h2><p>这是由于加的包<code>&quot;phalcon/incubator&quot;: &quot;^3.1&quot;</code>对于PHP 7.1.0版本以上支持的不好，每次对实体保存的时候都会在mongo中保存一下一些脏数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&quot;_dependencyInjector&quot; : &#123;&#125;,</span><br><span class="line">    &quot;_modelsManager&quot; : &#123;&#125;,</span><br><span class="line">    &quot;_source&quot; : null,</span><br><span class="line">    &quot;_operationMade&quot; : 1,</span><br><span class="line">    &quot;_dirtyState&quot; : 1,</span><br><span class="line">    &quot;_connection&quot; : &#123;&#125;,</span><br><span class="line">    &quot;_errorMessages&quot; : [],</span><br><span class="line">    &quot;_skipped&quot; : false,</span><br></pre></td></tr></table></figure>
+<p>然后再次存数据的时候，就报错了。<br>解决办法就是重写<code>save()</code>方法：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">save</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="title function_ invoke__">version_compare</span>(PHP_VERSION, <span class="string">&#x27;7.1.0&#x27;</span>) &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;_dependencyInjector = <span class="title class_">\Phalcon\Di</span>::<span class="title function_ invoke__">getDefault</span>();</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;_modelsManager = <span class="variable language_">$this</span>-&gt;_dependencyInjector-&gt;<span class="title function_ invoke__">getShared</span>(<span class="string">&quot;collectionManager&quot;</span>);</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;_modelsManager-&gt;<span class="title function_ invoke__">initialize</span>(<span class="variable">$this</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">parent</span>::<span class="title function_ invoke__">save</span>();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Phalcon无法使用redis或者memcached作为Phalcon的缓存服务"><a href="#Phalcon无法使用redis或者memcached作为Phalcon的缓存服务" class="headerlink" title="Phalcon无法使用redis或者memcached作为Phalcon的缓存服务"></a>Phalcon无法使用<code>redis</code>或者<code>memcached</code>作为Phalcon的缓存服务</h1><h2 id="问题现象-2"><a href="#问题现象-2" class="headerlink" title="问题现象"></a>问题现象</h2><p>使用Phalcon封装好的缓存类，只需要如下操作就可以了。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> <span class="title">Phalcon</span>\<span class="title">Cache</span>\<span class="title">Frontend</span>\<span class="title">Data</span> <span class="keyword">as</span> <span class="title">FrontData</span>;</span><br><span class="line"><span class="keyword">use</span> <span class="title">Phalcon</span>\<span class="title">Cache</span>\<span class="title">Backend</span>\<span class="title">Redis</span> <span class="keyword">as</span> <span class="title">BackendData</span>;</span><br><span class="line"></span><br><span class="line"><span class="variable">$di</span>-&gt;<span class="title function_ invoke__">setShared</span>(<span class="string">&#x27;redis&#x27;</span>, function()&#123;</span><br><span class="line">    <span class="variable">$config</span> = <span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">getConfig</span>();</span><br><span class="line">    <span class="variable">$redisConfig</span> = <span class="variable">$config</span>-&gt;sess_redis;</span><br><span class="line"></span><br><span class="line">    <span class="variable">$frontend</span> = <span class="keyword">new</span> <span class="title class_">FrontData</span>([<span class="string">&#x27;lifetime&#x27;</span> =&gt; <span class="variable">$config</span>-&gt;cache-&gt;lifetime]);</span><br><span class="line">    <span class="variable">$cache</span> = <span class="keyword">new</span> <span class="title class_">BackendRedis</span>(<span class="variable">$frontend</span>, </span><br><span class="line">        [</span><br><span class="line">            <span class="string">&quot;host&quot;</span> =&gt; <span class="variable">$redisConfig</span>-&gt;host,</span><br><span class="line">            <span class="string">&quot;port&quot;</span> =&gt; <span class="variable">$redisConfig</span>-&gt;port,</span><br><span class="line">            <span class="string">&quot;persistent&quot;</span> =&gt; <span class="variable">$redisConfig</span>-&gt;pconnect</span><br><span class="line">        ]</span><br><span class="line">      );</span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$cache</span>;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>但是有时候报错，找不到redis类…</p>
+<h2 id="问题原因以及解决-2"><a href="#问题原因以及解决-2" class="headerlink" title="问题原因以及解决"></a>问题原因以及解决</h2><p>这是因为Phalcon扩展在封装缓存类的时候，引用了PHP的<code>redis</code>扩展，而<code>redis</code>扩展并不是php的标准扩展包，so…<br>只需要安装好<code>redis</code>扩展就好。<br>同理，假如报<code>memcache</code>找不到，只需要安装相应扩展就好。</p>
+<h1 id="Phalcon-ORM使用Join语句出现The-column-XXX-is-ambiguous或者-Model-XXX-could-not-be-loaded的问题"><a href="#Phalcon-ORM使用Join语句出现The-column-XXX-is-ambiguous或者-Model-XXX-could-not-be-loaded的问题" class="headerlink" title="Phalcon ORM使用Join语句出现The column &#39;XXX&#39; is ambiguous或者 Model &#39;XXX&#39; could not be loaded的问题"></a>Phalcon ORM使用<code>Join</code>语句出现<code>The column &#39;XXX&#39; is ambiguous</code>或者 <code>Model &#39;XXX&#39; could not be loaded</code>的问题</h1><h2 id="问题现象以及解决"><a href="#问题现象以及解决" class="headerlink" title="问题现象以及解决"></a>问题现象以及解决</h2><p>在使用Phalcon的ORM进行<code>Join</code>语句的时候，需要如下操作</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$infos</span> = <span class="title class_">User</span>::<span class="title function_ invoke__">query</span>()-&gt;<span class="title function_ invoke__">inWhere</span>(<span class="string">&quot;tkey&quot;</span>, <span class="variable">$uids</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">leftJoin</span>(<span class="string">&quot;RealData&quot;</span>, <span class="string">&quot;User.tkey=RealData.tkey&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">leftJoin</span>(<span class="string">&quot;UserFace&quot;</span>, <span class="string">&quot;User.tkey=UserFace.tkey&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">columns</span>([</span><br><span class="line">                <span class="string">&quot;RealData.company&quot;</span>,</span><br><span class="line">                <span class="string">&quot;RealData.status&quot;</span>,</span><br><span class="line">                <span class="string">&quot;RealData.post&quot;</span>,</span><br><span class="line">                <span class="string">&quot;RealData.area&quot;</span>,</span><br><span class="line">                <span class="string">&quot;User.name&quot;</span>,</span><br><span class="line">                <span class="string">&quot;User.flag&quot;</span>,</span><br><span class="line">                <span class="string">&quot;User.sex&quot;</span>,</span><br><span class="line">                <span class="string">&quot;User.tkey&quot;</span>,</span><br><span class="line">                <span class="string">&quot;User.sequence&quot;</span>,</span><br><span class="line">                <span class="string">&quot;User.mobile&quot;</span>,</span><br><span class="line">                <span class="string">&quot;User.othermobile&quot;</span>,</span><br><span class="line">                <span class="string">&quot;User.integrity&quot;</span>,</span><br><span class="line">                <span class="string">&quot;UserFace.filename&quot;</span></span><br><span class="line">            ])</span><br><span class="line">            -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure>
+<p>报 <code>Model &#39;XXX&#39; could not be loaded</code>的错误，看看<code>leftJoin</code>方法：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Adds a LEFT join to the query</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * &lt;code&gt;</span></span><br><span class="line"><span class="comment">     * $criteria-&gt;leftJoin(&quot;Robots&quot;, &quot;r.id = RobotsParts.robots_id&quot;, &quot;r&quot;);</span></span><br><span class="line"><span class="comment">     * &lt;/code&gt;</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> string $model</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> mixed $conditions</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> mixed $alias</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> Criteria</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">leftJoin</span>(<span class="params"><span class="variable">$model</span>, <span class="variable">$conditions</span> = <span class="literal">null</span>, <span class="variable">$alias</span> = <span class="literal">null</span></span>) </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>感觉没毛病，细细想来，发现<code>Model</code>参数应该是该写的是<code>namespace</code>吧，于是：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$user</span> = <span class="title class_">User</span>::<span class="variable language_">class</span>;</span><br><span class="line">        <span class="variable">$realdata</span> = <span class="title class_">RealData</span>::<span class="variable language_">class</span>;</span><br><span class="line">        <span class="variable">$userface</span> = <span class="title class_">UserFace</span>::<span class="variable language_">class</span>;</span><br><span class="line"></span><br><span class="line">        <span class="variable">$infos</span> = <span class="title class_">User</span>::<span class="title function_ invoke__">query</span>()-&gt;<span class="title function_ invoke__">inWhere</span>(<span class="string">&quot;tkey&quot;</span>, <span class="variable">$uids</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">leftJoin</span>(<span class="variable">$realdata</span>, <span class="string">&quot;<span class="subst">$user</span>.tkey=<span class="subst">$realdata</span>.tkey&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">leftJoin</span>(<span class="variable">$userface</span>, <span class="string">&quot;<span class="subst">$user</span>.tkey=<span class="subst">$userface</span>.tkey&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">columns</span>([</span><br><span class="line">                <span class="string">&quot;<span class="subst">$realdata</span>.company&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$realdata</span>.status&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$realdata</span>.post&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$realdata</span>.area&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.name&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.flag&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.sex&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.tkey&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.sequence&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.mobile&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.othermobile&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.integrity&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$userface</span>.filename&quot;</span></span><br><span class="line">            ])</span><br><span class="line">            -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure>
+<p>但是又出现了新问题：<code>The column &#39;tkey&#39; is ambiguous, </code>，将SQL解析后发现：SQL语句中是不允许先”where 然后 join”的，但是Phalcon帮我们封装的时候，帮我们避开了这个问题：where 语句可以在Join之前写，但是最终解析的sql还是在join之后，既然在join之后，那么<code>tkey</code>当然就不明确咯,改成：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$user</span> = <span class="title class_">User</span>::<span class="variable language_">class</span>;</span><br><span class="line"><span class="variable">$realdata</span> = <span class="title class_">RealData</span>::<span class="variable language_">class</span>;</span><br><span class="line"><span class="variable">$userface</span> = <span class="title class_">UserFace</span>::<span class="variable language_">class</span>;</span><br><span class="line"></span><br><span class="line"><span class="variable">$infos</span> = <span class="title class_">User</span>::<span class="title function_ invoke__">query</span>()-&gt;<span class="title function_ invoke__">inWhere</span>(<span class="string">&quot;<span class="subst">$user</span>.tkey&quot;</span>, <span class="variable">$uids</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">leftJoin</span>(<span class="variable">$realdata</span>, <span class="string">&quot;<span class="subst">$user</span>.tkey=<span class="subst">$realdata</span>.tkey&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">leftJoin</span>(<span class="variable">$userface</span>, <span class="string">&quot;<span class="subst">$user</span>.tkey=<span class="subst">$userface</span>.tkey&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">columns</span>([</span><br><span class="line">                <span class="string">&quot;<span class="subst">$realdata</span>.company&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$realdata</span>.status&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$realdata</span>.post&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$realdata</span>.area&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.name&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.flag&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.sex&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.tkey&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.sequence&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.mobile&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.othermobile&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$user</span>.integrity&quot;</span>,</span><br><span class="line">                <span class="string">&quot;<span class="subst">$userface</span>.filename&quot;</span></span><br><span class="line">            ])</span><br><span class="line">            -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure>
+<p>问题就解决了</p>
+<h1 id="Phalcon-设置model之间的Realaction-通过一个model的实体找不到另一实体"><a href="#Phalcon-设置model之间的Realaction-通过一个model的实体找不到另一实体" class="headerlink" title="Phalcon 设置model之间的Realaction 通过一个model的实体找不到另一实体"></a>Phalcon 设置model之间的Realaction 通过一个model的实体找不到另一实体</h1><p>model之间的对应关系，通常是在model的<code>initialize</code>方法中实现，但是在实现的时候，要特别注意：Phalcon中参数都为定义的Model类，而不是MySQL中的table名字，这就带来一个问题：类名必须加namespace，生成的model的property名字奇怪或者引用不了。解决方法就是加上一个别名<code>alias</code>，代码如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">$this</span>-&gt;<span class="title function_ invoke__">hasMany</span>(<span class="string">&quot;order_no&quot;</span>, <span class="title class_">OrderDetail</span>::<span class="variable language_">class</span>, <span class="string">&quot;order_no&quot;</span>, </span><br><span class="line">[<span class="string">&quot;alias&quot;</span> =&gt; <span class="string">&#x27;orderDetail&#x27;</span>]);</span><br></pre></td></tr></table></figure>
+
+<h1 id="Phalcon-请求处理中getPost-“”-找不到数据和处理json数据的问题"><a href="#Phalcon-请求处理中getPost-“”-找不到数据和处理json数据的问题" class="headerlink" title="Phalcon 请求处理中getPost(“”)找不到数据和处理json数据的问题"></a>Phalcon 请求处理中getPost(“”)找不到数据和处理json数据的问题</h1><p>在Phalcon中，发送post请求的时候，如果post请求中的<code>Content-Type</code>是以<code>application/json</code> 的json形式发送请求数据，那么，使用<code>$this-&gt;request-&gt;getPost(&quot;xxx&quot;)</code>是拿不到任何数据的，必须使用<code>$this-&gt;request-&gt;getJsonRawBody()</code>这个方法。</p>
+<ul>
+<li>$this-&gt;request-&gt;getJsonRawBody(true) 拿到的是一个请求数组</li>
+<li>$this-&gt;request-&gt;getJsonRawBody() 拿到的是一个object</li>
+</ul>
+<h1 id="Phalcon-中使用where查询"><a href="#Phalcon-中使用where查询" class="headerlink" title="Phalcon 中使用where查询"></a>Phalcon 中使用where查询</h1><h2 id="连续几个where条件，不能和laravel等其他框架一样，好几个where并排，只能有一个-where，剩下的都是andWhere"><a href="#连续几个where条件，不能和laravel等其他框架一样，好几个where并排，只能有一个-where，剩下的都是andWhere" class="headerlink" title="连续几个where条件，不能和laravel等其他框架一样，好几个where并排，只能有一个 where，剩下的都是andWhere"></a>连续几个where条件，不能和laravel等其他框架一样，好几个where并排，只能有一个 <code>where</code>，剩下的都是<code>andWhere</code></h2><p>可能习惯了其他框架（例如：laravel 的查询，喜欢连续的<code>where</code>），如下：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$members</span> = <span class="title class_">Member</span>::<span class="title function_ invoke__">query</span>()</span><br><span class="line">           -&gt;<span class="title function_ invoke__">where</span>(<span class="string">&quot;id = :uid:&quot;</span>)</span><br><span class="line">           -&gt;<span class="title function_ invoke__">where</span>(<span class="string">&quot;member_id = :memberId:&quot;</span>)</span><br><span class="line">           -&gt;<span class="title function_ invoke__">bind</span>([</span><br><span class="line">               <span class="string">&quot;uid&quot;</span> =&gt; <span class="number">1</span>,</span><br><span class="line">               <span class="string">&quot;memberId&quot;</span> =&gt; <span class="number">1</span></span><br><span class="line">           ])</span><br><span class="line">           -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure>
+
+<p>感觉没毛病，但是一运行就报错：<code>SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens</code>，通过打印出来（语句为<code>$this-&gt;di-&gt;get(&#39;profiler&#39;)-&gt;getLastProfile()-&gt;getSQLStatement()</code>）的SQL可以看出来，上条语句转义的SQL语句中连续写了两个<code>where</code>，并不是 <code>where ... AND ...</code>这就和预期不太一致。改为如下代码，就正常了：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$members</span> = <span class="title class_">Member</span>::<span class="title function_ invoke__">query</span>()</span><br><span class="line">            -&gt;<span class="title function_ invoke__">where</span>(<span class="string">&quot;id = :uid:&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">andWhere</span>(<span class="string">&quot;member_id = :memberId:&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">bind</span>([</span><br><span class="line">                <span class="string">&quot;uid&quot;</span> =&gt; <span class="number">1</span>,</span><br><span class="line">                <span class="string">&quot;memberId&quot;</span> =&gt; <span class="number">1</span></span><br><span class="line">            ])</span><br><span class="line">            -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure>
+
+<h2 id="有inWhere的情况下，bind要写在where或者andWhere语句之后，不能和inWhere掺和在一起"><a href="#有inWhere的情况下，bind要写在where或者andWhere语句之后，不能和inWhere掺和在一起" class="headerlink" title="有inWhere的情况下，bind要写在where或者andWhere语句之后，不能和inWhere掺和在一起"></a>有<code>inWhere</code>的情况下，<code>bind</code>要写在<code>where</code>或者<code>andWhere</code>语句之后，不能和<code>inWhere</code>掺和在一起</h2><p>如下语句：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$members</span> = <span class="title class_">Member</span>::<span class="title function_ invoke__">query</span>()</span><br><span class="line">            -&gt;<span class="title function_ invoke__">where</span>(<span class="string">&quot;id = :uid:&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">andWhere</span>(<span class="string">&quot;member_id = :memberId:&quot;</span>)</span><br><span class="line">            -&gt;<span class="title function_ invoke__">inWhere</span>(<span class="string">&quot;country&quot;</span>, [<span class="number">86</span>])</span><br><span class="line">            -&gt;<span class="title function_ invoke__">bind</span>([</span><br><span class="line">                <span class="string">&quot;uid&quot;</span> =&gt; <span class="number">1</span>,</span><br><span class="line">                <span class="string">&quot;memberId&quot;</span> =&gt; <span class="number">1</span></span><br><span class="line">            ])</span><br><span class="line">            -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure>
+<p> 运行后报错：<br> <code>SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens</code><br> 原因是：<code>bind</code>没有和连续的where语句“绑”在一起。</p>
+<p> 应该写成：<br> <figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$members</span> = <span class="title class_">Member</span>::<span class="title function_ invoke__">query</span>()</span><br><span class="line">           -&gt;<span class="title function_ invoke__">where</span>(<span class="string">&quot;id = :uid:&quot;</span>)</span><br><span class="line">           -&gt;<span class="title function_ invoke__">andWhere</span>(<span class="string">&quot;member_id = :memberId:&quot;</span>)</span><br><span class="line">           -&gt;<span class="title function_ invoke__">bind</span>([</span><br><span class="line">               <span class="string">&quot;uid&quot;</span> =&gt; <span class="number">1</span>,</span><br><span class="line">               <span class="string">&quot;memberId&quot;</span> =&gt; <span class="number">1</span></span><br><span class="line">           ])</span><br><span class="line">           -&gt;<span class="title function_ invoke__">inWhere</span>(<span class="string">&quot;country&quot;</span>, [<span class="number">86</span>])</span><br><span class="line">           -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure></p>
+<h1 id="where语句中有时间的比较的时候，时间单位若为Y-m-d-H-i-s格式，一定要把在时间上加上引号"><a href="#where语句中有时间的比较的时候，时间单位若为Y-m-d-H-i-s格式，一定要把在时间上加上引号" class="headerlink" title="where语句中有时间的比较的时候，时间单位若为Y-m-d H:i:s格式，一定要把在时间上加上引号"></a>where语句中有时间的比较的时候，时间单位若为<code>Y-m-d H:i:s</code>格式，一定要把在时间上加上引号</h1><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$orderPayment</span> = <span class="title class_">OrderPayment</span>::<span class="title function_ invoke__">query</span>()</span><br><span class="line">           -&gt;<span class="title function_ invoke__">where</span>(<span class="string">&quot;order_no = :orderNo:&quot;</span>)</span><br><span class="line">           -&gt;<span class="title function_ invoke__">andWhere</span>(<span class="string">&quot;add_time &gt;= 2017-07-08 15:51:53&quot;</span>)</span><br><span class="line">           -&gt;<span class="title function_ invoke__">bind</span>([<span class="string">&quot;orderNo&quot;</span> =&gt; <span class="number">1707080031</span>])</span><br><span class="line">           -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure>
+<p>以上代码报错：<code>Syntax error, unexpected token INTEGER(15), near to &#39;:51:53)&#39;</code></p>
+<p>因为<code>Y-m-d H:i:s</code>格式的时间，中间有个空格，导致Phalcon无法正确的解析加上引号就好了。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$orderPayment</span> = <span class="title class_">OrderPayment</span>::<span class="title function_ invoke__">query</span>()</span><br><span class="line">           -&gt;<span class="title function_ invoke__">where</span>(<span class="string">&quot;order_no = :orderNo:&quot;</span>)</span><br><span class="line">           -&gt;<span class="title function_ invoke__">andWhere</span>(<span class="string">&quot;add_time &gt;= &#x27;2017-07-08 15:51:53&#x27;&quot;</span>)</span><br><span class="line">           -&gt;<span class="title function_ invoke__">bind</span>([<span class="string">&quot;orderNo&quot;</span> =&gt; <span class="number">1707080031</span>])</span><br><span class="line">           -&gt;<span class="title function_ invoke__">execute</span>();</span><br></pre></td></tr></table></figure>
+
+<h1 id="Phalcon-update更新语句问题"><a href="#Phalcon-update更新语句问题" class="headerlink" title="Phalcon update更新语句问题"></a>Phalcon update更新语句问题</h1><p>Phalcon一般的update方式为：先查询，拿到实体<code>model</code>;然后实体<code>model</code>的字段赋值<code>$model-&gt;xxxx = xxxx</code>,最后运行<code>$model-&gt;update()</code>，并判断<code>update</code>方法的返回值是true还是false，来判断更新是否成功。<br>但是，在高并发条件下，最好是<code>update table set columnA = xxx where colum = AND ...</code>这种形式。<br>代码为：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//项目启动的时候先注入</span></span><br><span class="line"><span class="variable">$di</span>-&gt;<span class="title function_ invoke__">set</span>(<span class="string">&#x27;modelsManager&#x27;</span>, function() &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ModelsManager</span>();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"><span class="comment">//业务代码中</span></span><br><span class="line"><span class="variable">$sql</span> = <span class="string">&quot;update <span class="subst">$model</span>  set wallet_money = <span class="subst">$remainMoney</span> </span></span><br><span class="line"><span class="string">where id = <span class="subst">&#123;$requestList[&#x27;uid&#x27;]&#125;</span> </span></span><br><span class="line"><span class="string">AND wallet_money = <span class="subst">&#123;$user-&gt;wallet_money&#125;</span>&quot;</span>;</span><br><span class="line">        </span><br><span class="line"><span class="variable">$manager</span> = <span class="variable language_">$this</span>-&gt;modelsManager-&gt;<span class="title function_ invoke__">executeQuery</span>(<span class="variable">$sql</span>);</span><br><span class="line">        </span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$manager</span>-&gt;<span class="title function_ invoke__">success</span>() == <span class="literal">false</span>)<span class="comment">//插入失败</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//todo</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>可是这却存在一个问题：<br>假如说<code>where</code>语句得到的是一个空行，不存在的数据，那么以上语句执行之后，还是会返回true。<br>也就是说其实Phalcon仅仅是判断的是否SQL返回正确，并没有判断改变了多少行，所以在用的时候要特别小心。尽量加上redis制作一个分布式锁。</p>
+<h1 id="Phalcon-model-查询方法find-和findFirst-的使用"><a href="#Phalcon-model-查询方法find-和findFirst-的使用" class="headerlink" title="Phalcon model 查询方法find()和findFirst()的使用"></a>Phalcon model 查询方法<code>find()</code>和<code>findFirst()</code>的使用</h1><h2 id="find的使用"><a href="#find的使用" class="headerlink" title="find的使用"></a><code>find</code>的使用</h2><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$member</span> = <span class="title class_">Member</span>::<span class="title function_ invoke__">find</span>(</span><br><span class="line">           [</span><br><span class="line">               <span class="string">&quot;conditions&quot;</span> =&gt; <span class="string">&quot;mobile = 15166266859 AND country = 86 AND role_id = 2&quot;</span>,</span><br><span class="line"></span><br><span class="line">           ]</span><br><span class="line">       );</span><br></pre></td></tr></table></figure>
+<p>或者：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$member</span> = <span class="title class_">Member</span>::<span class="title function_ invoke__">find</span>(</span><br><span class="line">            [</span><br><span class="line">                <span class="string">&quot;conditions&quot;</span> =&gt; <span class="string">&quot;mobile = ?1 AND country = ?2 AND role_id = ?3&quot;</span>,</span><br><span class="line">                <span class="string">&quot;bind&quot;</span> =&gt; [</span><br><span class="line">                    <span class="number">1</span> =&gt; <span class="string">&quot;15166266859&quot;</span>,</span><br><span class="line">                    <span class="number">2</span> =&gt; <span class="number">86</span>,</span><br><span class="line">                    <span class="number">3</span> =&gt; <span class="number">2</span></span><br><span class="line">                ]</span><br><span class="line"></span><br><span class="line">            ]</span><br><span class="line">        );</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$member</span> = <span class="title class_">Member</span>::<span class="title function_ invoke__">find</span>(</span><br><span class="line">           [</span><br><span class="line">               <span class="string">&quot;conditions&quot;</span> =&gt; <span class="string">&quot;mobile = :mobile: AND country = :country: AND role_id = :role:&quot;</span>,</span><br><span class="line">               <span class="string">&quot;bind&quot;</span> =&gt; [</span><br><span class="line">                   <span class="string">&quot;mobile&quot;</span> =&gt; <span class="string">&quot;15166266859&quot;</span>,</span><br><span class="line">                   <span class="string">&quot;country&quot;</span> =&gt; <span class="number">86</span>,</span><br><span class="line">                   <span class="string">&quot;role&quot;</span> =&gt; <span class="number">2</span></span><br><span class="line">               ]</span><br><span class="line"></span><br><span class="line">           ]</span><br><span class="line">       );</span><br></pre></td></tr></table></figure>
+
+<h2 id="findFirst-的使用"><a href="#findFirst-的使用" class="headerlink" title="findFirst()的使用"></a><code>findFirst()</code>的使用</h2><p><code>find()</code>能使用的，<code>findFirst()</code>都可以使用，而且，<code>findFirst()</code>还多了一种：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$member</span> = <span class="title class_">Member</span>::<span class="title function_ invoke__">findFirst</span>(<span class="number">4</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="特别注意：Phalcon中ODM和ORM对find及findFirst的操作是不相同的"><a href="#特别注意：Phalcon中ODM和ORM对find及findFirst的操作是不相同的" class="headerlink" title="特别注意：Phalcon中ODM和ORM对find及findFirst的操作是不相同的"></a>特别注意：Phalcon中<code>ODM</code>和<code>ORM</code>对<code>find</code>及<code>findFirst</code>的操作是不相同的</h2><p>ODM中可以这么用：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$action</span> = <span class="title class_">UserAction</span>::<span class="title function_ invoke__">findFirst</span>(</span><br><span class="line">           [</span><br><span class="line">               <span class="string">&quot;conditions&quot;</span> =&gt; [</span><br><span class="line">                   <span class="string">&quot;share_info.promo_code&quot;</span> =&gt; <span class="string">&quot;promo_code_1&quot;</span></span><br><span class="line">               ]</span><br><span class="line">           ]</span><br><span class="line">       );</span><br><span class="line"><span class="comment">//   conditions 是一个数组，包含查询条件，但是，ORM不可以这么用！     </span></span><br></pre></td></tr></table></figure>
+<p><code>conditions</code> 是一个数组，包含查询条件，但是，ORM不可以这么用！我想，可能是因为SQL语句中不仅包含<code>AND</code>还包含<code>OR</code>，直接用数组的话… (<em>^__^</em>) </p>
+<p>ODM中还可以直接这么用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$action = UserAction::findFirst(</span><br><span class="line">            [</span><br><span class="line">                [</span><br><span class="line">                    &quot;share_info.promo_code&quot; =&gt; &quot;promo_code_1&quot;</span><br><span class="line">                ]</span><br><span class="line">            ]</span><br><span class="line">        );</span><br></pre></td></tr></table></figure>
+
+<h1 id="Mac本地环境下不缺少类，但是一发布到测试环境，就报错xx-class-cannot-be-loaded"><a href="#Mac本地环境下不缺少类，但是一发布到测试环境，就报错xx-class-cannot-be-loaded" class="headerlink" title="Mac本地环境下不缺少类，但是一发布到测试环境，就报错xx class cannot be loaded"></a>Mac本地环境下不缺少类，但是一发布到测试环境，就报错<code>xx class cannot be loaded</code></h1><p>可能存在这样的原因：<br>你的包名为小写，而你的包下的<code>namespace</code>为大写，而你在引用了包的时候，仅仅引入了某个父包的namespace，而没有引入父包下每个子包的包名，在Mac下，不区分大小写，可以正常跑，但是到了Linux环境中，区分大小写，系统只会通过<code>namespace</code>的大写来找目录，而包名又都是小写，因而会找不到~<br>所以，应该避免如下简写：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$loader</span> = <span class="keyword">new</span> <span class="title class_">\Phalcon\Loader</span>();</span><br><span class="line"><span class="variable">$loader</span>-&gt;<span class="title function_ invoke__">registerNamespaces</span>([</span><br><span class="line">    <span class="string">&#x27;API&#x27;</span>       =&gt; BASE_PATH . <span class="string">&#x27;/apps/api/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Common&#x27;</span>    =&gt; BASE_PATH . <span class="string">&#x27;/apps/common/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;JiYu&#x27;</span>      =&gt; BASE_PATH . <span class="string">&#x27;/apps/jiyu/&#x27;</span>,</span><br><span class="line">])-&gt;<span class="title function_ invoke__">register</span>();</span><br></pre></td></tr></table></figure>
+<p>而是将各个父目录下的子目录都给它引上</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$loader</span> = <span class="keyword">new</span> <span class="title class_">\Phalcon\Loader</span>();</span><br><span class="line"><span class="variable">$loader</span>-&gt;<span class="title function_ invoke__">registerNamespaces</span>([</span><br><span class="line">    <span class="string">&#x27;API&#x27;</span>       =&gt; BASE_PATH . <span class="string">&#x27;/apps/api/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Common&#x27;</span>    =&gt; BASE_PATH . <span class="string">&#x27;/apps/common/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;JiYu&#x27;</span>      =&gt; BASE_PATH . <span class="string">&#x27;/apps/jiyu/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;JiYu\Model&#x27;</span>      =&gt; BASE_PATH . <span class="string">&#x27;/apps/jiyu/model/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;API\Controller&#x27;</span>       =&gt; BASE_PATH . <span class="string">&#x27;/apps/api/controller/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Common\Model&#x27;</span> =&gt; BASE_PATH . <span class="string">&#x27;/apps/common/model/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Common\Validator&#x27;</span> =&gt; BASE_PATH . <span class="string">&#x27;/apps/common/validator/&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;Common\Observer&#x27;</span> =&gt; BASE_PATH . <span class="string">&#x27;/apps/common/observer/&#x27;</span>,</span><br><span class="line"></span><br><span class="line">])-&gt;<span class="title function_ invoke__">register</span>();</span><br></pre></td></tr></table></figure>
+
+<h1 id="cli程序必须跑到指定的目录下"><a href="#cli程序必须跑到指定的目录下" class="headerlink" title="cli程序必须跑到指定的目录下"></a>cli程序必须跑到指定的目录下</h1><p>假如你想使用phalcon的 task功能，然后使用<code>crontab</code>来作定时脚本任务，会经常出现“路径找不到的问题”…</p>
+<p>细究其原因，是因为 <code>run</code>文件中的诸多文件都是以 <code>run</code>文件所在的位置作为“中心”来查找其他文件的，假如运行的当前目录中没有 <code>run</code>文件，那么就会报找不到某某某文件的错误。解决这个问题的途径也很简单，只需要让当前目录移动到<code>run</code>文件所在的目录就好了。</p>
+<h1 id="哪怕使用PHQL-，重写-model的update方法也会有问题"><a href="#哪怕使用PHQL-，重写-model的update方法也会有问题" class="headerlink" title="哪怕使用PHQL ，重写 model的update方法也会有问题"></a>哪怕使用PHQL ，重写 model的update方法也会有问题</h1><p>假如你重写了<code>model</code>的<code>update</code>方法，而你又想用偏原生SQL的方式去避开<code>model</code>的<code>update</code>方法带来的修改，例如你选择Phalcon自带的PHQL来躲避update方法的修改。那么，你就大错特错了，使用PHQL最终会调用<code>excute</code>方法，实际上就是拼出了model name，然后find相关的model；之后的操作，都是针对model的，也就是说，最终还会调用你重写的model的<code>update</code>方法…</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/07/09/Phalcon%E7%9A%84%E9%82%A3%E4%BA%9B%E5%9D%91/" data-id="clzo46bta000kvajhaz9f5z8g" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/07/28/GolangDetails/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Go语言的那些坑
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/06/28/rest-%E6%8E%A5%E5%8F%A3%E8%A7%84%E8%8C%83/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">RESTful API规范（详细版）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

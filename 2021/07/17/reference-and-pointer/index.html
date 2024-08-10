@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>图解Go的引用底层实现 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Go怎么可能有引用？得了吧~有人要说了，那利用make()函数执行后得到的slice、map、channel等类型，不都是得到的引用吗？ 我要说：那能叫引用吗？你能确定啥叫引用吗？如果你有点迷糊，那么请听我往下讲： 这一切要从变量说起。 什么是变量无论是引用变量还是指针变量，都是变量；那么，什么叫变量？其实变量本质就是一块内存。通常，我们对计算机内存进行操作，最直接的方式就是：“计算机，在0x02">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图解Go的引用底层实现">
+<meta property="og:url" content="http://yoursite.com/2021/07/17/reference-and-pointer/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="Go怎么可能有引用？得了吧~有人要说了，那利用make()函数执行后得到的slice、map、channel等类型，不都是得到的引用吗？ 我要说：那能叫引用吗？你能确定啥叫引用吗？如果你有点迷糊，那么请听我往下讲： 这一切要从变量说起。 什么是变量无论是引用变量还是指针变量，都是变量；那么，什么叫变量？其实变量本质就是一块内存。通常，我们对计算机内存进行操作，最直接的方式就是：“计算机，在0x02">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/reference_golang/variable.png">
+<meta property="og:image" content="http://yoursite.com/img/reference_golang/reference.png">
+<meta property="og:image" content="http://yoursite.com/img/reference_golang/pointer.png">
+<meta property="og:image" content="http://yoursite.com/img/reference_golang/sample.jpg">
+<meta property="og:image" content="http://yoursite.com/img/reference_golang/sample2.jpg">
+<meta property="og:image" content="http://yoursite.com/img/reference_golang/variable_reference1.png">
+<meta property="og:image" content="http://yoursite.com/img/reference_golang/variable_reference2.png">
+<meta property="article:published_time" content="2021-07-17T03:28:05.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.823Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="golang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/reference_golang/variable.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-reference-and-pointer" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2021/07/17/reference-and-pointer/" class="article-date">
+  <time datetime="2021-07-17T03:28:05.000Z" itemprop="datePublished">2021-07-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      图解Go的引用底层实现
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Go怎么可能有引用？得了吧~<br>有人要说了，那利用<code>make()</code>函数执行后得到的slice、map、channel等类型，不都是得到的引用吗？</p>
+<p>我要说：那能叫<strong>引用</strong>吗？你能确定啥叫<strong>引用</strong>吗？<br>如果你有点迷糊，那么请听我往下讲：</p>
+<p>这一切要从变量说起。</p>
+<h2 id="什么是变量"><a href="#什么是变量" class="headerlink" title="什么是变量"></a>什么是变量</h2><p>无论是引用变量还是指针变量，都是变量；那么，什么叫变量？<br>其实变量本质就是一块内存。通常，我们对计算机内存进行操作，最直接的方式就是：“计算机，在0x0201地址内存一个整数100，在0x00202地址存一个浮点数10.6，读取0x00203的数据…” 这种方式让机器来操作还行，如果直接写成代码让人看的话，这一堆“0x0201、0x0202…”难记的地址能把人给整崩溃了~<br>于是，聪明的人们想出了一种方法：把一堆难记的地址用其他人类可以方便读懂的方式来间接表示。例如：将“0x0201”的地址命名为“id”，将“0x0202”命名为“score”…然后，代码编译期间，再将”name”等人类能读懂的文字转化为真实的内存地址；于是，变量诞生了~</p>
+<p><img src="/img/reference_golang/variable.png"></p>
+<p>所以，其实每个变量都代表了一块内存，变量名是我们给那块儿内存起的一个别名，内存中存的值就是我们给变量赋的值。变量名在程序编译期间会直接转化为内存地址。</p>
+<h2 id="什么是引用"><a href="#什么是引用" class="headerlink" title="什么是引用"></a>什么是引用</h2><p>引用是指向另外一个变量的变量，或者说，叫一个已知变量的别名。</p>
+<p><img src="/img/reference_golang/reference.png"></p>
+<p>注意，引用和引用本身指向的变量对应的是同一块内存地址。引用本身也会在编译期间转化为真正的内存地址。当然咯，引用和它指向的变量在编译期间会转化为同一个内存地址。</p>
+<h2 id="什么是指针"><a href="#什么是指针" class="headerlink" title="什么是指针"></a>什么是指针</h2><p>指针本身也是一个变量，需要分配内存地址，但是内存地址中存的是另一个变量的内存地址。有点绕口，请看图：</p>
+<p><img src="/img/reference_golang/pointer.png"></p>
+<h2 id="GO中的引用和指针"><a href="#GO中的引用和指针" class="headerlink" title="GO中的引用和指针"></a>GO中的引用和指针</h2><p>我们先看看“正统”的引用的例子，在C++中(C中是没有引用的哈)：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> i = <span class="number">3</span>;</span><br><span class="line">        <span class="type">int</span> *ptr = &amp;i;</span><br><span class="line">        <span class="type">int</span> &amp;ref = i;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;%p %p %p\n&quot;</span>, &amp;i, ptr, &amp;ref); </span><br><span class="line">        <span class="comment">// 打印出：0x7ffeeac553a8 0x7ffeeac553a8 0x7ffeeac553a8</span></span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>变量地址、引用地址、指针的值 均相同；符合常理</p>
+<p>那我们再试试Go中类似代码的例子:</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    i := <span class="number">3</span></span><br><span class="line">    ref := i</span><br><span class="line">    ptr := &amp;i</span><br><span class="line">    </span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p %p&quot;</span>, &amp;i, &amp;ref, ptr))</span><br><span class="line">    <span class="comment">// 打印出 0xc000118000 0xc000118008 0xc000118000</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>变量i地址和指针ptr的值一样，这是符合预期的；但是：正如Go中没有特别的“引用符号”（C++中是<code>int &amp;ref = i;</code>）一样，上述go代码中的<code>ref</code>压根就是个变量，根本不是引用。</p>
+<p>可是，很多人不死心，是不是“实验对象”不对啊？代码中使用的是int整型，我们换做<code>slice</code>和<code>map</code>试试？毕竟网上的”资料”都是这么写的：<br>例如以下截图（只看标红部分就好）：<br><img src="/img/reference_golang/sample.jpg"><br>还有如下截图（只看标红部分就好）：<br><img src="/img/reference_golang/sample2.jpg"></p>
+<p>ok，那我们可以试试如下map的代码，看到底有没有引用：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>)</span><br><span class="line">    i[<span class="string">&quot;key&quot;</span>]=<span class="string">&quot;value&quot;</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p&quot;</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印出：0xc00010e018 0xc00010e020</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>哈哈！不对呀，如果是引用的话，打印的地址应该相同才对，但是现在不相同！所以不存在？<br>别着急，紧接着看下面的例子：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>)</span><br><span class="line">    i[<span class="string">&quot;key&quot;</span>]=<span class="string">&quot;value&quot;</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref[<span class="string">&quot;key&quot;</span>] = <span class="string">&quot;value1&quot;</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(i[<span class="string">&quot;key&quot;</span>]) <span class="comment">// 打印结果：value1</span></span><br><span class="line">    fmt.Println(ref[<span class="string">&quot;key&quot;</span>]) <span class="comment">// 打印结果：value1</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p&quot;</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印结果：0xc00000e028 0xc00000e030</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>能猜出来打印了什么吗？变量地址是不对，但是，但是值居然变了！ref变量可以“操控”i变量的内容！就和引用一样！</p>
+<p>这就很奇怪了~ 咋回事儿呢？</p>
+<p>我们细细研究一下<code>map</code>、<code>slice</code>、<code>channel</code>等具体实现（详情请看：我的其他文章 <a href="https://i6448038.github.io/2018/08/26/map-secret/">图解Go map底层实现</a>、<a href="https://i6448038.github.io/2018/08/11/array-and-slice-principle/">图解Go slice底层实现</a>、<a href="https://i6448038.github.io/2019/04/11/go-channel/">图解Go channel底层实现</a>）我们发现，这些类型的底层实现都是会有一个指针指向另外的存储地址，所以，在<code>make</code>函数创建了具体的类型实例后，实际上在内存空间中会开辟多个地址空间，而随着变量的赋值，指针引用的那个地址值也会跟着“复制”，因而其他变量可以改变原有变量的内容。</p>
+<p>听着是不是有点绕？我们来看看图：</p>
+<p>首先实例化了map并赋值</p>
+<p><img src="/img/reference_golang/variable_reference1.png"></p>
+<p>然后又赋值给了另外一个变量ref</p>
+<p><img src="/img/reference_golang/variable_reference2.png"></p>
+<p>由于对于指针变量的值而言，就是一个地址(程序实现上就是一串数字)，所以，在赋值的时候，就“复制”了一串数字，但是，这串数字背后的含义确是另外一个地址，而地址的内容，恰恰就是<code>map</code> <code>slice</code> <code>channel</code> 等数据结构真正底层存储的数据!</p>
+<p>所以，两变量因为同一个指针变量指向的内存，而产生了类似于“引用”的效果。假如实例化的类型数据中，没有<code>指针</code>属性，则不会产生这种“类引用”的效果：<br>例如如下代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    i := <span class="number">3</span></span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref = <span class="number">4</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(i, ref) <span class="comment">// 打印输出：3 4</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p&quot;</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印输出：0xc000016070 0xc000016078</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以将代码上述仔细看看能输出什么，不出意外的话你会发现：“类引用”效果消失了~</p>
+<p>要想再次展现“类引用”效果，只要创建一个带有指针属性的类型即可，我们自己实现都可以，无需依赖Go基础库中的<code>map</code>、<code>slice</code>、<code>channel</code>等</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Instance <span class="keyword">struct</span> &#123;</span><br><span class="line">    Name <span class="type">string</span></span><br><span class="line">    Data *<span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i Instance)</span></span> Store(num <span class="type">int</span>) &#123;</span><br><span class="line">    *(i.Data) = num</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i Instance)</span></span> Show() <span class="type">int</span>&#123;</span><br><span class="line">    <span class="keyword">return</span> *(i.Data)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">    data := <span class="number">5</span></span><br><span class="line"></span><br><span class="line">    i := Instance&#123;</span><br><span class="line">        Name:<span class="string">&quot;hello&quot;</span>,</span><br><span class="line">        Data:&amp;data,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ref := i</span><br><span class="line">    ref.Store(<span class="number">7</span>)</span><br><span class="line"></span><br><span class="line">    fmt.Println(i.Show(), ref.Show())</span><br><span class="line">    <span class="comment">// 打印出：7 7</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(fmt.Sprintf(<span class="string">&quot;%p %p&quot;</span>, &amp;i, &amp;ref))</span><br><span class="line">    <span class="comment">// 打印出：0xc0000a6018 0xc0000a6030</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>看看以上代码，是不是实现了“类引用”？ 有人要说了<code>map</code>展示key值，<code>slice</code>展示某个下标的值，没有用方法呀？<br>这就不对了，其实<code>map</code>的展示key的值<code>mapData[key]</code>也好，更改值也好，<code>slice</code>展示下标值<code>sliceArray[0]</code>也好，更改值也好；背后底层实现也都是些“函数”和“方法”，只不过Go语言把这些函数和方法做成了语法糖，我们无感知罢了~</p>
+<p>好了，现在我再问你：还敢说Go语言有引用类型吗？是不是感觉：也有、也没有了？ 😝</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2021/07/17/reference-and-pointer/" data-id="clzo46btr0026vajhgqbx0ppp" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/golang/" rel="tag">golang</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/09/05/float-binary/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          浮点数精度丢失问题详解
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2021/05/20/stack-heap-go/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">细谈Go变量的内存分布</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

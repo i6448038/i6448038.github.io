@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Go语言设计模式之装饰模式 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="装饰模式算是一种很好理解的设计模式了，相信接触过设计模式的同学都会对这种模式印象深刻，但是可能你不知道，装饰模式在业界的应用也非常的广泛，甚至远超你的想象，让我们来一起看看吧。 1.模式介绍装饰模式（Decorator Pattern）它的定义是这样的：Attach additional responsibilities to an object dynamically keeping the s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go语言设计模式之装饰模式">
+<meta property="og:url" content="http://yoursite.com/2023/10/21/decorator/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="装饰模式算是一种很好理解的设计模式了，相信接触过设计模式的同学都会对这种模式印象深刻，但是可能你不知道，装饰模式在业界的应用也非常的广泛，甚至远超你的想象，让我们来一起看看吧。 1.模式介绍装饰模式（Decorator Pattern）它的定义是这样的：Attach additional responsibilities to an object dynamically keeping the s">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/pattern/decorator/decorator.drawio.png">
+<meta property="og:image" content="http://yoursite.com/img/pattern/decorator/decorator_demo.drawio.png">
+<meta property="og:image" content="http://yoursite.com/img/pattern/decorator/go_demo.drawio.png">
+<meta property="og:image" content="http://yoursite.com/img/pattern/decorator/context.drawio.png">
+<meta property="og:image" content="http://yoursite.com/img/weichat/qrcode.jpg">
+<meta property="article:published_time" content="2023-10-21T07:43:37.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.828Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="Go设计模式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/pattern/decorator/decorator.drawio.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-decorator" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2023/10/21/decorator/" class="article-date">
+  <time datetime="2023-10-21T07:43:37.000Z" itemprop="datePublished">2023-10-21</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go语言设计模式之装饰模式
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>装饰模式算是一种很好理解的设计模式了，相信接触过设计模式的同学都会对这种模式印象深刻，但是可能你不知道，装饰模式在业界的应用也非常的广泛，甚至远超你的想象，让我们来一起看看吧。</p>
+<h1 id="1-模式介绍"><a href="#1-模式介绍" class="headerlink" title="1.模式介绍"></a>1.模式介绍</h1><p>装饰模式（Decorator Pattern）它的定义是这样的：Attach additional responsibilities to an object dynamically keeping the same interface. Decorators provide a flexible alternative to subclassing for extending functionality。</p>
+<p>动态地给一个对象添加一些额外的职责。就增加功能来说，装饰模式相比生成子类更为灵活。</p>
+<p>相较与继承，对象必须实现或者复用父类的函数或方法，装饰模式使用组合的方式代替继承，在不影响其他对象的情况下，动态地给一个对象添加一些额外的职责，更轻量的实现给原始类和对象增强功能的效果，在解决继承关系过于复杂、需要动态添加或者撤销职责的场景有很好的效果。</p>
+<p>   装饰模式其实从字面上更好理解：一个对象，我想要给他什么功能，就装饰什么功能，就像一间空屋子，用厨具的装饰方法来装饰，就会有厨房的功能，用书房的装饰方法来装饰，就会有书房的功能，以此类推，还有卧室、浴室等等。</p>
+<p>主要解决继承关系过于复杂的场景。 组合优于继承，可以“使用组合来替代继承”</p>
+<h1 id="2-模式demo"><a href="#2-模式demo" class="headerlink" title="2.模式demo"></a>2.模式demo</h1><h2 id="2-1-UML"><a href="#2-1-UML" class="headerlink" title="2.1 UML"></a>2.1 UML</h2><p>装饰模式（Decorator Pattern）的整体结构如下：</p>
+<p><img src="/img/pattern/decorator/decorator.drawio.png" alt="image.png"></p>
+<p>从UML图中，我们可以看到，装饰模式主要包含两个角色： 普通对象（Component）和装饰器（Decorator），装饰器和普通对象是聚合的关系，也就是说：普通对象和装饰器是部分与整体的关系，普通对象是装饰器的组成部分。</p>
+<h2 id="2-2-标准demo"><a href="#2-2-标准demo" class="headerlink" title="2.2 标准demo"></a>2.2 标准demo</h2><p>我们依据标准的UML图，写出一个具体的例子（对应UML图）：</p>
+<p><img src="/img/pattern/decorator/decorator_demo.drawio.png" alt="image.png"><br>(请放大图片观看)</p>
+<p>首先定义<code>Componet</code>(对照上图)接口: <code>House</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">type House interface &#123;</span><br><span class="line">   Live()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义<code>Componet</code>接口的实现类<code>ConcreteComponet</code>（对照上图）:<code>DxmHouse</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">type DxmHouse struct&#123;&#125;</span><br><span class="line"></span><br><span class="line">func (d *DxmHouse) Live() &#123;</span><br><span class="line">   fmt.Println(&quot;dxmer are working&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义包装类接口<code>Decorator</code>(对照上图)：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">type Decorator struct &#123;</span><br><span class="line">   h House</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (d *Decorator) SetHose(house House) &#123;</span><br><span class="line">   d.h = house</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后分别定义包装类接口的两个实现类：<br><code>KitchenDecorator</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">type KitchenDecorator struct &#123;</span><br><span class="line">   Decorator</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (k *KitchenDecorator) Live() &#123;</span><br><span class="line">   fmt.Println(&quot;---------厨房包装开始--------&quot;)</span><br><span class="line">   k.h.Live()</span><br><span class="line">   fmt.Println(&quot;---------厨房包装结束--------&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以及<code>BedroomDecorator</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">type BedroomDecorator struct &#123;</span><br><span class="line">   Decorator</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (b *BedroomDecorator) Live() &#123;</span><br><span class="line">   fmt.Println(&quot;---------卧室包装开始---------&quot;)</span><br><span class="line">   b.h.Live()</span><br><span class="line">   fmt.Println(&quot;---------卧室包装结束---------&quot;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+<p>运行调用函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">   dxm := &amp;DxmHouse&#123;&#125;</span><br><span class="line"></span><br><span class="line">   k := &amp;KitchenDecorator&#123;&#125;</span><br><span class="line">   k.SetHose(dxm)</span><br><span class="line">   b := &amp;BedroomDecorator&#123;&#125;</span><br><span class="line">   b.SetHose(k)</span><br><span class="line"></span><br><span class="line">   b.Live()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>运行结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---------卧室包装开始---------</span><br><span class="line">---------厨房包装开始--------</span><br><span class="line">dxmer are working</span><br><span class="line">---------厨房包装结束--------</span><br><span class="line">---------卧室包装结束---------</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h1 id="3-源码解析"><a href="#3-源码解析" class="headerlink" title="3. 源码解析"></a>3. 源码解析</h1><p>在Go的语言基础库中，经常能够看到很多场景使用了装饰模式。</p>
+<h2 id="3-1-GO语言IO库中的使用"><a href="#3-1-GO语言IO库中的使用" class="headerlink" title="3.1 GO语言IO库中的使用"></a>3.1 GO语言IO库中的使用</h2><p><img src="/img/pattern/decorator/go_demo.drawio.png" alt="go_demo.drawio.png"></p>
+<p>Go中io包中的很多地方用了装饰模式，这里以<code>bufio.Reader</code>为例子，首先定义一个被包装类的接口<code>io.Reader</code>（请对照2.1UML图中的<code>Component</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// that happen after reading some bytes and also both of the</span><br><span class="line">// allowed EOF behaviors.</span><br><span class="line">//</span><br><span class="line">// Implementations of Read are discouraged from returning a</span><br><span class="line">// zero byte count with a nil error, except when len(p) == 0.</span><br><span class="line">// Callers should treat a return of 0 and nil as indicating that</span><br><span class="line">// nothing happened; in particular it does not indicate EOF.</span><br><span class="line">//</span><br><span class="line">// Implementations must not retain p.</span><br><span class="line">type Reader interface &#123;</span><br><span class="line">   Read(p []byte) (n int, err error)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后定义<code>io.Reader</code>的实现类<code>os.File</code>（请对照2.1UML图中的<code>ConcreteComponet</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">// File represents an open file descriptor.</span><br><span class="line">type File struct &#123;</span><br><span class="line">   *file // os specific</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">// Read reads up to len(b) bytes from the File and stores them in b.</span><br><span class="line">// It returns the number of bytes read and any error encountered.</span><br><span class="line">// At end of file, Read returns 0, io.EOF.</span><br><span class="line">func (f *File) Read(b []byte) (n int, err error) &#123;</span><br><span class="line">   if err := f.checkValid(&quot;read&quot;); err != nil &#123;</span><br><span class="line">      return 0, err</span><br><span class="line">   &#125;</span><br><span class="line">   n, e := f.read(b)</span><br><span class="line">   return n, f.wrapErr(&quot;read&quot;, e)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后定义<code>io.Reader</code>的实现类<code>bufio.Reader</code>（请对照2.1UML图中的<code>Decorator</code>和<code>ConcreteDecorator1</code>和<code>ConcreteDecorator2</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">// Buffered input.</span><br><span class="line"></span><br><span class="line">// Reader implements buffering for an io.Reader object.</span><br><span class="line">type Reader struct &#123;</span><br><span class="line">   buf          []byte</span><br><span class="line">   rd           io.Reader // reader provided by the client</span><br><span class="line">   r, w         int       // buf read and write positions</span><br><span class="line">   err          error</span><br><span class="line">   lastByte     int // last byte read for UnreadByte; -1 means invalid</span><br><span class="line">   lastRuneSize int // size of last rune read for UnreadRune; -1 means invalid</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// NewReader returns a new Reader whose buffer has the default size.</span><br><span class="line">func NewReader(rd io.Reader) *Reader &#123;</span><br><span class="line">   return NewReaderSize(rd, defaultBufSize)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line">// Read reads data into p.</span><br><span class="line">// It returns the number of bytes read into p.</span><br><span class="line">// The bytes are taken from at most one Read on the underlying Reader,</span><br><span class="line">// hence n may be less than len(p).</span><br><span class="line">// To read exactly len(p) bytes, use io.ReadFull(b, p).</span><br><span class="line">// At EOF, the count will be zero and err will be io.EOF.</span><br><span class="line">func (b *Reader) Read(p []byte) (n int, err error) &#123;</span><br><span class="line">   n = len(p)</span><br><span class="line">   if n == 0 &#123;</span><br><span class="line">      if b.Buffered() &gt; 0 &#123;</span><br><span class="line">         return 0, nil</span><br><span class="line">      &#125;</span><br><span class="line">      return 0, b.readErr()</span><br><span class="line">   &#125;</span><br><span class="line">   if b.r == b.w &#123;</span><br><span class="line">      if b.err != nil &#123;</span><br><span class="line">         return 0, b.readErr()</span><br><span class="line">      &#125;</span><br><span class="line">      if len(p) &gt;= len(b.buf) &#123;</span><br><span class="line">         // Large read, empty buffer.</span><br><span class="line">         // Read directly into p to avoid copy.</span><br><span class="line">         n, b.err = b.rd.Read(p)</span><br><span class="line">         if n &lt; 0 &#123;</span><br><span class="line">            panic(errNegativeRead)</span><br><span class="line">         &#125;</span><br><span class="line">         if n &gt; 0 &#123;</span><br><span class="line">            b.lastByte = int(p[n-1])</span><br><span class="line">            b.lastRuneSize = -1</span><br><span class="line">         &#125;</span><br><span class="line">         return n, b.readErr()</span><br><span class="line">      &#125;</span><br><span class="line">      // One read.</span><br><span class="line">      // Do not use b.fill, which will loop.</span><br><span class="line">      b.r = 0</span><br><span class="line">      b.w = 0</span><br><span class="line">      n, b.err = b.rd.Read(b.buf)</span><br><span class="line">      if n &lt; 0 &#123;</span><br><span class="line">         panic(errNegativeRead)</span><br><span class="line">      &#125;</span><br><span class="line">      if n == 0 &#123;</span><br><span class="line">         return 0, b.readErr()</span><br><span class="line">      &#125;</span><br><span class="line">      b.w += n</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   // copy as much as we can</span><br><span class="line">   // Note: if the slice panics here, it is probably because</span><br><span class="line">   // the underlying reader returned a bad count. See issue 49795.</span><br><span class="line">   n = copy(p, b.buf[b.r:b.w])</span><br><span class="line">   b.r += n</span><br><span class="line">   b.lastByte = int(b.buf[b.r-1])</span><br><span class="line">   b.lastRuneSize = -1</span><br><span class="line">   return n, nil</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>函数有点长，可以无视，只关注结构体<code>bufio.Reader</code>实现了<code>Read</code>和<code>NewReader</code>即可。</p>
+<p>最后进行调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">func main() &#123;</span><br><span class="line">   f, err := os.Open(&quot;tmp&quot;)</span><br><span class="line">   if err != nil &#123;</span><br><span class="line">      fmt.Println(err.Error())</span><br><span class="line">      return</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   reader := bufio.NewReader(f)</span><br><span class="line">   for &#123;</span><br><span class="line">      msg, r := reader.ReadString(&#x27;\n&#x27;)</span><br><span class="line">      if r != io.EOF &amp;&amp; r != nil &#123;</span><br><span class="line">         fmt.Println(err.Error())</span><br><span class="line">         return</span><br><span class="line">      &#125;</span><br><span class="line">      fmt.Println(msg)</span><br><span class="line">      if r == io.EOF &#123;</span><br><span class="line">         break</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可见<code>bufio.Reader</code>实现了标准的装饰模式，以此类推，<code>bufio.Writer</code>也是同样的。</p>
+<p>其实不仅仅是Go语言，其他语言的IO标准库也大量的使用了装饰模式。</p>
+<h2 id="3-2-Go基础库Context"><a href="#3-2-Go基础库Context" class="headerlink" title="3.2 Go基础库Context"></a>3.2 Go基础库Context</h2><p><img src="/img/pattern/decorator/context.drawio.png" alt="context.drawio.png"><br>(请放大图观看)</p>
+<p>首先回顾一下Context的用途：Context是一种用于跨多个Goroutine传递请求，协同工作的机制。正如它的名字一样，就是协程之间的上下文。<br>接下来看看它的实现机制，首先定义一个<code>Context</code>接口：（请对照2.1UML图中的<code>Component</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// A Context carries a deadline, a cancellation signal, and other values across</span><br><span class="line">// API boundaries.</span><br><span class="line">//</span><br><span class="line">// Context&#x27;s methods may be called by multiple goroutines simultaneously.</span><br><span class="line">type Context interface &#123;</span><br><span class="line">   </span><br><span class="line">   Deadline() (deadline time.Time, ok bool)</span><br><span class="line"></span><br><span class="line">   //</span><br><span class="line">   Done() &lt;-chan struct&#123;&#125;</span><br><span class="line"></span><br><span class="line">   //</span><br><span class="line">   Err() error</span><br><span class="line"></span><br><span class="line">   //</span><br><span class="line">   Value(key any) any</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后又定义了<code>emptyCtx</code>结构体并实现了<code>Context</code>（请对照2.1UML图中的<code>ConcreteComponet</code>）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">// An emptyCtx is never canceled, has no values, and has no deadline. It is not</span><br><span class="line">// struct&#123;&#125;, since vars of this type must have distinct addresses.</span><br><span class="line">type emptyCtx int</span><br><span class="line"></span><br><span class="line">func (*emptyCtx) Deadline() (deadline time.Time, ok bool) &#123;</span><br><span class="line">   return</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (*emptyCtx) Done() &lt;-chan struct&#123;&#125; &#123;</span><br><span class="line">   return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (*emptyCtx) Err() error &#123;</span><br><span class="line">   return nil</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func (*emptyCtx) Value(key any) any &#123;</span><br><span class="line">   return nil</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是一个私有的结构体，实体主要用于<code>background</code>和<code>todo</code>两个变量，这也是<code>context.Background()</code> 和 <code>context.TODO()</code>函数的返回值。如下代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">var (</span><br><span class="line">   background = new(emptyCtx)</span><br><span class="line">   todo       = new(emptyCtx)</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">// Background returns a non-nil, empty Context. It is never canceled, has no</span><br><span class="line">// values, and has no deadline. It is typically used by the main function,</span><br><span class="line">// initialization, and tests, and as the top-level Context for incoming</span><br><span class="line">// requests.</span><br><span class="line">func Background() Context &#123;</span><br><span class="line">   return background</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// TODO returns a non-nil, empty Context. Code should use context.TODO when</span><br><span class="line">// it&#x27;s unclear which Context to use or it is not yet available (because the</span><br><span class="line">// surrounding function has not yet been extended to accept a Context</span><br><span class="line">// parameter).</span><br><span class="line">func TODO() Context &#123;</span><br><span class="line">   return todo</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>不同于标准的装饰类UML图，没有像Go语言的IO库一样那么标准，<code>Context</code>没有实现2.1UML图中的<code>Decorator</code>和实现类<code>ConcreteDecorator1</code>、<code>ConcreteDecorator2</code>，而是用各种函数替代：<code>WithValue(...)</code>、<code>WithTimeout(...)</code>、<code>WithCancel(...)</code>、<code>WithDeadline(...)</code>。</p>
+<p>以上这几个函数会返回三个私有的结构体：<code>cancelCtx</code>、<code>valueCtx</code>、<code>timerCtx</code>,三个结构体都实现了<code>Context</code>接口，并且<code>timerCtx</code>继承与<code>cancelCtx</code>。</p>
+<p>具体的结构请参照3.2开头的结构图。</p>
+<p><code>valueCtx</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// A valueCtx carries a key-value pair. It implements Value for that key and</span><br><span class="line">// delegates all other calls to the embedded Context.</span><br><span class="line">type valueCtx struct &#123;</span><br><span class="line">   Context</span><br><span class="line">   key, val any</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>cancelCtx</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// A cancelCtx can be canceled. When canceled, it also cancels any children</span><br><span class="line">// that implement canceler.</span><br><span class="line">type cancelCtx struct &#123;</span><br><span class="line">   Context</span><br><span class="line"></span><br><span class="line">   mu       sync.Mutex            // protects following fields</span><br><span class="line">   done     atomic.Value          // of chan struct&#123;&#125;, created lazily, closed by first cancel call</span><br><span class="line">   children map[canceler]struct&#123;&#125; // set to nil by the first cancel call</span><br><span class="line">   err      error                 // set to non-nil by the first cancel call</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>timerCtx</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">// A timerCtx carries a timer and a deadline. It embeds a cancelCtx to</span><br><span class="line">// implement Done and Err. It implements cancel by stopping its timer then</span><br><span class="line">// delegating to cancelCtx.cancel.</span><br><span class="line">type timerCtx struct &#123;</span><br><span class="line">   cancelCtx</span><br><span class="line">   timer *time.Timer // Under cancelCtx.mu.</span><br><span class="line"></span><br><span class="line">   deadline time.Time</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="4-总结"><a href="#4-总结" class="headerlink" title="4 总结"></a>4 总结</h1><p>装饰模式的基本思想是通过组合和委托的方式，在不改变对象自身的情况下来动态增强对象的功能，通过装饰模式，可以将对象的功能分为不同的层级，每个层级的对象可以按照一定的顺序动态地组合进来，形成一个具有多种功能的对象。装饰模式的设计方式可以让项目能够更加灵活的组合对象，从而实现复杂的功能。</p>
+<p>装饰模式的应用场景非常广泛，除了各类语言的语言IO基础库及Go的context之外，我们常用的Web框架中的router过滤器，也常常使用装饰模式去实现（还可能会用责任链实现，请参考博主<a href="https://i6448038.github.io/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a> 的文章）。</p>
+<h1 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h1><p>更多精彩内容，请搜索我的微信公众号 <code>码农RyuGou</code></p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2023/10/21/decorator/" data-id="clzo46btd000uvajh5nuhdwg5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2023/12/16/singleton/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Go语言设计模式之单例模式
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2023/07/29/pattern-linked/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Go语言设计模式之责任链模式</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>用PHPExcel读取excel表格 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="PHPExcel这个神器，可以帮助我们用PHP程序轻松的使用excel表格。在此仅提供读取Excel表格内容到内存的两种方式: 通过坐标获取单元格的值123456789101112131415161718192021222324252627282930313233require_once &#x27;Excel&#x2F;PHPExcel.php&#x27;;require_once &#x27;Excel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="用PHPExcel读取excel表格">
+<meta property="og:url" content="http://yoursite.com/2017/06/18/%E7%94%A8PHPExcel%E8%AF%BB%E5%8F%96excel%E8%A1%A8%E6%A0%BC/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="PHPExcel这个神器，可以帮助我们用PHP程序轻松的使用excel表格。在此仅提供读取Excel表格内容到内存的两种方式: 通过坐标获取单元格的值123456789101112131415161718192021222324252627282930313233require_once &#x27;Excel&#x2F;PHPExcel.php&#x27;;require_once &#x27;Excel">
+<meta property="og:locale">
+<meta property="article:published_time" content="2017-06-18T13:37:35.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.806Z">
+<meta property="article:author" content="菜刚">
+<meta property="article:tag" content="php">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-用PHPExcel读取excel表格" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/06/18/%E7%94%A8PHPExcel%E8%AF%BB%E5%8F%96excel%E8%A1%A8%E6%A0%BC/" class="article-date">
+  <time datetime="2017-06-18T13:37:35.000Z" itemprop="datePublished">2017-06-18</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      用PHPExcel读取excel表格
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a href="https://github.com/PHPOffice/PHPExcel"><code>PHPExcel</code></a>这个神器，可以帮助我们用PHP程序轻松的使用<code>excel</code>表格。<br>在此仅提供读取<code>Excel</code>表格内容到内存的两种方式:</p>
+<h1 id="通过坐标获取单元格的值"><a href="#通过坐标获取单元格的值" class="headerlink" title="通过坐标获取单元格的值"></a>通过坐标获取单元格的值</h1><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel.php&#x27;</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel/IOFactory.php&#x27;</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel/Reader/Excel5.php&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$fileExtensions</span>==<span class="string">&quot;.xlsx&quot;</span>)&#123;</span><br><span class="line">    <span class="variable">$objReader</span> = <span class="title class_">\PHPExcel_IOFactory</span>::<span class="title function_ invoke__">createReader</span>(<span class="string">&#x27;Excel2007&#x27;</span>);</span><br><span class="line">    <span class="variable">$objReader</span>-&gt;<span class="title function_ invoke__">setReadDataOnly</span>(<span class="literal">true</span>);</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="variable">$objReader</span> = <span class="title class_">\PHPExcel_IOFactory</span>::<span class="title function_ invoke__">createReader</span>(<span class="string">&#x27;Excel5&#x27;</span>);</span><br><span class="line">    <span class="variable">$objReader</span>-&gt;<span class="title function_ invoke__">setReadDataOnly</span>(<span class="literal">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="variable">$objPHPExcel</span> = <span class="variable">$objReader</span>-&gt;<span class="title function_ invoke__">load</span>(<span class="variable">$filepath</span>); <span class="comment">//$filename可以是上传的文件，或者是指定的文件</span></span><br><span class="line"><span class="variable">$sheetCount</span> = <span class="variable">$objPHPExcel</span>-&gt;<span class="title function_ invoke__">getSheetCount</span>();<span class="comment">//获取所有工作表的个数</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(<span class="variable">$i</span> = <span class="number">0</span>; <span class="variable">$i</span> &lt; <span class="variable">$sheetCount</span>; <span class="variable">$i</span>++)<span class="comment">//遍历Excels的sheet页</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="variable">$sheet</span> = <span class="variable">$objPHPExcel</span>-&gt;<span class="title function_ invoke__">getSheet</span>(<span class="variable">$i</span>);</span><br><span class="line">    <span class="comment">//获取sheet页的名字：$sheetName = $sheet-&gt;getTitle();</span></span><br><span class="line">    <span class="variable">$highestRow</span> = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getHighestRow</span>(); <span class="comment">// 取得总行数</span></span><br><span class="line">    <span class="variable">$highestColumn</span> = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getHighestColumn</span>(); <span class="comment">// 取得总列数</span></span><br><span class="line">    <span class="variable">$maxColumns</span> = <span class="title class_">\PHPExcel_Cell</span>::<span class="title function_ invoke__">columnIndexFromString</span>(<span class="variable">$highestColumn</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="variable">$key</span> = <span class="number">1</span>; <span class="variable">$key</span> &lt;= <span class="variable">$highestRow</span>; <span class="variable">$key</span>++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="variable">$k</span> = <span class="number">0</span>; <span class="variable">$k</span> &lt; <span class="variable">$maxColumns</span>; <span class="variable">$k</span>++)</span><br><span class="line">        &#123;</span><br><span class="line">            columnValue = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getCellByColumnAndRow</span>(<span class="variable">$k</span>, <span class="variable">$key</span>)-&gt;<span class="title function_ invoke__">getValue</span>();<span class="comment">//获取数据</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h1 id="通过遍历的方式获取单元格的值"><a href="#通过遍历的方式获取单元格的值" class="headerlink" title="通过遍历的方式获取单元格的值"></a>通过遍历的方式获取单元格的值</h1><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//把上传的excel读进来，然后处理数据</span></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel.php&#x27;</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel/IOFactory.php&#x27;</span>;</span><br><span class="line"><span class="keyword">require_once</span> <span class="string">&#x27;Excel/PHPExcel/Reader/Excel5.php&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="variable">$fileExtensions</span>==<span class="string">&quot;xlsx&quot;</span>)&#123;</span><br><span class="line">    <span class="variable">$objReader</span> = <span class="title class_">\PHPExcel_IOFactory</span>::<span class="title function_ invoke__">createReader</span>(<span class="string">&#x27;Excel2007&#x27;</span>);</span><br><span class="line">&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">    <span class="variable">$objReader</span> = <span class="title class_">\PHPExcel_IOFactory</span>::<span class="title function_ invoke__">createReader</span>(<span class="string">&#x27;Excel5&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="variable">$objPHPExcel</span> = <span class="variable">$objReader</span>-&gt;<span class="title function_ invoke__">load</span>(<span class="variable">$basepath</span>.<span class="variable">$_FILES</span>[<span class="string">&#x27;file&#x27;</span>][<span class="string">&#x27;name&#x27;</span>]); <span class="comment">//$filename可以是上传的文件，或者是指定的文件</span></span><br><span class="line"><span class="variable">$sheetCount</span> = <span class="variable">$objPHPExcel</span>-&gt;<span class="title function_ invoke__">getSheetCount</span>();<span class="comment">//获取所有工作表的个数</span></span><br><span class="line"><span class="keyword">for</span>(<span class="variable">$i</span> = <span class="number">0</span>; <span class="variable">$i</span> &lt; <span class="variable">$sheetCount</span>; <span class="variable">$i</span>++)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="variable">$sheet</span> = <span class="variable">$objPHPExcel</span>-&gt;<span class="title function_ invoke__">getSheet</span>(<span class="variable">$i</span>);</span><br><span class="line">    <span class="comment">//获取sheet页的名字：$sheetName = $sheet-&gt;getTitle();</span></span><br><span class="line">    <span class="variable">$highestRow</span> = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getHighestRow</span>(); <span class="comment">// 取得总行数</span></span><br><span class="line">    <span class="variable">$highestColumn</span> = <span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getHighestColumn</span>(); <span class="comment">// 取得总列数</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">foreach</span>(<span class="variable">$sheet</span>-&gt;<span class="title function_ invoke__">getRowIterator</span>() <span class="keyword">as</span> <span class="variable">$key</span> =&gt; <span class="variable">$row</span>) &#123;</span><br><span class="line">        <span class="variable">$cellIterator</span> = <span class="variable">$row</span>-&gt;<span class="title function_ invoke__">getCellIterator</span>();</span><br><span class="line">        <span class="variable">$cellIterator</span>-&gt;<span class="title function_ invoke__">setIterateOnlyExistingCells</span>(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">foreach</span> (<span class="variable">$cellIterator</span> <span class="keyword">as</span> <span class="variable">$cell</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span>(<span class="variable">$key</span> == <span class="number">1</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="variable">$columnValue</span> = (<span class="keyword">string</span>)<span class="variable">$cell</span>-&gt;<span class="title function_ invoke__">getValue</span>();<span class="comment">//获取数据</span></span><br><span class="line">            &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<pre><code>                                                                                                                                                                                                        $colums = [];
+                                                                                                                                                                                                                    $goodsAttrRef = [];//excel中的技术参数数据存到内存中
+</code></pre>
+<pre><code>
+</code></pre>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2017/06/18/%E7%94%A8PHPExcel%E8%AF%BB%E5%8F%96excel%E8%A1%A8%E6%A0%BC/" data-id="clzo46bu10032vajh4ngrcddj" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/php/" rel="tag">php</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/06/27/MySQL%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E8%AF%BB%E5%86%99%E5%88%86%E7%A6%BB%E6%90%AD%E5%BB%BA/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          MySQL主从复制读写分离搭建
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/05/24/phpstrom-%E5%92%8C-xdebug-%E8%B0%83%E8%AF%95PHP%E7%A8%8B%E5%BA%8F/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">使用phpstrom 和 xdebug 调试PHP程序</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

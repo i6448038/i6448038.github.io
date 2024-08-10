@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>HTTP 缓存详解 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="用途HTTP缓存主要用在对一些实时性要求不高的静态文件进行的缓存，往往都是存在浏览器端，防止这些“多余”的请求重复的访问服务器，对服务器造成压力，从而提高网站的性能。 原理现有两端，浏览器C和服务器端S。  浏览器向服务器发送请求，获取一个文件f  服务器就把f给返回浏览器  假如这个文件的内容变化不是那么快，一两周更新一次，浏览器每次请求服务器都返回相同的文件，岂不是对服务器资源的一种浪费？ 如">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP 缓存详解">
+<meta property="og:url" content="http://yoursite.com/2018/04/29/http-cache/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="用途HTTP缓存主要用在对一些实时性要求不高的静态文件进行的缓存，往往都是存在浏览器端，防止这些“多余”的请求重复的访问服务器，对服务器造成压力，从而提高网站的性能。 原理现有两端，浏览器C和服务器端S。  浏览器向服务器发送请求，获取一个文件f  服务器就把f给返回浏览器  假如这个文件的内容变化不是那么快，一两周更新一次，浏览器每次请求服务器都返回相同的文件，岂不是对服务器资源的一种浪费？ 如">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_1.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_2.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_3.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_4.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_5.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_6.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_7.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_8.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_9.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_10.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_11.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_12.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_13.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_14.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_15.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/http_cache/http_cache_16.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/weichat/qrcode.jpg">
+<meta property="article:published_time" content="2018-04-28T18:09:58.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.811Z">
+<meta property="article:author" content="菜刚">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/http_cache/http_cache_1.jpeg">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-http-cache" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/29/http-cache/" class="article-date">
+  <time datetime="2018-04-28T18:09:58.000Z" itemprop="datePublished">2018-04-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      HTTP 缓存详解
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h3><p>HTTP缓存主要用在对一些实时性要求不高的静态文件进行的缓存，往往都是存在浏览器端，防止这些“多余”的请求重复的访问服务器，对服务器造成压力，从而提高网站的性能。</p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>现有两端，浏览器C和服务器端S。</p>
+<p><img src="/img/http_cache/http_cache_1.jpeg" alt="这里写图片描述"></p>
+<p>浏览器向服务器发送请求，获取一个文件f</p>
+<p><img src="/img/http_cache/http_cache_2.jpeg" alt="这里写图片描述"></p>
+<p>服务器就把f给返回浏览器</p>
+<p><img src="/img/http_cache/http_cache_3.jpeg" alt="这里写图片描述"></p>
+<p>假如这个文件的内容变化不是那么快，一两周更新一次，浏览器每次请求服务器都返回相同的文件，岂不是对服务器资源的一种浪费？</p>
+<p>如何解决呢？</p>
+<p>浏览器把请求后拿到的文件存到本地，等下次请求的时候，看看本地是否有缓存文件，如果有，直接拿本地的文件，岂不是就不用请求服务器了？这其实就是http缓存的最最根本的原理。</p>
+<p>C端浏览器端把请求来的文件缓存到如图下f的小方格内<br><img src="/img/http_cache/http_cache_4.jpeg" alt="这里写图片描述"></p>
+<p>等到下次C端再次请求此文件时，就直接从浏览器缓存的文件中拿，而不再向S服务器端发起请求了</p>
+<p><img src="/img/http_cache/http_cache_5.jpeg" alt="这里写图片描述"></p>
+<p>以下浏览器截图中标红的部分，就是没有发起请求，直接从浏览器缓存中获取的数据</p>
+<p><img src="/img/http_cache/http_cache_6.jpeg" alt="这里写图片描述"></p>
+<h3 id="两种缓存方式"><a href="#两种缓存方式" class="headerlink" title="两种缓存方式"></a>两种缓存方式</h3><p>浏览器端有了缓存之后，不能一直有效吧，如果文件更新了，我们还继续使用浏览器缓存中的数据，虽说时效性不强，但长期使用旧文件也不算合理吧。</p>
+<p>http协议提供了两种维度来让缓存失效：时间和文件的修改。</p>
+<h3 id="利用时间来让缓存失效"><a href="#利用时间来让缓存失效" class="headerlink" title="利用时间来让缓存失效"></a>利用时间来让缓存失效</h3><p>时间维度很简单，就是设定一个缓存时间段，过了这个时间段，缓存就自动失效了，浏览器就会发起请求获取文件。这个设定时间的http字段就是<code>cache-control</code>字段。</p>
+<p><code>cache-control</code> 可设置的字段值有：</p>
+<ul>
+<li>private ：客户端可以缓存</li>
+<li>public ：客户端和代理服务器都可缓存，大部分情况可以认为public和private是一样的</li>
+<li>max-age&#x3D;xxx ：   缓存的内容将在 xxx 秒后失效 (时间就是在这儿设置的)</li>
+<li>no-cache ：需要使用另外一种http缓存策略来验证缓存数据</li>
+<li>no-store ：所有缓存策略都不会进行(这里指的是两种缓存策略都不会进行)</li>
+</ul>
+<p>cache-control 缓存原理</p>
+<p>第一次访问请求，客户端C向服务端S发起一个文件请求，服务器返回文件并在<code>response</code>中加了响应头”Cache-Control:max-age&#x3D;60”，这样一来，这个f文件只能在浏览器端存<br>60秒</p>
+<p><img src="/img/http_cache/http_cache_7.jpeg" alt="这里写图片描述"></p>
+<p>在这60秒钟，客户端请求服务器的f文件会直接从缓存中拿取</p>
+<p><img src="/img/http_cache/http_cache_8.jpeg" alt="这里写图片描述"></p>
+<p>60秒过后，缓存失效，浏览器再次请求文件需要重新向服务器发起请求。</p>
+<p><img src="/img/http_cache/http_cache_9.jpeg" alt="这里写图片描述"></p>
+<p>注意：假如说请求中包含“Cache-Control:max-age&#x3D;0”或者“Cache-Control:no-store”无论响应中返回的”max-age”值是多少，都不会缓存到服务器。浏览器中对于地址栏中直接输入文件地址的请求做了优化处理，加上了“Cache-Control:max-age&#x3D;0”，也就是说，如果这个css、js或者其他静态文件是通过你在浏览器上直接输入获得的，将会每时每刻都是获取最新的。</p>
+<h3 id="通过查看文件的修改来让缓存失效"><a href="#通过查看文件的修改来让缓存失效" class="headerlink" title="通过查看文件的修改来让缓存失效"></a>通过查看文件的修改来让缓存失效</h3><p>这种维度比较的科学：浏览器先请求服务获得文件后，服务器会返回该文件的最后修改时间<code>Last-Modified</code>，作为文件的一个标识，下次浏览器请求的时候，会带着这个标识去请求(此时为<code>If-Modified-Since</code>)，然后服务器做校验，如果说时间标识<code>If-Modified-Since</code>等于服务器的文件修改时间，则说明没有修改，返回304状态码，浏览器从缓存中获取文件，但是如果浏览器保存的时间标识<code>If-Modified-Since</code>小于服务器端的文件修改时间，那么，说明文件发生了修改，浏览器就会重新获取新的文件。<br>（<code>If-Modified-Since</code>的时间如果大于服务器端文件的时间，会被认为是错误的请求）</p>
+<p>如图，浏览器C向服务器发S起请求，服务器S返回文件的同时还会返回文件的最后修改时间<code>Last-Modified</code>作为文件时间标识，浏览器会将文件和文件时间标识都缓存起来。</p>
+<p><img src="/img/http_cache/http_cache_10.jpeg" alt="这里写图片描述"></p>
+<p>假如服务器端的文件f并没有被修改，服务器通过判断请求头带的时间标识<code>If-Modified-Since</code>得出结论后，都会返回状态码<code>304</code>告诉浏览器文件没有被修改，让浏览器使用缓存。</p>
+<p><img src="/img/http_cache/http_cache_11.jpeg" alt="这里写图片描述"></p>
+<p>假如服务器端的文件f修改了，那么，浏览器将重新获取文件，并缓存到浏览器中。</p>
+<p><img src="/img/http_cache/http_cache_12.jpeg" alt="这里写图片描述"></p>
+<p>虽然通过文件最后修改时间作为标识已经很完美了，但是，还是可能存在一个问题：就是有可能服务器端的文件修改后，又改回原来的样子，这样，虽然文件最后修改时间变了，但是，文件内容并没有改变。这样还是会有多余的请求到达服务器，该如何处理呢？<br>可以将文件内容作为一个唯一标识，例如可以对文件内容取MD5值作为字段(<code>etag</code>)也传给浏览器端，假如这个文件内容没变化，那么MD5值也不会改变。那么，处理流程就变成了这样：服务器端先判断文件修改时间是否发生了变化，如果发生了变化，那么再对比浏览器传来的<code>If-None-Match</code>即浏览器端保留的<code>E-tag</code>值，如果发生了变化，则证明文件修改了，需要浏览器重新下载文件，如果没有，则证明文件内容没变化，返回304状态码。</p>
+<p>如图，浏览器C要访问服务器S的f文件，服务器S返回了文件最后修改时间<code>Last-Modified</code>和文件的内容标识<code>E-tag</code>，浏览器将这两个字段及其文件缓存了起来</p>
+<p><img src="/img/http_cache/http_cache_13.jpeg" alt="这里写图片描述"></p>
+<p>当文件最后修改时间没变，文件内容也没变的时候，返回304，让浏览器从缓存中拿取文件。</p>
+<p><img src="/img/http_cache/http_cache_14.jpeg" alt="这里写图片描述"></p>
+<p>当文件最后修改时间变了，文件内容没变的时候，返回304，让浏览器从缓存中拿取文件。</p>
+<p><img src="/img/http_cache/http_cache_15.jpeg" alt="这里写图片描述"></p>
+<p>当文件修改时间变了，文件内容也变了的时候，服务器会重新下发新的文件给浏览器。</p>
+<p><img src="/img/http_cache/http_cache_16.jpeg" alt="这里写图片描述"></p>
+<p>此维度让缓存失效牵扯的http字段有点多，我们最后整理一下：<br>文件最后修改时间字段：</p>
+<ul>
+<li>Response：<code>Last-Modified</code></li>
+<li>Request：<code>If-Modified-Since</code></li>
+</ul>
+<p>文件内容标识字段：</p>
+<ul>
+<li>Response：<code>E-tag</code></li>
+<li>Request：<code>If-None-Match</code></li>
+</ul>
+<h3 id="请关注我"><a href="#请关注我" class="headerlink" title="请关注我"></a>请关注我</h3><p>更多精彩内容，请搜索我的微信公众号 <code>码农RyuGou</code></p>
+<p>或者扫码<img src="/img/weichat/qrcode.jpg"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/04/29/http-cache/" data-id="clzo46btj001dvajh6loh4lv8" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/05/08/bitcoin-and-blockchain/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          比特币和区块链
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/04/05/WeiboSummary/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">微博git使用中那些可圈可点的地方</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

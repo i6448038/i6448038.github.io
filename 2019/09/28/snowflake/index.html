@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>图解各路分布式ID生成算法 | 菜刚RyuGou的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在分布式系统中，通常会用到分布式ID来标注数据的唯一性，而分布式ID的生成方式又多种多样，今天我们就来讨论一下主流的分布式ID生成策略。 分布式ID基本需求 全局唯一 趋势递增 信息安全  全局唯一这是基本要求，不必解释 趋势递增为什么要趋势递增呢？第一，由于我们的分布式ID，是用来标识数据唯一性的，所以多数时候会被定义为主键或者唯一索引。第二，并且绝大多数互联网公司使用的数据库是：MySQL，存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图解各路分布式ID生成算法">
+<meta property="og:url" content="http://yoursite.com/2019/09/28/snowflake/index.html">
+<meta property="og:site_name" content="菜刚RyuGou的博客">
+<meta property="og:description" content="在分布式系统中，通常会用到分布式ID来标注数据的唯一性，而分布式ID的生成方式又多种多样，今天我们就来讨论一下主流的分布式ID生成策略。 分布式ID基本需求 全局唯一 趋势递增 信息安全  全局唯一这是基本要求，不必解释 趋势递增为什么要趋势递增呢？第一，由于我们的分布式ID，是用来标识数据唯一性的，所以多数时候会被定义为主键或者唯一索引。第二，并且绝大多数互联网公司使用的数据库是：MySQL，存">
+<meta property="og:locale">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/mysql1.png">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/mysql2.png">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/redis1.png">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/redis2.png">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/uuid1.png">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/uuid3.png">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/uuid2.png">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/snowflake.jpeg">
+<meta property="og:image" content="http://yoursite.com/img/snowflake/snowflake1.png">
+<meta property="og:image" content="https://i6448038.github.io/img/weichat/qrcode.jpg">
+<meta property="article:published_time" content="2019-09-28T10:40:30.000Z">
+<meta property="article:modified_time" content="2024-07-27T23:44:20.798Z">
+<meta property="article:author" content="菜刚">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/img/snowflake/mysql1.png">
+  
+    <link rel="alternate" href="/atom.xml" title="菜刚RyuGou的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">菜刚RyuGou的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-snowflake" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/09/28/snowflake/" class="article-date">
+  <time datetime="2019-09-28T10:40:30.000Z" itemprop="datePublished">2019-09-28</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      图解各路分布式ID生成算法
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在分布式系统中，通常会用到分布式ID来标注数据的唯一性，而分布式ID的生成方式又多种多样，今天我们就来讨论一下主流的分布式ID生成策略。</p>
+<h2 id="分布式ID基本需求"><a href="#分布式ID基本需求" class="headerlink" title="分布式ID基本需求"></a>分布式ID基本需求</h2><ul>
+<li>全局唯一</li>
+<li>趋势递增</li>
+<li>信息安全</li>
+</ul>
+<h3 id="全局唯一"><a href="#全局唯一" class="headerlink" title="全局唯一"></a>全局唯一</h3><p>这是基本要求，不必解释</p>
+<h3 id="趋势递增"><a href="#趋势递增" class="headerlink" title="趋势递增"></a>趋势递增</h3><p>为什么要趋势递增呢？<br>第一，由于我们的分布式ID，是用来标识数据唯一性的，所以多数时候会被定义为主键或者唯一索引。<br>第二，并且绝大多数互联网公司使用的数据库是：MySQL，存储引擎为innoDB。<br>对于<code>B + Tree</code>这个数据结构来讲，数据以自增顺序来写入的话，b+tree的结构不会时常被打乱重塑，存取效率是最高的。</p>
+<h3 id="信息安全"><a href="#信息安全" class="headerlink" title="信息安全"></a>信息安全</h3><p>由于数据是递增的，所以，恶意用户的可以根据当前ID推测出下一个，非常危险，所以，我们的分布式ID尽量做到不易被破解。</p>
+<h2 id="数据库主键自增-Flicker"><a href="#数据库主键自增-Flicker" class="headerlink" title="数据库主键自增(Flicker)"></a>数据库主键自增(Flicker)</h2><p>基于数据库主键自增的方案，名为<code>Flicker</code>。<br>主要是利用MySQL的自增主键来实现分布式ID。</p>
+<p>以下为<code>Flicker</code>实现分布式ID的主流做法：</p>
+<h3 id="1、需要单独建立一个数据库实例：flicker"><a href="#1、需要单独建立一个数据库实例：flicker" class="headerlink" title="1、需要单独建立一个数据库实例：flicker"></a>1、需要单独建立一个数据库实例：flicker</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create database `flicker`;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2、创建一张表：sequence-id"><a href="#2、创建一张表：sequence-id" class="headerlink" title="2、创建一张表：sequence_id"></a>2、创建一张表：sequence_id</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">create table sequence_id(</span><br><span class="line">    id bigint(20) unsigned NOT NULL auto_increment, </span><br><span class="line">    stub char(10) NOT NULL default &#x27;&#x27;,</span><br><span class="line">    PRIMARY KEY (id),</span><br><span class="line">    UNIQUE KEY stub (stub)</span><br><span class="line">) ENGINE=MyISAM;</span><br></pre></td></tr></table></figure>
+<p>为什么用<code>MyISAM</code>？不用<code>InnoDB</code>？个人推测原因是：<code>flicker</code>算法出来的时候，MySQL的默认引擎还依旧是<code>MyISAM</code>而不是<code>InnoDB</code>，作者只是想用默认引擎而已，并无其他原因。</p>
+<ul>
+<li>stub: 票根，对应需要生成 Id 的业务方编码，可以是项目名、表名甚至是服务器 IP 地址。</li>
+<li>stub 要设置为唯一索引</li>
+</ul>
+<h3 id="3、使用以下SQL来获取ID"><a href="#3、使用以下SQL来获取ID" class="headerlink" title="3、使用以下SQL来获取ID"></a>3、使用以下SQL来获取ID</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">REPLACE INTO ticket_center (stub) VALUES (&#x27;test&#x27;);  </span><br><span class="line">SELECT LAST_INSERT_ID();  </span><br></pre></td></tr></table></figure>
+
+<p><code>Replace into</code> 先尝试插入数据到表中，如果发现表中已经有此行数据（根据主键或者唯一索引判断）则先删除此行数据，然后插入新的数据， 否则直接插入新数据。<br>一般<code>stub</code>为特殊的相同的值。</p>
+<p>这样，一个分布式ID系统算是可以搭建运行了。但是，有人要问：“这是一个单实例、单点的系统，万一挂了，岂不是影响所有关联的业务方？”</p>
+<h3 id="改进升华"><a href="#改进升华" class="headerlink" title="改进升华"></a>改进升华</h3><p>是的。确实如此，因此又有人说：“可以利用MySQL主从模式，主库挂了，使用从库。”<br>这只能算是一种比较low的策略，因为如果主库挂了，从库没来得及同步，就会生成重复的ID。<br>有没有更好的方法呢？<br>我们可以使用“双主模式“，也就是有两个MySQL实例，这两个都能生成ID。<br>如图所示，我们原来的模式：<br><img src="/img/snowflake/mysql1.png"></p>
+<p>双主模式是该怎么样呢？如何保持唯一性？<br>我们可以让一台实例生成奇数ID，另一台生成偶数ID。</p>
+<p>奇数那一台：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">set @@auto_increment_offset = 1;     -- 起始值</span><br><span class="line">set @@auto_increment_increment = 2;  -- 步长</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>偶数那一台：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">set @@auto_increment_offset = 2;     -- 起始值</span><br><span class="line">set @@auto_increment_increment = 2;  -- 步长</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>当两台都OK的时候，随机取其中的一台生成ID；若其中一台挂了，则取另外一台生成ID。<br>如图所示：<br><img src="/img/snowflake/mysql2.png"></p>
+<p>细心会发现，N个节点，只要起始值为1，2，…N，然后步长为N，就会生成各不相同的ID。(PS:后文有推导公式)</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>优点：</p>
+<ul>
+<li>简单。充分利用了数据库自增 ID 机制，生成的 ID 有序递增。</li>
+<li>ID递增</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>并发量不大。</li>
+<li>水平扩展困难，系统定义好了起始值、步长和机器台数，跑起来之后，添加额外的机器困难。</li>
+<li>安全系数低</li>
+</ul>
+<h2 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h2><p>Redis为单线程的，所以操作为原子操作，利用<code>incrby</code>命令可以生成唯一的递增ID。</p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p><img src="/img/snowflake/redis1.png"></p>
+<p>单机单点，吞吐不够，加集群</p>
+<p><img src="/img/snowflake/redis2.png"></p>
+<p>假设N个节点，则步长为N，节点起始值为1，2，…… N。则三个节点生成的ID一定不同！<br>想想为什么？<br>以上信息条件可以转化为数学推理：<br><code>1 + x * N = 2 + y * N 且 x、y、N都为整成数且N不为1，试问等式存不存在？</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">答：</span><br><span class="line">假设存在在起始值是1的节点上叠加x次之后等于起始值为2、叠加y次的值，</span><br><span class="line">既 “1 + x * N = 2 + y * N” 等式成立</span><br><span class="line">则：</span><br><span class="line">x * N = 1 + y * N</span><br><span class="line">x * N - y * N = 1</span><br><span class="line">(x - y) * N = 1</span><br><span class="line">(x - y) = 1 / N</span><br><span class="line"></span><br><span class="line">又因为 x、y都为整成数；</span><br><span class="line">所以x - y 必为整成数；</span><br><span class="line">又因为只有N等于1的时候，1/N才为整成数；</span><br><span class="line">与条件N为1不符合，所以不存在。</span><br></pre></td></tr></table></figure>
+<p>同理可证<code>1 + x * N = 3 + y * N </code>和<code>2 + x * N = 3 + y * N </code>也是如此。</p>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>性能显然高于基于数据库的<code>Flicker</code>方案</li>
+<li>ID递增</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>水平扩展困难</li>
+<li>Redis集群宕机可能会产生重复的id</li>
+<li>易破解</li>
+</ul>
+<h2 id="UUID"><a href="#UUID" class="headerlink" title="UUID"></a>UUID</h2><p>想必这个大家都熟悉。<br><code>UUID</code>是通用唯一识别码（Universally Unique Identifier）的缩写，是一种软件建构的标准，亦为开放软件基金会组织在分布式计算环境领域的一部分。</p>
+<h3 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h3><p><img src="/img/snowflake/uuid1.png"></p>
+<p>UUID是由一组32位数的16进制数字所构成，是故UUID理论上的总数为16^32 &#x3D; 2^128，约等于3.4 x 10^38。也就是说若每纳秒产生1兆个UUID，要花100亿年才会将所有UUID用完。</p>
+<p><code>UUID</code>是利用同一时空中的所有机器都是唯一的这一规则来确保唯一性的。</p>
+<p><img src="/img/snowflake/uuid3.png"></p>
+<p>具体外形为：<br><img src="/img/snowflake/uuid2.png"></p>
+<p>通常由以下几部分组成：</p>
+<ul>
+<li>系统时间</li>
+<li>时钟序列</li>
+<li>全局唯一的IEEE机器识别，如网卡MAC、机器SN等</li>
+</ul>
+<p>生成方式多种多样，业界公认的是五种，分别是uuid1,uuid2,uuid3,uuid4,uuid5。<br>目前使用最广泛的UUID是微软的<code>GUID</code>。</p>
+<h3 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>本地生成，性能极佳。无网络消耗</li>
+<li>全局唯一</li>
+</ul>
+<h3 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>存储麻烦。16字节128位，通常以36长度的字符串表示，很多场景不适用</li>
+<li>通常是字符串，非自增，无序，不利于做主键。每次插入都会对B+tree结构进行修改</li>
+<li>破解相对困难，但是也不安全。参考”梅丽莎病毒事件，病毒作者制作的UUID包含Mac地址，被警方破解后，直接定位，抓捕归案😝”</li>
+</ul>
+<h2 id="snowflake"><a href="#snowflake" class="headerlink" title="snowflake"></a>snowflake</h2><p>snowflake即雪花算法，Twitter发明的。</p>
+<h3 id="原理-2"><a href="#原理-2" class="headerlink" title="原理"></a>原理</h3><p>外形长这样：<br><img src="/img/snowflake/snowflake.jpeg"></p>
+<ul>
+<li><code>1位</code>不用。二进制中最高位为1的都是负数，但是我们生成的id一般都使用整数，所以这个最高位固定是0。</li>
+<li><code>41位</code>，用来记录毫秒的时间戳。41位可以表示的数值范围是：0 至 2^{41}-1，减1是因为可表示的数值范围是从0开始算的，而不是1，转化为年则是<code>2^&#123;41&#125;-1) / (1000 * 60 * 60 * 24 * 365) = 69</code>年。</li>
+<li><code>10位</code>，用来记录工作机器id。最多可以部署在2^{10} &#x3D; 1024个节点，我们可以根据具体的业务来定制具体分配的机器数量和每台机器1毫秒产生的id序号number数。例如可以把10bit分5bit给IDC，分5bit给工作机器。这样就可以表示32个IDC，每个IDC下可以有32台机器，可以将内容配置在配置文件中，服务去获取。</li>
+<li><code>12位</code>。用来表示单台机器每毫秒生成的id序号，12位bit可以表示的最大正整数为2^12 - 1 &#x3D; 4096，若超过4096，则重新从0开始。即，每台机器1毫秒内最多产生4096个ID，足够用了。</li>
+</ul>
+<p>最后将上述4段bit通过位运算拼接起来组成64位bit.<br>由于是64位bit,所以完全可以用数字来表示ID。</p>
+<p>基本是根据：</p>
+<p><img src="/img/snowflake/snowflake1.png"></p>
+<h3 id="优点-2"><a href="#优点-2" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>ID为数字且时间位在高位，整个ID都是趋势递增的。</li>
+<li>不依赖任何第三方库，完全可以自己写，且性能非常高。</li>
+<li>可根据业务定制分配bit位，非常灵活。得益于<code>10位</code>机器IDbit位。</li>
+<li>不太容易破解</li>
+</ul>
+<h3 id="缺点-2"><a href="#缺点-2" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>依赖机器的时间，如果机器时间不准或者回拨，可能导致重复</li>
+</ul>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p>在国内也得到了比较普遍的应用，各大厂根据其基本原理，生成了自己的规则：</p>
+<ul>
+<li>百度的uid-generator：<a href="https://github.com/baidu/uid-generator">https://github.com/baidu/uid-generator</a></li>
+<li>美团Leaf：<a href="https://github.com/zhuzhong/idleaf">https://github.com/zhuzhong/idleaf</a></li>
+</ul>
+<h2 id="更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流："><a href="#更多精彩内容，请关注我的微信公众号-互联网技术窝-或者加微信共同探讨交流：" class="headerlink" title="更多精彩内容，请关注我的微信公众号 互联网技术窝  或者加微信共同探讨交流："></a>更多精彩内容，请关注我的微信公众号 <code>互联网技术窝</code>  或者加微信共同探讨交流：</h2><p>   <img src="https://i6448038.github.io/img/weichat/qrcode.jpg"></p>
+<p>参考文献：<br>[flicker算法原文] <a href="http://code.flickr.com/blog/2010/02/08/ticket-servers-distributed-unique-primary-keys-on-the-cheap/">http://code.flickr.com/blog/2010/02/08/ticket-servers-distributed-unique-primary-keys-on-the-cheap/</a></p>
+<p>[分布式唯一ID极简教程] <a href="https://mp.weixin.qq.com/s/cqIK5Bv1U0mT97C7EOxmnA">https://mp.weixin.qq.com/s/cqIK5Bv1U0mT97C7EOxmnA</a></p>
+<p>[分布式 ID 生成策略] <a href="https://mp.weixin.qq.com/s/UAvSUDFJ8Fr0a-Na2Vr22g">https://mp.weixin.qq.com/s/UAvSUDFJ8Fr0a-Na2Vr22g</a></p>
+<p>[分布式ID系列（2）——UUID适合做分布式ID吗] <a href="https://mp.weixin.qq.com/s/kZAnYz_Jj4aBrtsk8Q9w_A">https://mp.weixin.qq.com/s/kZAnYz_Jj4aBrtsk8Q9w_A</a></p>
+<p><a href="https://segmentfault.com/a/1190000011282426">https://segmentfault.com/a/1190000011282426</a></p>
+<p><a href="https://juejin.im/post/5d6fc8eff265da03ef7a324b#comment">https://juejin.im/post/5d6fc8eff265da03ef7a324b#comment</a></p>
+<p><a href="https://segmentfault.com/a/1190000010978305">https://segmentfault.com/a/1190000010978305</a></p>
+<p>[Leaf——美团点评分布式ID生成系统] <a href="https://tech.meituan.com/2017/04/21/mt-leaf.html">https://tech.meituan.com/2017/04/21/mt-leaf.html</a></p>
+<p>[UUID的含义及实现原理]<a href="https://blog.csdn.net/reggergdsg/article/details/92091404">https://blog.csdn.net/reggergdsg/article/details/92091404</a></p>
+<p>[通用唯一标识码UUID的介绍及使用] <a href="https://mp.weixin.qq.com/s/BjCL076USuhLj9GjhXDaTA">https://mp.weixin.qq.com/s/BjCL076USuhLj9GjhXDaTA</a><br>[UUID简史] <a href="https://www.infoq.cn/article/talk-about-the-history-of-uuid/?utm_source=tuicool&utm_medium=referral">https://www.infoq.cn/article/talk-about-the-history-of-uuid/?utm_source=tuicool&amp;utm_medium=referral</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/09/28/snowflake/" data-id="clzo46btt002gvajh8tjmax84" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/11/10/io-multi/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          动图了解I/O多路复用
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/05/18/golang-mem/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">图解Golang的内存分配</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%85%B6%E4%BB%96/">其他</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blockchain/" rel="tag">Blockchain</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Golang/" rel="tag">Golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">Go设计模式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/" rel="tag">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/golang/" rel="tag">golang</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/" rel="tag">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/php/" rel="tag">php</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/web%E5%8D%8F%E8%AE%AE/" rel="tag">web协议</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%85%B6%E4%BB%96/" rel="tag">其他</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%89%8D%E7%AB%AF/" rel="tag">前端</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" rel="tag">字符集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" rel="tag">正则表达式</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%AE%97%E6%B3%95/" rel="tag">算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" rel="tag">计算机基础</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Blockchain/" style="font-size: 10px;">Blockchain</a> <a href="/tags/Golang/" style="font-size: 16.67px;">Golang</a> <a href="/tags/Go%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 13.33px;">Go设计模式</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/golang/" style="font-size: 20px;">golang</a> <a href="/tags/mysql/" style="font-size: 11.67px;">mysql</a> <a href="/tags/php/" style="font-size: 18.33px;">php</a> <a href="/tags/web%E5%8D%8F%E8%AE%AE/" style="font-size: 10px;">web协议</a> <a href="/tags/%E5%85%B6%E4%BB%96/" style="font-size: 15px;">其他</a> <a href="/tags/%E5%89%8D%E7%AB%AF/" style="font-size: 10px;">前端</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E9%9B%86/" style="font-size: 10px;">字符集</a> <a href="/tags/%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F/" style="font-size: 10px;">正则表达式</a> <a href="/tags/%E7%AE%97%E6%B3%95/" style="font-size: 10px;">算法</a> <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" style="font-size: 11.67px;">计算机基础</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/12/">December 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">October 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">July 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/03/">March 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/09/">September 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/07/">July 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/06/">June 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">May 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/03/">March 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/02/">February 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">March 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">October 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/11/">November 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">July 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/06/">June 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">May 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/04/">April 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">March 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/02/">February 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2023/12/16/singleton/">Go语言设计模式之单例模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/10/21/decorator/">Go语言设计模式之装饰模式</a>
+          </li>
+        
+          <li>
+            <a href="/2023/07/29/pattern-linked/">Go语言设计模式之责任链模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/10/16/http2/">http2.0 一篇就够了</a>
+          </li>
+        
+          <li>
+            <a href="/2022/03/19/js-learning-1/">JS的那些坑（一）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 菜刚<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
